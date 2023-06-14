@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>화남면-2023 영천시 공유재산</title>
+    
+</head>
+<body>
+<!-- div id="map" style="width:100%;height:350px;"></div -->
+<div id="map" style="width:100%;height:1200px;"></div>
+<p>
+    <input type="checkbox" id="chkUseDistrict" onclick="setOverlayMapTypeId()" /> 지적편집도 정보 보기
+</p>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+    var mapContainer = document.getElementById('map'), // 지도를 표시할 div  
+    mapOption = { 
+        // center: new kakao.maps.LatLng(33.450701, 126.570667), // 지도의 중심좌표
+        center: new kakao.maps.LatLng(35.977166473249, 128.962935458715),
+        mapTypeId: kakao.maps.MapTypeId.HYBRID,  // ROADMAP, SKYVIEW, HYBRID, ROADVIEW, USE_DISTRICT:지적편집도
+        level: 5 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px;">내위치</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.842868821783, 128.765090553713),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+var mapTypes = {
+    useDistrict : kakao.maps.MapTypeId.USE_DISTRICT
+};
+
+// 체크 박스를 선택하면 호출되는 함수입니다
+function setOverlayMapTypeId() {
+    var chkUseDistrict = document.getElementById('chkUseDistrict');
+    
+    // 지도 타입을 제거합니다
+    for (var type in mapTypes) {
+        map.removeOverlayMapTypeId(mapTypes[type]);    
+    }
+
+    // 지적편집도정보 체크박스가 체크되어있으면 지도에 지적편집도정보 지도타입을 추가합니다
+    if (chkUseDistrict.checked) {
+        map.addOverlayMapTypeId(mapTypes.useDistrict);    
+    }
+    
+}  
+ 
+// 마커를 표시할 위치와 내용을 가지고 있는 객체 배열입니다 
+var positions = [
+{
+    content: '<div style="padding:5px;"> 금호리 151-6</div>',
+    latlng: new kakao.maps.LatLng(36.0699768685487, 128.906728104055)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 234</div>',
+    latlng: new kakao.maps.LatLng(36.0704050455067, 128.907566642605)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 580</div>',
+    latlng: new kakao.maps.LatLng(36.0775471962655, 128.912150069479)
+    },
+    {
+    content: '<div style="padding:5px;"> 죽곡리 657-1</div>',
+    latlng: new kakao.maps.LatLng(36.0475289826335, 128.948509041524)
+    },
+    {
+    content: '<div style="padding:5px;"> 신호리 178</div>',
+    latlng: new kakao.maps.LatLng(36.0475015769802, 128.943548737585)
+    },
+    {
+    content: '<div style="padding:5px;"> 신호리 658</div>',
+    latlng: new kakao.maps.LatLng(36.0340109183473, 128.933630025903)
+    },
+    {
+    content: '<div style="padding:5px;"> 사천리 517-4</div>',
+    latlng: new kakao.maps.LatLng(36.0379075477023, 128.918678107582)
+    },
+    {
+    content: '<div style="padding:5px;"> 사천리 598-2</div>',
+    latlng: new kakao.maps.LatLng(36.0403027182135, 128.920605792704)
+    },
+    {
+    content: '<div style="padding:5px;"> 사천리 산 78-5</div>',
+    latlng: new kakao.maps.LatLng(36.0553483239573, 128.918806001583)
+    },
+    {
+    content: '<div style="padding:5px;"> 대천리 425-3</div>',
+    latlng: new kakao.maps.LatLng(36.0407391434489, 128.908407091281)
+    },
+    {
+    content: '<div style="padding:5px;"> 대천리 535</div>',
+    latlng: new kakao.maps.LatLng(36.0391782724864, 128.910213657356)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 1106-2</div>',
+    latlng: new kakao.maps.LatLng(36.0509348416855, 128.895012500336)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 35</div>',
+    latlng: new kakao.maps.LatLng(36.0691765944001, 128.900110689003)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 36</div>',
+    latlng: new kakao.maps.LatLng(36.069367081007, 128.899621931067)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 36-1</div>',
+    latlng: new kakao.maps.LatLng(36.0691505158547, 128.899556122944)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 245</div>',
+    latlng: new kakao.maps.LatLng(36.0603800588177, 128.891122845681)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 268-3</div>',
+    latlng: new kakao.maps.LatLng(36.0608612585808, 128.891098297119)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 531-2</div>',
+    latlng: new kakao.maps.LatLng(36.0687833115029, 128.892336350435)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 850</div>',
+    latlng: new kakao.maps.LatLng(36.0589854050074, 128.889944550411)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 853</div>',
+    latlng: new kakao.maps.LatLng(36.0588050438902, 128.890667886939)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 975-2</div>',
+    latlng: new kakao.maps.LatLng(36.058674701092, 128.888905291389)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 1023-1</div>',
+    latlng: new kakao.maps.LatLng(36.0588638168302, 128.889329513524)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 1023-2</div>',
+    latlng: new kakao.maps.LatLng(36.0591407293881, 128.889271548726)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 141</div>',
+    latlng: new kakao.maps.LatLng(36.0484974708023, 128.8786409089)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 681-2</div>',
+    latlng: new kakao.maps.LatLng(36.0635796639851, 128.869826680517)
+    },
+    {
+    content: '<div style="padding:5px;"> 안천리 565-7</div>',
+    latlng: new kakao.maps.LatLng(36.083831275631, 128.895585244829)
+    },
+    {
+    content: '<div style="padding:5px;"> 안천리 603</div>',
+    latlng: new kakao.maps.LatLng(36.0847186027102, 128.895627978662)
+    },
+    {
+    content: '<div style="padding:5px;"> 안천리 863-1</div>',
+    latlng: new kakao.maps.LatLng(36.0825936173056, 128.894989724044)
+    },
+    {
+    content: '<div style="padding:5px;"> 안천리 1623</div>',
+    latlng: new kakao.maps.LatLng(36.089825792876, 128.867058754535)
+    },
+    {
+    content: '<div style="padding:5px;"> 온천리 112</div>',
+    latlng: new kakao.maps.LatLng(36.0888538616027, 128.860516238795)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 255</div>',
+    latlng: new kakao.maps.LatLng(36.1288379106758, 128.881294356893)
+    },
+    {
+    content: '<div style="padding:5px;"> 월곡리 211-1</div>',
+    latlng: new kakao.maps.LatLng(36.1007790776307, 128.893792081116)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 772-2</div>',
+    latlng: new kakao.maps.LatLng(36.0797729834015, 128.907612924916)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 775</div>',
+    latlng: new kakao.maps.LatLng(36.0802918414907, 128.907532219789)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 1164-1</div>',
+    latlng: new kakao.maps.LatLng(36.0664383525473, 128.904632878669)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 15</div>',
+    latlng: new kakao.maps.LatLng(36.0911882999659, 128.906482563228)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 17-2</div>',
+    latlng: new kakao.maps.LatLng(36.0907032090924, 128.907159153833)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 28</div>',
+    latlng: new kakao.maps.LatLng(36.07147547434, 128.920621339667)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 30</div>',
+    latlng: new kakao.maps.LatLng(36.0700324280968, 128.919906552513)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 31</div>',
+    latlng: new kakao.maps.LatLng(36.0715544656539, 128.916115380882)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 34</div>',
+    latlng: new kakao.maps.LatLng(36.067234483788, 128.915714911019)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 37</div>',
+    latlng: new kakao.maps.LatLng(36.0658755014711, 128.917590295626)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 39</div>',
+    latlng: new kakao.maps.LatLng(36.0675235036993, 128.917334420541)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 48</div>',
+    latlng: new kakao.maps.LatLng(36.0643386371516, 128.913898844904)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 50-1</div>',
+    latlng: new kakao.maps.LatLng(36.0662927528976, 128.913037463089)
+    },
+    {
+    content: '<div style="padding:5px;"> 금호리 산 58</div>',
+    latlng: new kakao.maps.LatLng(36.0746204486873, 128.902651827787)
+    },
+    {
+    content: '<div style="padding:5px;"> 죽곡리 815-4</div>',
+    latlng: new kakao.maps.LatLng(36.0474877279081, 128.947249671609)
+    },
+    {
+    content: '<div style="padding:5px;"> 죽곡리 산 67</div>',
+    latlng: new kakao.maps.LatLng(36.0597567296741, 128.963340401886)
+    },
+    {
+    content: '<div style="padding:5px;"> 죽곡리 산 70</div>',
+    latlng: new kakao.maps.LatLng(36.0606399044435, 128.964876926788)
+    },
+    {
+    content: '<div style="padding:5px;"> 죽곡리 산 138</div>',
+    latlng: new kakao.maps.LatLng(36.0584592602458, 128.950164826782)
+    },
+    {
+    content: '<div style="padding:5px;"> 죽곡리 산 205</div>',
+    latlng: new kakao.maps.LatLng(36.0667927749979, 128.943813122469)
+    },
+    {
+    content: '<div style="padding:5px;"> 신호리 138</div>',
+    latlng: new kakao.maps.LatLng(36.0450538233154, 128.944449180998)
+    },
+    {
+    content: '<div style="padding:5px;"> 신호리 산 22</div>',
+    latlng: new kakao.maps.LatLng(36.0342569451286, 128.940447284387)
+    },
+    {
+    content: '<div style="padding:5px;"> 신호리 산 29</div>',
+    latlng: new kakao.maps.LatLng(36.0253292723031, 128.934239967728)
+    },
+    {
+    content: '<div style="padding:5px;"> 사천리 277</div>',
+    latlng: new kakao.maps.LatLng(36.0408049234256, 128.924283133603)
+    },
+    {
+    content: '<div style="padding:5px;"> 사천리 668</div>',
+    latlng: new kakao.maps.LatLng(36.0408002675526, 128.921849504719)
+    },
+    {
+    content: '<div style="padding:5px;"> 사천리 674-5</div>',
+    latlng: new kakao.maps.LatLng(36.0422399377756, 128.922740919616)
+    },
+    {
+    content: '<div style="padding:5px;"> 사천리 997</div>',
+    latlng: new kakao.maps.LatLng(36.0565539628991, 128.920155593158)
+    },
+    {
+    content: '<div style="padding:5px;"> 사천리 산 5</div>',
+    latlng: new kakao.maps.LatLng(36.0425702363265, 128.928648588017)
+    },
+    {
+    content: '<div style="padding:5px;"> 사천리 산 88</div>',
+    latlng: new kakao.maps.LatLng(36.0608058285993, 128.91744914443)
+    },
+    {
+    content: '<div style="padding:5px;"> 대천리 산 9</div>',
+    latlng: new kakao.maps.LatLng(36.0588460784205, 128.906221962539)
+    },
+    {
+    content: '<div style="padding:5px;"> 대천리 산 17</div>',
+    latlng: new kakao.maps.LatLng(36.0572599788425, 128.909303302513)
+    },
+    {
+    content: '<div style="padding:5px;"> 대천리 산 20</div>',
+    latlng: new kakao.maps.LatLng(36.054685636842, 128.910444424347)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 산 9</div>',
+    latlng: new kakao.maps.LatLng(36.0525613973768, 128.905648581472)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 산 36</div>',
+    latlng: new kakao.maps.LatLng(36.0634777935492, 128.910655482562)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 산 42</div>',
+    latlng: new kakao.maps.LatLng(36.062164866948, 128.902986918976)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 산 45</div>',
+    latlng: new kakao.maps.LatLng(36.0636839888009, 128.900641666384)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 산 67</div>',
+    latlng: new kakao.maps.LatLng(36.0573670463449, 128.900555395738)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 산 86</div>',
+    latlng: new kakao.maps.LatLng(36.0537903321157, 128.8851518386)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 산 87</div>',
+    latlng: new kakao.maps.LatLng(36.0540003638378, 128.884401833008)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 산 87-2</div>',
+    latlng: new kakao.maps.LatLng(36.0541507978197, 128.885418768296)
+    },
+    {
+    content: '<div style="padding:5px;"> 선천리 산 87-3</div>',
+    latlng: new kakao.maps.LatLng(36.0535297387243, 128.885341032841)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 6</div>',
+    latlng: new kakao.maps.LatLng(36.0708751426202, 128.90075067916)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 6-1</div>',
+    latlng: new kakao.maps.LatLng(36.0707455669543, 128.900682631509)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 204-15</div>',
+    latlng: new kakao.maps.LatLng(36.0626236793743, 128.893533959087)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 산 2</div>',
+    latlng: new kakao.maps.LatLng(36.0738471598175, 128.900738082314)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 산 5</div>',
+    latlng: new kakao.maps.LatLng(36.0712628027528, 128.900448348353)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 산 15</div>',
+    latlng: new kakao.maps.LatLng(36.0724224590228, 128.8874696321)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 산 22-1</div>',
+    latlng: new kakao.maps.LatLng(36.0699765072798, 128.884669858174)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 산 22-2</div>',
+    latlng: new kakao.maps.LatLng(36.0713295048617, 128.882558135779)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 산 42</div>',
+    latlng: new kakao.maps.LatLng(36.0576557503568, 128.885238399898)
+    },
+    {
+    content: '<div style="padding:5px;"> 삼창리 산 44</div>',
+    latlng: new kakao.maps.LatLng(36.0550862562321, 128.884407088197)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 12-1</div>',
+    latlng: new kakao.maps.LatLng(36.0587250813421, 128.883339862461)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 12-2</div>',
+    latlng: new kakao.maps.LatLng(36.0587432609024, 128.883891610616)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 12-3</div>',
+    latlng: new kakao.maps.LatLng(36.0584460660154, 128.88390438847)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 산 19</div>',
+    latlng: new kakao.maps.LatLng(36.0478301941039, 128.883316349048)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 산 28</div>',
+    latlng: new kakao.maps.LatLng(36.0518708102575, 128.877215984205)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 산 28-1</div>',
+    latlng: new kakao.maps.LatLng(36.050947613453, 128.87754669394)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 산 46</div>',
+    latlng: new kakao.maps.LatLng(36.0580927387838, 128.884232098829)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 산 46-3</div>',
+    latlng: new kakao.maps.LatLng(36.0589872669053, 128.883897650684)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 산 46-4</div>',
+    latlng: new kakao.maps.LatLng(36.0587609646821, 128.884335925566)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 산 139</div>',
+    latlng: new kakao.maps.LatLng(36.0657174868187, 128.86767016099)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 산 149</div>',
+    latlng: new kakao.maps.LatLng(36.0768364887694, 128.858972851845)
+    },
+    {
+    content: '<div style="padding:5px;"> 귀호리 산 213</div>',
+    latlng: new kakao.maps.LatLng(36.0546978010525, 128.867512209794)
+    },
+    {
+    content: '<div style="padding:5px;"> 안천리 1061</div>',
+    latlng: new kakao.maps.LatLng(36.0928718570309, 128.884627235932)
+    },
+    {
+    content: '<div style="padding:5px;"> 안천리 산 51</div>',
+    latlng: new kakao.maps.LatLng(36.0904885830626, 128.887851339167)
+    },
+    {
+    content: '<div style="padding:5px;"> 안천리 산 100</div>',
+    latlng: new kakao.maps.LatLng(36.0778057589764, 128.902695175281)
+    },
+    {
+    content: '<div style="padding:5px;"> 안천리 산 101</div>',
+    latlng: new kakao.maps.LatLng(36.0755419922274, 128.901623230122)
+    },
+    {
+    content: '<div style="padding:5px;"> 온천리 187-1</div>',
+    latlng: new kakao.maps.LatLng(36.0921515032249, 128.862778647899)
+    },
+    {
+    content: '<div style="padding:5px;"> 온천리 248-1</div>',
+    latlng: new kakao.maps.LatLng(36.0872541677743, 128.856643335424)
+    },
+    {
+    content: '<div style="padding:5px;"> 온천리 345</div>',
+    latlng: new kakao.maps.LatLng(36.0858447626404, 128.854487191355)
+    },
+    {
+    content: '<div style="padding:5px;"> 온천리 산 68</div>',
+    latlng: new kakao.maps.LatLng(36.0906747747394, 128.844232974452)
+    },
+    {
+    content: '<div style="padding:5px;"> 온천리 산 69-2</div>',
+    latlng: new kakao.maps.LatLng(36.0913726850516, 128.842661921969)
+    },
+    {
+    content: '<div style="padding:5px;"> 온천리 산 85</div>',
+    latlng: new kakao.maps.LatLng(36.0936300312629, 128.859162013234)
+    },
+    {
+    content: '<div style="padding:5px;"> 구전리 산 1</div>',
+    latlng: new kakao.maps.LatLng(36.0959045176789, 128.866653896187)
+    },
+    {
+    content: '<div style="padding:5px;"> 구전리 산 44</div>',
+    latlng: new kakao.maps.LatLng(36.1112649229635, 128.840949647137)
+    },
+    {
+    content: '<div style="padding:5px;"> 구전리 산 49</div>',
+    latlng: new kakao.maps.LatLng(36.1020208959006, 128.837874631485)
+    },
+    {
+    content: '<div style="padding:5px;"> 구전리 산 49-1</div>',
+    latlng: new kakao.maps.LatLng(36.101550209201, 128.834415937432)
+    },
+    {
+    content: '<div style="padding:5px;"> 구전리 산 68</div>',
+    latlng: new kakao.maps.LatLng(36.0991420731188, 128.853696847371)
+    },
+    {
+    content: '<div style="padding:5px;"> 구전리 산 77</div>',
+    latlng: new kakao.maps.LatLng(36.093278586228, 128.861954268916)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 6</div>',
+    latlng: new kakao.maps.LatLng(36.140281322047, 128.892946139453)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 332</div>',
+    latlng: new kakao.maps.LatLng(36.1281450899979, 128.880020160837)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 351-1</div>',
+    latlng: new kakao.maps.LatLng(36.1273118629799, 128.880514426193)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 8</div>',
+    latlng: new kakao.maps.LatLng(36.1260080545009, 128.879416064184)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 10</div>',
+    latlng: new kakao.maps.LatLng(36.1332728053231, 128.89197476647)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 13-1</div>',
+    latlng: new kakao.maps.LatLng(36.138330547222, 128.895917334468)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 17</div>',
+    latlng: new kakao.maps.LatLng(36.1416069424691, 128.886313495442)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 73-1</div>',
+    latlng: new kakao.maps.LatLng(36.1414023795251, 128.859617369645)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 73-3</div>',
+    latlng: new kakao.maps.LatLng(36.1418408470977, 128.856644156522)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 93</div>',
+    latlng: new kakao.maps.LatLng(36.1237235559308, 128.864586733938)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 102-1</div>',
+    latlng: new kakao.maps.LatLng(36.1386333691266, 128.854181204123)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 102-2</div>',
+    latlng: new kakao.maps.LatLng(36.1418256401252, 128.856642798264)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 104</div>',
+    latlng: new kakao.maps.LatLng(36.1300978283051, 128.855000786716)
+    },
+    {
+    content: '<div style="padding:5px;"> 용계리 산 106</div>',
+    latlng: new kakao.maps.LatLng(36.1227113901965, 128.863364969212)
+    },
+    {
+    content: '<div style="padding:5px;"> 월곡리 산 54</div>',
+    latlng: new kakao.maps.LatLng(36.1049241066231, 128.893356840017)
+    },
+    {
+    content: '<div style="padding:5px;"> 월곡리 산 64</div>',
+    latlng: new kakao.maps.LatLng(36.1048532263964, 128.886118682578)
+    },
+    {
+    content: '<div style="padding:5px;"> 월곡리 산 141</div>',
+    latlng: new kakao.maps.LatLng(36.106648603975, 128.87484690389)
+    },
+    {
+    content: '<div style="padding:5px;"> 월곡리 산 222</div>',
+    latlng: new kakao.maps.LatLng(36.1279844562937, 128.885777567459)
+    },
+    {
+    content: '<div style="padding:5px;"> 월곡리 산 223</div>',
+    latlng: new kakao.maps.LatLng(36.129042461835, 128.890191011164)
+    }    
+];
+
+for (var i = 0; i < positions.length; i ++) {
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({
+        map: map, // 마커를 표시할 지도
+        position: positions[i].latlng // 마커의 위치
+    });
+
+    // 마커에 표시할 인포윈도우를 생성합니다 
+    var infowindow = new kakao.maps.InfoWindow({
+        content: positions[i].content // 인포윈도우에 표시할 내용
+    });
+
+    infowindow.open(map, marker); 
+}
+</script>
+</body>
+</html>
