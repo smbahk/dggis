@@ -1,0 +1,102 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    text-align: center;
+    font-size: 24px;
+    margin-top: 20px 0;
+    position: absolute;
+    /*top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);*/
+    color: red;
+    position: relative; /* 상대적인 위치 설정 */
+}
+
+.slider {
+    width: 100%;
+    max-width: 800px;
+    height: 600px;
+    overflow: hidden;
+    position: relative;
+    margin: 0 auto;
+    margin-top: 10px; /* 슬라이더의 상단 여백 추가 */
+}
+
+.slider img {
+    width: 100%;
+    height: 100%;
+    display: none;
+    opacity: 0; /* 페이드 효과를 위해 초기값을 0으로 설정 */
+    transition: opacity 0.5s ease-in-out; /* 페이드 효과를 위한 transition 추가 */
+}
+
+.slider img.active {
+    display: block;
+    opacity: 1; /* 활성화된 이미지는 opacity를 1로 설정하여 나타나도록 함 */
+}
+
+.thumbnails {
+    margin-top: 20px;
+    text-align: center;
+    display: flex; /* 썸네일 이미지들을 가로로 정렬하기 위해 flexbox를 사용 */
+    justify-content: center; /* 가운데 정렬 */
+    flex-wrap: wrap; /* 썸네일 이미지가 너비를 초과할 경우 줄바꿈 */
+}
+
+.thumbnails img {
+    width: 100px;
+    height: auto;
+    cursor: pointer;
+    margin: 5px; /* 각 썸네일 이미지 사이의 간격 조정 */
+    filter: grayscale(100%); /* 썸네일 이미지를 회색으로 처리 */
+    transition: filter 0.5s ease-in-out; /* 마우스 오버 시 효과를 위한 transition 추가 */
+}
+
+.thumbnails img:hover {
+    filter: grayscale(0%); /* 마우스 오버 시 회색 해제 */
+}
+
+.thumbnails img.active {
+    filter: grayscale(0%); /* 활성화된 이미지는 회색 해제 */
+}
+
+.thumbnail-box {
+    border: 1px solid #000; /* 썸네일 박스 테두리 스타일 */
+    margin: 10px; /* 썸네일 박스 간격 조정 */
+    padding: 10px; /* 썸네일 박스 안 여백 */
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.thumbnail-row {
+    display: inline-flex; /* 썸네일 박스들을 가로로 정렬하기 위해 flexbox를 사용 */
+    justify-content: center; /* 가운데 정렬 */
+    flex-wrap: nowrap;
+}
+
+.thumbnail-column {
+    flex: 1; /* 썸네일 박스들을 동일한 크기로 설정 */
+}
+
+.prev,
+.next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 30px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    cursor: pointer;
+}
+
+.prev {
+    left: 10px;
+}
+
+.next {
+    right: 10px;
+}
