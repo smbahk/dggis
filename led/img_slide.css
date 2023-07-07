@@ -56,7 +56,7 @@ body {
 }
 
 .thumbnail-box {
-    border: 1px solid #000;
+    border: 1px solid #e7e7e7;
     margin: 10px;
     padding: 10px;
     overflow-x: auto;
@@ -75,12 +75,27 @@ body {
 
 .prev,
 .next {
-    display: none; /* 모바일 화면에서는 이전/다음 버튼 숨김 */
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 30px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    cursor: pointer;
 }
 
-@media (max-width: 480px) {
+.prev {
+    left: 10px;
+}
+
+.next {
+    right: 10px;
+}
+
+@media (max-width: 768px) {
     .slider {
-        height: 300px; /* 모바일 화면에서 슬라이더의 높이 조정 */
+        max-width: 480px; /* 모바일 화면에서 슬라이더의 최대 너비 조정 */
     }
 
     .thumbnails img {
