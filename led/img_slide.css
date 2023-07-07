@@ -5,72 +5,80 @@ body {
 
 .header {
     text-align: center;
-    font-size: 20px;
+    font-size: 15px;
     margin-top: 20px 0;
+    position: absolute;
+    /*top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);*/
     color: red;
+    position: relative; /* 상대적인 위치 설정 */
 }
 
 .slider {
     width: 100%;
     max-width: 800px;
-    height: auto;
+    height: 600px;
+    overflow: hidden;
     position: relative;
     margin: 0 auto;
-    margin-top: 10px;
-    overflow: hidden;
+    margin-top: 10px; /* 슬라이더의 상단 여백 추가 */
 }
 
 .slider img {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: none;
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
+    opacity: 0; /* 페이드 효과를 위해 초기값을 0으로 설정 */
+    transition: opacity 0.5s ease-in-out; /* 페이드 효과를 위한 transition 추가 */
 }
 
 .slider img.active {
     display: block;
-    opacity: 1;
+    opacity: 1; /* 활성화된 이미지는 opacity를 1로 설정하여 나타나도록 함 */
 }
 
 .thumbnails {
     margin-top: 20px;
     text-align: center;
+    display: flex; /* 썸네일 이미지들을 가로로 정렬하기 위해 flexbox를 사용 */
+    justify-content: center; /* 가운데 정렬 */
+    flex-wrap: wrap; /* 썸네일 이미지가 너비를 초과할 경우 줄바꿈 */
 }
 
 .thumbnails img {
-    width: 80px;
+    width: 100px;
     height: auto;
     cursor: pointer;
-    margin: 5px;
-    filter: grayscale(100%);
-    transition: filter 0.5s ease-in-out;
+    margin: 5px; /* 각 썸네일 이미지 사이의 간격 조정 */
+    filter: grayscale(100%); /* 썸네일 이미지를 회색으로 처리 */
+    transition: filter 0.5s ease-in-out; /* 마우스 오버 시 효과를 위한 transition 추가 */
 }
 
 .thumbnails img:hover {
-    filter: grayscale(0%);
+    filter: grayscale(0%); /* 마우스 오버 시 회색 해제 */
 }
 
 .thumbnails img.active {
-    filter: grayscale(0%);
+    filter: grayscale(0%); /* 활성화된 이미지는 회색 해제 */
 }
 
 .thumbnail-box {
-    border: 1px solid #e7e7e7;
-    margin: 10px;
-    padding: 10px;
+    border: 1px solid #d6d6d6; /* 썸네일 박스 테두리 스타일 */
+    margin: 10px; /* 썸네일 박스 간격 조정 */
+    padding: 10px; /* 썸네일 박스 안 여백 */
     overflow-x: auto;
     white-space: nowrap;
 }
 
 .thumbnail-row {
-    display: inline-flex;
-    justify-content: center;
+    display: inline-flex; /* 썸네일 박스들을 가로로 정렬하기 위해 flexbox를 사용 */
+    justify-content: center; /* 가운데 정렬 */
     flex-wrap: nowrap;
 }
 
 .thumbnail-column {
-    flex: 0 0 auto;
+    flex: 1; /* 썸네일 박스들을 동일한 크기로 설정 */
 }
 
 .prev,
@@ -91,14 +99,4 @@ body {
 
 .next {
     right: 10px;
-}
-
-@media (max-width: 768px) {
-    .slider {
-        max-width: 480px; /* 모바일 화면에서 슬라이더의 최대 너비 조정 */
-    }
-
-    .thumbnails img {
-        width: 50px; /* 모바일 화면에서 썸네일 이미지의 크기 조정 */
-    }
 }

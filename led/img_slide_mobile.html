@@ -3,26 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DGGIS_랜딩페이지</title>
-    <link rel="stylesheet" href="img_slide.css">
+    <title>DGGIS_랜딩페이지 (Mobile)</title>
+    <link rel="stylesheet" href="img_slide_mobile.css">
 </head>
 <body>
-    <script>
-        if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
-            // 모바일 장치인 경우
-            window.location.href = "img_slide_mobile.html"; // 모바일 페이지로 리다이렉트
-        }
-    </script>
-
     <div class="header">
-        <p>도로명판 야간조명장치 [임시]랜딩페이지 입니다.</p>
+        <h1>도로명판 야간조명장치 [임시]랜딩페이지 (Mobile)입니다.</h1>
     </div>
     <div class="slider">
+        <!-- img src="images/mobile/image1.jpg" alt="Image 1" class="active" -->
         <img src="images/image1.jpg" alt="Image 1" class="active">
         <img src="images/image2.jpg" alt="Image 2">
-        <!-- 나머지 이미지들을 여기에 추가 -->
         <img src="images/image3.jpg" alt="Image 3">
-        <!-- ... -->
         <img src="images/image4.jpg" alt="Image 4">
         <img src="images/image5.jpg" alt="Image 5">
         <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
@@ -32,7 +24,6 @@
     <div class="thumbnails">
         <div class="thumbnail-box">
             <div class="thumbnail-row">
-                <!-- 이미지에 해당하는 썸네일 이미지를 여기에 추가 -->
                 <div class="thumbnail-column">
                     <img src="images/image1.jpg" alt="Thumbnail 1" onclick="currentSlide(1)">
                 </div>
@@ -42,7 +33,6 @@
                 <div class="thumbnail-column">
                     <img src="images/image3.jpg" alt="Thumbnail 3" onclick="currentSlide(3)">
                 </div>
-                <!-- ... -->
                 <div class="thumbnail-column">
                     <img src="images/image4.jpg" alt="Thumbnail 4" onclick="currentSlide(4)">
                 </div>
@@ -58,7 +48,7 @@
     <script type="text/javascript" src="//wcs.naver.net/wcslog.js"></script>
     <script type="text/javascript">
         if(!wcs_add) var wcs_add = {};
-        wcs_add["wa"] = "126151491fabc50";
+        wcs_add["wa"] = "1c3343e58e60500";
         if(window.wcs) {
             wcs_do();
         }
