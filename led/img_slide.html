@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DGGIS_랜딩페이지</title>
+    <link rel="stylesheet" href="img_slide.css">
+</head>
+<body>
+    <div class="header">
+        <p>도로명판 야간조명장치 [임시]랜딩페이지 입니다.</p>
+    </div>
+    <div class="slider">
+        <img src="images/image1.jpg" alt="Image 1" class="active">
+        <img src="images/image2.jpg" alt="Image 2">
+        <!-- 나머지 이미지들을 여기에 추가 -->
+        <img src="images/image3.jpg" alt="Image 3">
+        <!-- ... -->
+        <img src="images/image4.jpg" alt="Image 20">
+        <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
+        <a class="next" onclick="changeSlide(1)">&#10095;</a>
+    </div>
+
+    <div class="thumbnails">
+        <div class="thumbnail-box">
+            <div class="thumbnail-row">
+                <!-- 이미지에 해당하는 썸네일 이미지를 여기에 추가 -->
+                <div class="thumbnail-column">
+                    <img src="images/image1.jpg" alt="Thumbnail 1" onclick="currentSlide(1)">
+                </div>
+                <div class="thumbnail-column">
+                    <img src="images/image2.jpg" alt="Thumbnail 2" onclick="currentSlide(2)">
+                </div>
+                <div class="thumbnail-column">
+                    <img src="images/image3.jpg" alt="Thumbnail 3" onclick="currentSlide(3)">
+                </div>
+                <!-- ... -->
+                <div class="thumbnail-column">
+                    <img src="images/image4.jpg" alt="Thumbnail 4" onclick="currentSlide(4)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="img_slide.js"></script>
+    
+    <script type="text/javascript" src="//wcs.naver.net/wcslog.js"></script>
+    <script type="text/javascript">
+        if(!wcs_add) var wcs_add = {};
+        wcs_add["wa"] = "126151491fabc50";
+        if(window.wcs) {
+        wcs_do();
+        }
+    </script>
+</body>
+</html>
