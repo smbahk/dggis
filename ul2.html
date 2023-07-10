@@ -39,7 +39,7 @@ if (navigator.geolocation) {
             lon = position.coords.longitude; // 경도
         
         var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
-            message = '<div style="text-align:center; padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+            message = '<div style="padding:50px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
         
         // 마커와 인포윈도우를 표시합니다
         displayMarker(locPosition, message);
@@ -89,20 +89,20 @@ var infowindows = [];
 var markerInfos = [
     {
         position: new kakao.maps.LatLng(37.4615233974438, 130.874581683416),
-        content: '<div style="margin-right:10px;padding:5px;">울릉순환로 2620-5555</div>'
+        content: '<div style="margin-right:50px;padding:20px;">울릉순환로 2620-5555</div>'
     },
     {
         position: new kakao.maps.LatLng(37.4611714030355, 130.874403423966),
-        content: '<div style="margin:auto;padding:5px;">울릉순환로 2222-5555</div>'
+        content: '<div style="margin-right:50px;padding:5px;">울릉순환로 2222-5555</div>'
     },
     {
         position: new kakao.maps.LatLng(37.4606502381344, 130.874089906797),
-        content: '<div style="margin:auto;padding:5px;">간령길 81-8</div>'
+        content: '<div style="margin-right:50px;padding:5px;">간령길 81-8</div>'
     },
     // ... 마커 4부터 10까지 추가
     {
         position: new kakao.maps.LatLng(37.46092837127, 130.873659994117),
-        content: '<div style="margin:auto;padding:5px;">간령길 83-4</div>'
+        content: '<div style="margin-right:50px;padding:5px;">간령길 83-4</div>'
     }
 ];
 
