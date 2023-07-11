@@ -5,9 +5,11 @@
     <title>북안면</title>
 </head>
 <body>
-<div id="map" style="width:100%;height:1550px;"></div>
+<div id="map" style="width:100%;height:1350px;"></div>
 <p>
-    <input type="checkbox" id="chkUseDistrict" onclick="setOverlayMapTypeId()" /> 지적편집도 정보 보기
+    <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+    <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    <button onclick="">스카이뷰는 지도 오른쪽 위에 버튼 있음</button>
 </p>
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
 <script>
@@ -83,25 +85,37 @@ function displayMarker(locPosition, message) {
 
 // ------------ 내위치 끝
 
-var mapTypes = {
-    useDistrict : kakao.maps.MapTypeId.USE_DISTRICT
-};
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
 
-// 체크 박스를 선택하면 호출되는 함수입니다
-function setOverlayMapTypeId() {
-    var chkUseDistrict = document.getElementById('chkUseDistrict');
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
     
-    // 지도 타입을 제거합니다
-    for (var type in mapTypes) {
-        map.removeOverlayMapTypeId(mapTypes[type]);    
-    }
-
-    // 지적편집도정보 체크박스가 체크되어있으면 지도에 지적편집도정보 지도타입을 추가합니다
-    if (chkUseDistrict.checked) {
-        map.addOverlayMapTypeId(mapTypes.useDistrict);    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
     }
     
-} 
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
 
 // 마커와 인포윈도우를 담을 배열입니다
 var markers = [];
