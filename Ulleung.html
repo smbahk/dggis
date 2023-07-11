@@ -3,25 +3,30 @@
 <head>
     <meta charset="utf-8">
     <title>울릉도 건물번호판 부착-390개</title>
-    
 </head>
 <body>
-<!-- div id="map" style="width:100%;height:350px;"></div -->
-<div id="map" style="width:100%;height:1200px;"></div>
-<p>
-    <input type="checkbox" id="chkUseDistrict" onclick="setOverlayMapTypeId()" /> 지적편집도 정보 보기
-</p>
+<div id="map" style="width:100%;height:1550px;"></div>
+<br /><strong>마커를 클릭해주세요!</strong>
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
 <script>
-    var mapContainer = document.getElementById('map'), // 지도를 표시할 div  
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
     mapOption = { 
-        // center: new kakao.maps.LatLng(33.450701, 126.570667), // 지도의 중심좌표
-        center: new kakao.maps.LatLng(37.4843331744993, 130.905642182244),
-        mapTypeId: kakao.maps.MapTypeId.HYBRID,  // ROADMAP, SKYVIEW, HYBRID, ROADVIEW, USE_DISTRICT:지적편집도
-        level: 5 // 지도의 확대 레벨
+        center: new kakao.maps.LatLng(37.4843331744993, 130.905642182244), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
     };
 
 var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
 
 // ----- 내위치 시작
 
@@ -34,7 +39,7 @@ if (navigator.geolocation) {
             lon = position.coords.longitude; // 경도
         
         var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
-            message = '<div style="padding:3px;">내위치</div>'; // 인포윈도우에 표시될 내용입니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
         
         // 마커와 인포윈도우를 표시합니다
         displayMarker(locPosition, message);
@@ -76,1604 +81,1603 @@ function displayMarker(locPosition, message) {
 
 // ------------ 내위치 끝
 
-var mapTypes = {
-    useDistrict : kakao.maps.MapTypeId.USE_DISTRICT
-};
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
 
-// 체크 박스를 선택하면 호출되는 함수입니다
-function setOverlayMapTypeId() {
-    var chkUseDistrict = document.getElementById('chkUseDistrict');
-    
-    // 지도 타입을 제거합니다
-    for (var type in mapTypes) {
-        map.removeOverlayMapTypeId(mapTypes[type]);    
-    }
-
-    // 지적편집도정보 체크박스가 체크되어있으면 지도에 지적편집도정보 지도타입을 추가합니다
-    if (chkUseDistrict.checked) {
-        map.addOverlayMapTypeId(mapTypes.useDistrict);    
-    }
-    
-}  
- 
-// 마커를 표시할 위치와 내용을 가지고 있는 객체 배열입니다 
-var positions = [
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+var markerInfos = [
 {
-    content: '<div style="padding:3px;">간령길 68</div>',
-    latlng: new kakao.maps.LatLng(37.4615233974438, 130.874581683416)
+    position: new kakao.maps.LatLng(37.4615233974438,130.874581683416),
+    content: '<div style="width:185px; height:25px; padding:5px;">간령길 68</div>'
     },
     {
-    content: '<div style="padding:3px;">간령길 79</div>',
-    latlng: new kakao.maps.LatLng(37.4611714030355, 130.874403423966)
+    position: new kakao.maps.LatLng(37.4611714030355,130.874403423966),
+    content: '<div style="width:185px; height:25px; padding:5px;">간령길 79</div>'
     },
     {
-    content: '<div style="padding:3px;">간령길 81-8</div>',
-    latlng: new kakao.maps.LatLng(37.4606502381344, 130.874089906797)
+    position: new kakao.maps.LatLng(37.4606502381344,130.874089906797),
+    content: '<div style="width:185px; height:25px; padding:5px;">간령길 81-8</div>'
     },
     {
-    content: '<div style="padding:3px;">간령길 83-4</div>',
-    latlng: new kakao.maps.LatLng(37.46092837127, 130.873659994117)
+    position: new kakao.maps.LatLng(37.46092837127,130.873659994117),
+    content: '<div style="width:185px; height:25px; padding:5px;">간령길 83-4</div>'
     },
     {
-    content: '<div style="padding:3px;">간령길 86</div>',
-    latlng: new kakao.maps.LatLng(37.461184759939, 130.873725090678)
+    position: new kakao.maps.LatLng(37.461184759939,130.873725090678),
+    content: '<div style="width:185px; height:25px; padding:5px;">간령길 86</div>'
     },
     {
-    content: '<div style="padding:3px;">간령길 93-152</div>',
-    latlng: new kakao.maps.LatLng(37.4589221629362, 130.873038653142)
+    position: new kakao.maps.LatLng(37.4589221629362,130.873038653142),
+    content: '<div style="width:185px; height:25px; padding:5px;">간령길 93-152</div>'
     },
     {
-    content: '<div style="padding:3px;">간령길 149</div>',
-    latlng: new kakao.maps.LatLng(37.4612048960805, 130.870636464136)
+    position: new kakao.maps.LatLng(37.4612048960805,130.870636464136),
+    content: '<div style="width:185px; height:25px; padding:5px;">간령길 149</div>'
     },
     {
-    content: '<div style="padding:3px;">간령길 192</div>',
-    latlng: new kakao.maps.LatLng(37.462547811296, 130.869891311527)
+    position: new kakao.maps.LatLng(37.462547811296,130.869891311527),
+    content: '<div style="width:185px; height:25px; padding:5px;">간령길 192</div>'
     },
     {
-    content: '<div style="padding:3px;">간령길 204</div>',
-    latlng: new kakao.maps.LatLng(37.46261664449, 130.869239436897)
+    position: new kakao.maps.LatLng(37.46261664449,130.869239436897),
+    content: '<div style="width:185px; height:25px; padding:5px;">간령길 204</div>'
     },
     {
-    content: '<div style="padding:3px;">도동1길 5-14</div>',
-    latlng: new kakao.maps.LatLng(37.4823369426891, 130.907485681388)
+    position: new kakao.maps.LatLng(37.4823369426891,130.907485681388),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동1길 5-14</div>'
     },
     {
-    content: '<div style="padding:3px;">도동1길 5-40</div>',
-    latlng: new kakao.maps.LatLng(37.4819610409182, 130.907786186751)
+    position: new kakao.maps.LatLng(37.4819610409182,130.907786186751),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동1길 5-40</div>'
     },
     {
-    content: '<div style="padding:3px;">도동1길 30</div>',
-    latlng: new kakao.maps.LatLng(34.4879127762511, 126.886637769583)
+    position: new kakao.maps.LatLng(37.4831089774316,130.907108431264),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동1길 30</div>'
     },
     {
-    content: '<div style="padding:3px;">도동1길 33-11</div>',
-    latlng: new kakao.maps.LatLng(37.4829065235394, 130.906736852777)
+    position: new kakao.maps.LatLng(37.4829065235394,130.906736852777),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동1길 33-11</div>'
     },
     {
-    content: '<div style="padding:3px;">도동1길 35-53</div>',
-    latlng: new kakao.maps.LatLng(37.4832305702241, 130.906299960689)
+    position: new kakao.maps.LatLng(37.4832305702241,130.906299960689),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동1길 35-53</div>'
     },
     {
-    content: '<div style="padding:3px;">도동1길 40-1</div>',
-    latlng: new kakao.maps.LatLng(37.4833989595844, 130.906658802698)
+    position: new kakao.maps.LatLng(37.4833989595844,130.906658802698),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동1길 40-1</div>'
     },
     {
-    content: '<div style="padding:3px;">도동1길 41</div>',
-    latlng: new kakao.maps.LatLng(37.4832846355499, 130.906298824994)
+    position: new kakao.maps.LatLng(37.4832846355499,130.906298824994),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동1길 41</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 8-5</div>',
-    latlng: new kakao.maps.LatLng(37.4831007382244, 130.908515134362)
+    position: new kakao.maps.LatLng(37.4831007382244,130.908515134362),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 8-5</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 12-7</div>',
-    latlng: new kakao.maps.LatLng(37.4831986759234, 130.90839109008)
+    position: new kakao.maps.LatLng(37.4831986759234,130.90839109008),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 12-7</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 12-13</div>',
-    latlng: new kakao.maps.LatLng(37.4833272700037, 130.908263108034)
+    position: new kakao.maps.LatLng(37.4833272700037,130.908263108034),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 12-13</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 12-35</div>',
-    latlng: new kakao.maps.LatLng(37.483215069007, 130.908537709704)
+    position: new kakao.maps.LatLng(37.483215069007,130.908537709704),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 12-35</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 18</div>',
-    latlng: new kakao.maps.LatLng(34.4880931889962, 126.886865607055)
+    position: new kakao.maps.LatLng(37.4832617274516,130.907950193404),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 18</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 33</div>',
-    latlng: new kakao.maps.LatLng(37.4835592368731, 130.907083100035)
+    position: new kakao.maps.LatLng(37.4835592368731,130.907083100035),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 33</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 34-7</div>',
-    latlng: new kakao.maps.LatLng(37.4838153608956, 130.907400192999)
+    position: new kakao.maps.LatLng(37.4838153608956,130.907400192999),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 34-7</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 34-12</div>',
-    latlng: new kakao.maps.LatLng(37.4837719080129, 130.907374536249)
+    position: new kakao.maps.LatLng(37.4837719080129,130.907374536249),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 34-12</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 40-2</div>',
-    latlng: new kakao.maps.LatLng(37.4837186921844, 130.90695853257)
+    position: new kakao.maps.LatLng(37.4837186921844,130.90695853257),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 40-2</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 40-6</div>',
-    latlng: new kakao.maps.LatLng(37.4838342354322, 130.907050548974)
+    position: new kakao.maps.LatLng(37.4838342354322,130.907050548974),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 40-6</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 46</div>',
-    latlng: new kakao.maps.LatLng(37.4838137184375, 130.906617831899)
+    position: new kakao.maps.LatLng(37.4838137184375,130.906617831899),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 46</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 46-1</div>',
-    latlng: new kakao.maps.LatLng(37.4838908186529, 130.90645134053)
+    position: new kakao.maps.LatLng(37.4838908186529,130.90645134053),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 46-1</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 46-2</div>',
-    latlng: new kakao.maps.LatLng(37.4838642200758, 130.906596510207)
+    position: new kakao.maps.LatLng(37.4838642200758,130.906596510207),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 46-2</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 47</div>',
-    latlng: new kakao.maps.LatLng(37.4837689184546, 130.906271195154)
+    position: new kakao.maps.LatLng(37.4837689184546,130.906271195154),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 47</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 53</div>',
-    latlng: new kakao.maps.LatLng(37.4838720738892, 130.906049337727)
+    position: new kakao.maps.LatLng(37.4838720738892,130.906049337727),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 53</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 54</div>',
-    latlng: new kakao.maps.LatLng(37.4839789144157, 130.906151294887)
+    position: new kakao.maps.LatLng(37.4839789144157,130.906151294887),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 54</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉경찰서-도동2길 62</div>',
-    latlng: new kakao.maps.LatLng(37.4843091297771, 130.905851668763)
+    position: new kakao.maps.LatLng(37.4843091297771,130.905851668763),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 62</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 77-4</div>',
-    latlng: new kakao.maps.LatLng(37.4844161053165, 130.904799024218)
+    position: new kakao.maps.LatLng(37.4844161053165,130.904799024218),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 77-4</div>'
     },
     {
-    content: '<div style="padding:3px;">도동2길 84</div>',
-    latlng: new kakao.maps.LatLng(37.4847101914557, 130.904739323064)
+    position: new kakao.maps.LatLng(37.4847101914557,130.904739323064),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동2길 84</div>'
     },
     {
-    content: '<div style="padding:3px;">도동3길 41-1</div>',
-    latlng: new kakao.maps.LatLng(37.4843725195909, 130.904018312282)
+    position: new kakao.maps.LatLng(37.4843725195909,130.904018312282),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동3길 41-1</div>'
     },
     {
-    content: '<div style="padding:3px;">도동4길 10</div>',
-    latlng: new kakao.maps.LatLng(34.4910697660827, 126.885468988428)
+    position: new kakao.maps.LatLng(37.4835811395788,130.904604877902),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동4길 10</div>'
     },
     {
-    content: '<div style="padding:3px;">도동4길 14</div>',
-    latlng: new kakao.maps.LatLng(34.4907840075926, 126.885665568204)
+    position: new kakao.maps.LatLng(37.4834552782571,130.904468146295),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동4길 14</div>'
     },
     {
-    content: '<div style="padding:3px;">도동5길 14</div>',
-    latlng: new kakao.maps.LatLng(37.4852988079728, 130.90449767796)
+    position: new kakao.maps.LatLng(37.4852988079728,130.90449767796),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동5길 14</div>'
     },
     {
-    content: '<div style="padding:3px;">도동5길 29</div>',
-    latlng: new kakao.maps.LatLng(37.4859550748951, 130.904804780103)
+    position: new kakao.maps.LatLng(37.4859550748951,130.904804780103),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동5길 29</div>'
     },
     {
-    content: '<div style="padding:3px;">도동5길 32-3</div>',
-    latlng: new kakao.maps.LatLng(37.4858087680482, 130.905005524788)
+    position: new kakao.maps.LatLng(37.4858087680482,130.905005524788),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동5길 32-3</div>'
     },
     {
-    content: '<div style="padding:3px;">도동6길 23-4</div>',
-    latlng: new kakao.maps.LatLng(37.4863759079961, 130.902242733089)
+    position: new kakao.maps.LatLng(37.4863759079961,130.902242733089),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동6길 23-4</div>'
     },
     {
-    content: '<div style="padding:3px;">도동6길 23-17</div>',
-    latlng: new kakao.maps.LatLng(37.4868923260391, 130.901962272394)
+    position: new kakao.maps.LatLng(37.4868923260391,130.901962272394),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동6길 23-17</div>'
     },
     {
-    content: '<div style="padding:3px;">도동6길 23-28</div>',
-    latlng: new kakao.maps.LatLng(37.4867814018212, 130.902152438303)
+    position: new kakao.maps.LatLng(37.4867814018212,130.902152438303),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동6길 23-28</div>'
     },
     {
-    content: '<div style="padding:3px;">도동6길 35-10</div>',
-    latlng: new kakao.maps.LatLng(37.4869713612131, 130.902194426659)
+    position: new kakao.maps.LatLng(37.4869713612131,130.902194426659),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동6길 35-10</div>'
     },
     {
-    content: '<div style="padding:3px;">도동6길 43</div>',
-    latlng: new kakao.maps.LatLng(37.4865248225959, 130.902926574969)
+    position: new kakao.maps.LatLng(37.4865248225959,130.902926574969),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동6길 43</div>'
     },
     {
-    content: '<div style="padding:3px;">도동6길 46-1</div>',
-    latlng: new kakao.maps.LatLng(37.4865149618086, 130.903129349666)
+    position: new kakao.maps.LatLng(37.4865149618086,130.903129349666),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동6길 46-1</div>'
     },
     {
-    content: '<div style="padding:3px;">도동9길 147</div>',
-    latlng: new kakao.maps.LatLng(37.4861370522803, 130.892522534124)
+    position: new kakao.maps.LatLng(37.4861370522803,130.892522534124),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동9길 147</div>'
     },
     {
-    content: '<div style="padding:3px;">도동9길 192</div>',
-    latlng: new kakao.maps.LatLng(37.485882246145, 130.890739370163)
+    position: new kakao.maps.LatLng(37.485882246145,130.890739370163),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동9길 192</div>'
     },
     {
-    content: '<div style="padding:3px;">도동길 44</div>',
-    latlng: new kakao.maps.LatLng(37.4826281607818, 130.908607993445)
+    position: new kakao.maps.LatLng(37.4826281607818,130.908607993445),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동길 44</div>'
     },
     {
-    content: '<div style="padding:3px;">도동길 75</div>',
-    latlng: new kakao.maps.LatLng(37.4833289640992, 130.907179001363)
+    position: new kakao.maps.LatLng(37.4833289640992,130.907179001363),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동길 75</div>'
     },
     {
-    content: '<div style="padding:3px;">도동길 83</div>',
-    latlng: new kakao.maps.LatLng(35.352729802675, 126.928906968555)
+    position: new kakao.maps.LatLng(37.4834460535626,130.906906234015),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동길 83</div>'
     },
     {
-    content: '<div style="padding:3px;">도동길 122</div>',
-    latlng: new kakao.maps.LatLng(37.4839044470372, 130.904976313283)
+    position: new kakao.maps.LatLng(37.4839044470372,130.904976313283),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동길 122</div>'
     },
     {
-    content: '<div style="padding:3px;">도동길 149-41</div>',
-    latlng: new kakao.maps.LatLng(37.4841105185533, 130.902193878322)
+    position: new kakao.maps.LatLng(37.4841105185533,130.902193878322),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동길 149-41</div>'
     },
     {
-    content: '<div style="padding:3px;">도동길 151-18</div>',
-    latlng: new kakao.maps.LatLng(37.4850810250664, 130.902972709814)
+    position: new kakao.maps.LatLng(37.4850810250664,130.902972709814),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동길 151-18</div>'
     },
     {
-    content: '<div style="padding:3px;">도동길 164</div>',
-    latlng: new kakao.maps.LatLng(37.4851532271022, 130.903305185116)
+    position: new kakao.maps.LatLng(37.4851532271022,130.903305185116),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동길 164</div>'
     },
     {
-    content: '<div style="padding:3px;">도동길 217</div>',
-    latlng: new kakao.maps.LatLng(37.4849261046521, 130.900474716924)
+    position: new kakao.maps.LatLng(37.4849261046521,130.900474716924),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동길 217</div>'
     },
     {
-    content: '<div style="padding:3px;">도동길 220</div>',
-    latlng: new kakao.maps.LatLng(36.2189364195141, 127.853203914624)
+    position: new kakao.maps.LatLng(37.4850741057805,130.900282415413),
+    content: '<div style="width:185px; height:25px; padding:5px;">도동길 220</div>'
     },
     {
-    content: '<div style="padding:3px;">무릉길 245-39</div>',
-    latlng: new kakao.maps.LatLng(37.4789827279717, 130.898084144149)
+    position: new kakao.maps.LatLng(37.4789827279717,130.898084144149),
+    content: '<div style="width:185px; height:25px; padding:5px;">무릉길 245-39</div>'
     },
     {
-    content: '<div style="padding:3px;">무릉길 245-144</div>',
-    latlng: new kakao.maps.LatLng(37.4786991473513, 130.898174809724)
+    position: new kakao.maps.LatLng(37.4786991473513,130.898174809724),
+    content: '<div style="width:185px; height:25px; padding:5px;">무릉길 245-144</div>'
     },
     {
-    content: '<div style="padding:3px;">무릉길 299-13</div>',
-    latlng: new kakao.maps.LatLng(37.4792991971848, 130.894549328929)
+    position: new kakao.maps.LatLng(37.4792991971848,130.894549328929),
+    content: '<div style="width:185px; height:25px; padding:5px;">무릉길 299-13</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래1길 30-15</div>',
-    latlng: new kakao.maps.LatLng(37.4919750622874, 130.909897788888)
+    position: new kakao.maps.LatLng(37.4919750622874,130.909897788888),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래1길 30-15</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래1길 30-19</div>',
-    latlng: new kakao.maps.LatLng(37.4919842619571, 130.910057611696)
+    position: new kakao.maps.LatLng(37.4919842619571,130.910057611696),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래1길 30-19</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래1길 43-26</div>',
-    latlng: new kakao.maps.LatLng(37.4912414863305, 130.910394017508)
+    position: new kakao.maps.LatLng(37.4912414863305,130.910394017508),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래1길 43-26</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래1길 43-34</div>',
-    latlng: new kakao.maps.LatLng(37.4911655667236, 130.910473114086)
+    position: new kakao.maps.LatLng(37.4911655667236,130.910473114086),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래1길 43-34</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래1길 44-4</div>',
-    latlng: new kakao.maps.LatLng(37.4916998347624, 130.9094482243)
+    position: new kakao.maps.LatLng(37.4916998347624,130.9094482243),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래1길 44-4</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래1길 52-3</div>',
-    latlng: new kakao.maps.LatLng(37.4913788004201, 130.90914996303)
+    position: new kakao.maps.LatLng(37.4913788004201,130.90914996303),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래1길 52-3</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래1길 58</div>',
-    latlng: new kakao.maps.LatLng(37.4913122217429, 130.909213501497)
+    position: new kakao.maps.LatLng(37.4913122217429,130.909213501497),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래1길 58</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래2길 19-4</div>',
-    latlng: new kakao.maps.LatLng(37.4932996814281, 130.908853224889)
+    position: new kakao.maps.LatLng(37.4932996814281,130.908853224889),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래2길 19-4</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래2길 32-2</div>',
-    latlng: new kakao.maps.LatLng(37.4938266148723, 130.909111838376)
+    position: new kakao.maps.LatLng(37.4938266148723,130.909111838376),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래2길 32-2</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래2길 37-6</div>',
-    latlng: new kakao.maps.LatLng(37.4935854532363, 130.908661330595)
+    position: new kakao.maps.LatLng(37.4935854532363,130.908661330595),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래2길 37-6</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래2길 37-21</div>',
-    latlng: new kakao.maps.LatLng(37.4929213412549, 130.908800590947)
+    position: new kakao.maps.LatLng(37.4929213412549,130.908800590947),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래2길 37-21</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래2길 37-22</div>',
-    latlng: new kakao.maps.LatLng(37.4931276325324, 130.90868930694)
+    position: new kakao.maps.LatLng(37.4931276325324,130.90868930694),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래2길 37-22</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래2길 37-26</div>',
-    latlng: new kakao.maps.LatLng(37.4929324236354, 130.908615606396)
+    position: new kakao.maps.LatLng(37.4929324236354,130.908615606396),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래2길 37-26</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래2길 45-3</div>',
-    latlng: new kakao.maps.LatLng(37.4937874666815, 130.908252488417)
+    position: new kakao.maps.LatLng(37.4937874666815,130.908252488417),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래2길 45-3</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래2길 45-5</div>',
-    latlng: new kakao.maps.LatLng(37.4937966018079, 130.908139840483)
+    position: new kakao.maps.LatLng(37.4937966018079,130.908139840483),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래2길 45-5</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 11-9</div>',
-    latlng: new kakao.maps.LatLng(37.4922531958802, 130.906764886807)
+    position: new kakao.maps.LatLng(37.4922531958802,130.906764886807),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 11-9</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 11-14</div>',
-    latlng: new kakao.maps.LatLng(37.4922333527643, 130.906627223335)
+    position: new kakao.maps.LatLng(37.4922333527643,130.906627223335),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 11-14</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 19</div>',
-    latlng: new kakao.maps.LatLng(37.4925626738061, 130.906626546915)
+    position: new kakao.maps.LatLng(37.4925626738061,130.906626546915),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 19</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 34</div>',
-    latlng: new kakao.maps.LatLng(37.4928630288249, 130.905920757239)
+    position: new kakao.maps.LatLng(37.4928630288249,130.905920757239),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 34</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 36</div>',
-    latlng: new kakao.maps.LatLng(37.4929359595127, 130.905915520228)
+    position: new kakao.maps.LatLng(37.4929359595127,130.905915520228),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 36</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 38</div>',
-    latlng: new kakao.maps.LatLng(37.4929654252623, 130.905876825326)
+    position: new kakao.maps.LatLng(37.4929654252623,130.905876825326),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 38</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 51</div>',
-    latlng: new kakao.maps.LatLng(37.4933799770211, 130.905238348928)
+    position: new kakao.maps.LatLng(37.4933799770211,130.905238348928),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 51</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 64-56</div>',
-    latlng: new kakao.maps.LatLng(37.4935529082438, 130.905704837239)
+    position: new kakao.maps.LatLng(37.4935529082438,130.905704837239),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 64-56</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 64-60</div>',
-    latlng: new kakao.maps.LatLng(37.493619012604, 130.90550599433)
+    position: new kakao.maps.LatLng(37.493619012604,130.90550599433),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 64-60</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 64-88</div>',
-    latlng: new kakao.maps.LatLng(37.4940331901244, 130.904231345521)
+    position: new kakao.maps.LatLng(37.4940331901244,130.904231345521),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 64-88</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래3길 64-90</div>',
-    latlng: new kakao.maps.LatLng(37.4940763981365, 130.90401412844)
+    position: new kakao.maps.LatLng(37.4940763981365,130.90401412844),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래3길 64-90</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6</div>',
-    latlng: new kakao.maps.LatLng(36.8780614107304, 128.742229855639)
+    position: new kakao.maps.LatLng(37.4941759404964,130.909594327928),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-5</div>',
-    latlng: new kakao.maps.LatLng(37.4943046227246, 130.909401240299)
+    position: new kakao.maps.LatLng(37.4943046227246,130.909401240299),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-5</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-7</div>',
-    latlng: new kakao.maps.LatLng(37.4944091228687, 130.909383528269)
+    position: new kakao.maps.LatLng(37.4944091228687,130.909383528269),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-7</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-13</div>',
-    latlng: new kakao.maps.LatLng(37.4944733313146, 130.909261097237)
+    position: new kakao.maps.LatLng(37.4944733313146,130.909261097237),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-13</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-15</div>',
-    latlng: new kakao.maps.LatLng(37.4945441757821, 130.90925631968)
+    position: new kakao.maps.LatLng(37.4945441757821,130.90925631968),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-15</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-23</div>',
-    latlng: new kakao.maps.LatLng(37.4948050259362, 130.909321923375)
+    position: new kakao.maps.LatLng(37.4948050259362,130.909321923375),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-23</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-27</div>',
-    latlng: new kakao.maps.LatLng(37.4949398030584, 130.909219336579)
+    position: new kakao.maps.LatLng(37.4949398030584,130.909219336579),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-27</div>'
     },
     {
-    content: '<div style="padding:3px;">상록맨션_아파트-봉래길 6-30</div>',
-    latlng: new kakao.maps.LatLng(37.4954276018572, 130.908865526899)
+    position: new kakao.maps.LatLng(37.4954276018572,130.908865526899),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-30</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-40</div>',
-    latlng: new kakao.maps.LatLng(37.4948698572557, 130.908773125079)
+    position: new kakao.maps.LatLng(37.4948698572557,130.908773125079),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-40</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-46</div>',
-    latlng: new kakao.maps.LatLng(37.49470254795, 130.90869443673)
+    position: new kakao.maps.LatLng(37.49470254795,130.90869443673),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-46</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-48</div>',
-    latlng: new kakao.maps.LatLng(37.4946079364251, 130.908601235208)
+    position: new kakao.maps.LatLng(37.4946079364251,130.908601235208),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-48</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-51</div>',
-    latlng: new kakao.maps.LatLng(37.4949679849261, 130.909110732733)
+    position: new kakao.maps.LatLng(37.4949679849261,130.909110732733),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-51</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 6-83</div>',
-    latlng: new kakao.maps.LatLng(37.4945055660226, 130.908359017198)
+    position: new kakao.maps.LatLng(37.4945055660226,130.908359017198),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 6-83</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 12</div>',
-    latlng: new kakao.maps.LatLng(36.8779635013852, 128.742670291662)
+    position: new kakao.maps.LatLng(37.4942834510848,130.909290173969),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 12</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 31-26</div>',
-    latlng: new kakao.maps.LatLng(37.494054659105, 130.907400986631)
+    position: new kakao.maps.LatLng(37.494054659105,130.907400986631),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 31-26</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 40</div>',
-    latlng: new kakao.maps.LatLng(37.4943437287378, 130.907837945794)
+    position: new kakao.maps.LatLng(37.4943437287378,130.907837945794),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 40</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 43-3</div>',
-    latlng: new kakao.maps.LatLng(37.4940807516368, 130.90763537913)
+    position: new kakao.maps.LatLng(37.4940807516368,130.90763537913),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 43-3</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 43-5</div>',
-    latlng: new kakao.maps.LatLng(37.4941079066519, 130.907487054999)
+    position: new kakao.maps.LatLng(37.4941079066519,130.907487054999),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 43-5</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 43-6</div>',
-    latlng: new kakao.maps.LatLng(37.4941210898603, 130.907322858098)
+    position: new kakao.maps.LatLng(37.4941210898603,130.907322858098),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 43-6</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 57-8</div>',
-    latlng: new kakao.maps.LatLng(37.493996208742, 130.906767894746)
+    position: new kakao.maps.LatLng(37.493996208742,130.906767894746),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 57-8</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 71-2</div>',
-    latlng: new kakao.maps.LatLng(37.4941803606797, 130.905856790579)
+    position: new kakao.maps.LatLng(37.4941803606797,130.905856790579),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 71-2</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 77</div>',
-    latlng: new kakao.maps.LatLng(37.4942336193341, 130.905624389596)
+    position: new kakao.maps.LatLng(37.4942336193341,130.905624389596),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 77</div>'
     },
     {
-    content: '<div style="padding:3px;">봉래길 81-16</div>',
-    latlng: new kakao.maps.LatLng(37.4941069510104, 130.905397861369)
+    position: new kakao.maps.LatLng(37.4941069510104,130.905397861369),
+    content: '<div style="width:185px; height:25px; padding:5px;">봉래길 81-16</div>'
     },
     {
-    content: '<div style="padding:3px;">사동1길 57-17</div>',
-    latlng: new kakao.maps.LatLng(37.4759595543429, 130.890206937458)
+    position: new kakao.maps.LatLng(37.4759595543429,130.890206937458),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동1길 57-17</div>'
     },
     {
-    content: '<div style="padding:3px;">사동1길 193</div>',
-    latlng: new kakao.maps.LatLng(37.4793265786326, 130.888650170802)
+    position: new kakao.maps.LatLng(37.4793265786326,130.888650170802),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동1길 193</div>'
     },
     {
-    content: '<div style="padding:3px;">사동2길 25-37</div>',
-    latlng: new kakao.maps.LatLng(37.4806304874811, 130.893290419337)
+    position: new kakao.maps.LatLng(37.4806304874811,130.893290419337),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동2길 25-37</div>'
     },
     {
-    content: '<div style="padding:3px;">사동2길 44-32</div>',
-    latlng: new kakao.maps.LatLng(37.4829400660721, 130.891569175843)
+    position: new kakao.maps.LatLng(37.4829400660721,130.891569175843),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동2길 44-32</div>'
     },
     {
-    content: '<div style="padding:3px;">사동2길 503</div>',
-    latlng: new kakao.maps.LatLng(37.4831973573786, 130.878134270419)
+    position: new kakao.maps.LatLng(37.4831973573786,130.878134270419),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동2길 503</div>'
     },
     {
-    content: '<div style="padding:3px;">사동2길 504-6</div>',
-    latlng: new kakao.maps.LatLng(37.483231958488, 130.878741610964)
+    position: new kakao.maps.LatLng(37.483231958488,130.878741610964),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동2길 504-6</div>'
     },
     {
-    content: '<div style="padding:3px;">사동2길 504-16</div>',
-    latlng: new kakao.maps.LatLng(37.4834451301036, 130.879192545252)
+    position: new kakao.maps.LatLng(37.4834451301036,130.879192545252),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동2길 504-16</div>'
     },
     {
-    content: '<div style="padding:3px;">사동길 7</div>',
-    latlng: new kakao.maps.LatLng(35.3059346092244, 127.336852879883)
+    position: new kakao.maps.LatLng(37.4750500496336,130.894367466292),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동길 7</div>'
     },
     {
-    content: '<div style="padding:3px;">사동길 47</div>',
-    latlng: new kakao.maps.LatLng(37.9617942294002, 128.343299346024)
+    position: new kakao.maps.LatLng(37.4761261387296,130.895953777072),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동길 47</div>'
     },
     {
-    content: '<div style="padding:3px;">사동길 91</div>',
-    latlng: new kakao.maps.LatLng(37.1054573508727, 127.293936239826)
+    position: new kakao.maps.LatLng(37.4763927052472,130.897885681752),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동길 91</div>'
     },
     {
-    content: '<div style="padding:3px;">사동길 139</div>',
-    latlng: new kakao.maps.LatLng(36.556882603456, 127.411824075583)
+    position: new kakao.maps.LatLng(37.4775652972,130.898801090296),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동길 139</div>'
     },
     {
-    content: '<div style="padding:3px;">사동길 140</div>',
-    latlng: new kakao.maps.LatLng(37.4777376802993, 130.898718313842)
+    position: new kakao.maps.LatLng(37.4777376802993,130.898718313842),
+    content: '<div style="width:185px; height:25px; padding:5px;">사동길 140</div>'
     },
     {
-    content: '<div style="padding:3px;">신리1길 29</div>',
-    latlng: new kakao.maps.LatLng(37.1823974332823, 129.137110472147)
+    position: new kakao.maps.LatLng(37.4679008821608,130.879153355517),
+    content: '<div style="width:185px; height:25px; padding:5px;">신리1길 29</div>'
     },
     {
-    content: '<div style="padding:3px;">신리1길 33-3</div>',
-    latlng: new kakao.maps.LatLng(37.4678760482023, 130.878936404037)
+    position: new kakao.maps.LatLng(37.4678760482023,130.878936404037),
+    content: '<div style="width:185px; height:25px; padding:5px;">신리1길 33-3</div>'
     },
     {
-    content: '<div style="padding:3px;">신리1길 33-6</div>',
-    latlng: new kakao.maps.LatLng(37.4681690480818, 130.879101143806)
+    position: new kakao.maps.LatLng(37.4681690480818,130.879101143806),
+    content: '<div style="width:185px; height:25px; padding:5px;">신리1길 33-6</div>'
     },
     {
-    content: '<div style="padding:3px;">신리1길 39</div>',
-    latlng: new kakao.maps.LatLng(35.84108924565, 126.965378973504)
+    position: new kakao.maps.LatLng(37.4683087503658,130.879423119369),
+    content: '<div style="width:185px; height:25px; padding:5px;">신리1길 39</div>'
     },
     {
-    content: '<div style="padding:3px;">신리길 68</div>',
-    latlng: new kakao.maps.LatLng(37.1654876330314, 126.977350975841)
+    position: new kakao.maps.LatLng(37.4673834146071,130.877648441278),
+    content: '<div style="width:185px; height:25px; padding:5px;">신리길 68</div>'
     },
     {
-    content: '<div style="padding:3px;">신리길 132</div>',
-    latlng: new kakao.maps.LatLng(37.4650784400167, 130.876841228649)
+    position: new kakao.maps.LatLng(37.4650784400167,130.876841228649),
+    content: '<div style="width:185px; height:25px; padding:5px;">신리길 132</div>'
     },
     {
-    content: '<div style="padding:3px;">약수터길 18</div>',
-    latlng: new kakao.maps.LatLng(37.6188242444824, 127.447631953233)
+    position: new kakao.maps.LatLng(37.4840581741973,130.903468471053),
+    content: '<div style="width:185px; height:25px; padding:5px;">약수터길 18</div>'
     },
     {
-    content: '<div style="padding:3px;">약수터길 23</div>',
-    latlng: new kakao.maps.LatLng(37.483683235495, 130.90339729484)
+    position: new kakao.maps.LatLng(37.483683235495,130.90339729484),
+    content: '<div style="width:185px; height:25px; padding:5px;">약수터길 23</div>'
     },
     {
-    content: '<div style="padding:3px;">약수터길 33-1</div>',
-    latlng: new kakao.maps.LatLng(37.4833140385674, 130.902880423564)
+    position: new kakao.maps.LatLng(37.4833140385674,130.902880423564),
+    content: '<div style="width:185px; height:25px; padding:5px;">약수터길 33-1</div>'
     },
     {
-    content: '<div style="padding:3px;">옥천1길 9-8</div>',
-    latlng: new kakao.maps.LatLng(36.3039141054526, 127.571319969635)
+    position: new kakao.maps.LatLng(37.4742888398514,130.883811130618),
+    content: '<div style="width:185px; height:25px; padding:5px;">옥천1길 9-8</div>'
     },
     {
-    content: '<div style="padding:3px;">옥천2길 119</div>',
-    latlng: new kakao.maps.LatLng(37.4710310690597, 130.880260534635)
+    position: new kakao.maps.LatLng(37.4710310690597,130.880260534635),
+    content: '<div style="width:185px; height:25px; padding:5px;">옥천2길 119</div>'
     },
     {
-    content: '<div style="padding:3px;">옥천길 30-17</div>',
-    latlng: new kakao.maps.LatLng(35.8970858499751, 129.008536859147)
+    position: new kakao.maps.LatLng(37.4734793184632,130.888116938564),
+    content: '<div style="width:185px; height:25px; padding:5px;">옥천길 30-17</div>'
     },
     {
-    content: '<div style="padding:3px;">옥천길 30-21</div>',
-    latlng: new kakao.maps.LatLng(37.4734940223971, 130.888277344463)
+    position: new kakao.maps.LatLng(37.4734940223971,130.888277344463),
+    content: '<div style="width:185px; height:25px; padding:5px;">옥천길 30-21</div>'
     },
     {
-    content: '<div style="padding:3px;">옥천길 128</div>',
-    latlng: new kakao.maps.LatLng(34.9532029538765, 127.479183155714)
+    position: new kakao.maps.LatLng(37.4739190022896,130.882640672686),
+    content: '<div style="width:185px; height:25px; padding:5px;">옥천길 128</div>'
     },
     {
-    content: '<div style="padding:3px;">옥천길 144</div>',
-    latlng: new kakao.maps.LatLng(34.9527000680905, 127.478315673991)
+    position: new kakao.maps.LatLng(37.4741498366483,130.881889546112),
+    content: '<div style="width:185px; height:25px; padding:5px;">옥천길 144</div>'
     },
     {
-    content: '<div style="padding:3px;">옥천길 148-12</div>',
-    latlng: new kakao.maps.LatLng(37.4745778157923, 130.881260478623)
+    position: new kakao.maps.LatLng(37.4745778157923,130.881260478623),
+    content: '<div style="width:185px; height:25px; padding:5px;">옥천길 148-12</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 20-12</div>',
-    latlng: new kakao.maps.LatLng(37.5067599137577, 130.912780594809)
+    position: new kakao.maps.LatLng(37.5067599137577,130.912780594809),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 20-12</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 98-16</div>',
-    latlng: new kakao.maps.LatLng(37.500351929581, 130.914518936917)
+    position: new kakao.maps.LatLng(37.500351929581,130.914518936917),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 98-16</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 98-40</div>',
-    latlng: new kakao.maps.LatLng(37.5001578209, 130.913191074489)
+    position: new kakao.maps.LatLng(37.5001578209,130.913191074489),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 98-40</div>'
     },
     {
-    content: '<div style="padding:3px;">어업지도선사무실-울릉순환로 100-1</div>',
-    latlng: new kakao.maps.LatLng(37.4999994625883, 130.913996095839)
+    position: new kakao.maps.LatLng(37.4999994625883,130.913996095839),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 100-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 102</div>',
-    latlng: new kakao.maps.LatLng(37.4999817770082, 130.913736692563)
+    position: new kakao.maps.LatLng(37.4999817770082,130.913736692563),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 102</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 108-3</div>',
-    latlng: new kakao.maps.LatLng(37.5000734707117, 130.913203957913)
+    position: new kakao.maps.LatLng(37.5000734707117,130.913203957913),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 108-3</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 108-7</div>',
-    latlng: new kakao.maps.LatLng(37.5001214790657, 130.913390804608)
+    position: new kakao.maps.LatLng(37.5001214790657,130.913390804608),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 108-7</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 108-10</div>',
-    latlng: new kakao.maps.LatLng(37.5001279810956, 130.913618203848)
+    position: new kakao.maps.LatLng(37.5001279810956,130.913618203848),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 108-10</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 112</div>',
-    latlng: new kakao.maps.LatLng(37.5000258884554, 130.912654110391)
+    position: new kakao.maps.LatLng(37.5000258884554,130.912654110391),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 112</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 113-3</div>',
-    latlng: new kakao.maps.LatLng(37.4997990904878, 130.912731996283)
+    position: new kakao.maps.LatLng(37.4997990904878,130.912731996283),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 113-3</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 113-6</div>',
-    latlng: new kakao.maps.LatLng(37.4996943684111, 130.912563660925)
+    position: new kakao.maps.LatLng(37.4996943684111,130.912563660925),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 113-6</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 113-10</div>',
-    latlng: new kakao.maps.LatLng(37.4995597972552, 130.912478079371)
+    position: new kakao.maps.LatLng(37.4995597972552,130.912478079371),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 113-10</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 113-15</div>',
-    latlng: new kakao.maps.LatLng(37.4993089119067, 130.912527468898)
+    position: new kakao.maps.LatLng(37.4993089119067,130.912527468898),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 113-15</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 116</div>',
-    latlng: new kakao.maps.LatLng(37.499690016277, 130.912276813585)
+    position: new kakao.maps.LatLng(37.499690016277,130.912276813585),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 116</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 118</div>',
-    latlng: new kakao.maps.LatLng(37.4995046300129, 130.912162243587)
+    position: new kakao.maps.LatLng(37.4995046300129,130.912162243587),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 118</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 120</div>',
-    latlng: new kakao.maps.LatLng(37.4994297347157, 130.912093682617)
+    position: new kakao.maps.LatLng(37.4994297347157,130.912093682617),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 120</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 122-1</div>',
-    latlng: new kakao.maps.LatLng(37.4991544532743, 130.911939267408)
+    position: new kakao.maps.LatLng(37.4991544532743,130.911939267408),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 122-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 130</div>',
-    latlng: new kakao.maps.LatLng(37.498501040444, 130.911861728517)
+    position: new kakao.maps.LatLng(37.498501040444,130.911861728517),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 130</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 136</div>',
-    latlng: new kakao.maps.LatLng(37.4983552462645, 130.911414017327)
+    position: new kakao.maps.LatLng(37.4983552462645,130.911414017327),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 136</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 144-1</div>',
-    latlng: new kakao.maps.LatLng(37.4978449510225, 130.910545151476)
+    position: new kakao.maps.LatLng(37.4978449510225,130.910545151476),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 144-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 144-2</div>',
-    latlng: new kakao.maps.LatLng(37.4977973962091, 130.910477569612)
+    position: new kakao.maps.LatLng(37.4977973962091,130.910477569612),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 144-2</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 148</div>',
-    latlng: new kakao.maps.LatLng(37.4976462801733, 130.910320607301)
+    position: new kakao.maps.LatLng(37.4976462801733,130.910320607301),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 148</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 150-4</div>',
-    latlng: new kakao.maps.LatLng(37.4974861291026, 130.910066770139)
+    position: new kakao.maps.LatLng(37.4974861291026,130.910066770139),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 150-4</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 150-6</div>',
-    latlng: new kakao.maps.LatLng(37.4974339470187, 130.909894293414)
+    position: new kakao.maps.LatLng(37.4974339470187,130.909894293414),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 150-6</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 150-9</div>',
-    latlng: new kakao.maps.LatLng(37.4974252900477, 130.90971809973)
+    position: new kakao.maps.LatLng(37.4974252900477,130.90971809973),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 150-9</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 150-12</div>',
-    latlng: new kakao.maps.LatLng(37.4975484131426, 130.909863879107)
+    position: new kakao.maps.LatLng(37.4975484131426,130.909863879107),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 150-12</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 152</div>',
-    latlng: new kakao.maps.LatLng(37.4973457092594, 130.910062488771)
+    position: new kakao.maps.LatLng(37.4973457092594,130.910062488771),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 152</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 154</div>',
-    latlng: new kakao.maps.LatLng(37.4972124352017, 130.909894254175)
+    position: new kakao.maps.LatLng(37.4972124352017,130.909894254175),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 154</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 154-12</div>',
-    latlng: new kakao.maps.LatLng(37.4972565861812, 130.909817334833)
+    position: new kakao.maps.LatLng(37.4972565861812,130.909817334833),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 154-12</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 154-14</div>',
-    latlng: new kakao.maps.LatLng(37.4973137620529, 130.909782120666)
+    position: new kakao.maps.LatLng(37.4973137620529,130.909782120666),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 154-14</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 154-18</div>',
-    latlng: new kakao.maps.LatLng(37.4973846220548, 130.909641045891)
+    position: new kakao.maps.LatLng(37.4973846220548,130.909641045891),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 154-18</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 154-20</div>',
-    latlng: new kakao.maps.LatLng(37.4974571496068, 130.90959092373)
+    position: new kakao.maps.LatLng(37.4974571496068,130.90959092373),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 154-20</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 158</div>',
-    latlng: new kakao.maps.LatLng(37.4968704842066, 130.909645732063)
+    position: new kakao.maps.LatLng(37.4968704842066,130.909645732063),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 158</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 158-1</div>',
-    latlng: new kakao.maps.LatLng(37.4967353773533, 130.909608841356)
+    position: new kakao.maps.LatLng(37.4967353773533,130.909608841356),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 158-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 164-4</div>',
-    latlng: new kakao.maps.LatLng(37.4962273410758, 130.909478341319)
+    position: new kakao.maps.LatLng(37.4962273410758,130.909478341319),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 164-4</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 164-6</div>',
-    latlng: new kakao.maps.LatLng(37.4961632002832, 130.909471036959)
+    position: new kakao.maps.LatLng(37.4961632002832,130.909471036959),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 164-6</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 164-8</div>',
-    latlng: new kakao.maps.LatLng(37.4960834037389, 130.90946607965)
+    position: new kakao.maps.LatLng(37.4960834037389,130.90946607965),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 164-8</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 164-10</div>',
-    latlng: new kakao.maps.LatLng(37.4960286784194, 130.909449095556)
+    position: new kakao.maps.LatLng(37.4960286784194,130.909449095556),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 164-10</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 164-14</div>',
-    latlng: new kakao.maps.LatLng(37.4959126771295, 130.90941715876)
+    position: new kakao.maps.LatLng(37.4959126771295,130.90941715876),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 164-14</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 164-20</div>',
-    latlng: new kakao.maps.LatLng(37.4956778893897, 130.909312341876)
+    position: new kakao.maps.LatLng(37.4956778893897,130.909312341876),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 164-20</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 173</div>',
-    latlng: new kakao.maps.LatLng(37.4952838207228, 130.909495193792)
+    position: new kakao.maps.LatLng(37.4952838207228,130.909495193792),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 173</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 177</div>',
-    latlng: new kakao.maps.LatLng(37.4949635187957, 130.909552495033)
+    position: new kakao.maps.LatLng(37.4949635187957,130.909552495033),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 177</div>'
     },
     {
-    content: '<div style="padding:3px;">해양경찰서 울릉파출소-울릉순환로 179</div>',
-    latlng: new kakao.maps.LatLng(37.4948628090312, 130.909640586008)
+    position: new kakao.maps.LatLng(37.4948628090312,130.909640586008),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 179</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 181</div>',
-    latlng: new kakao.maps.LatLng(37.4947396885922, 130.909625116836)
+    position: new kakao.maps.LatLng(37.4947396885922,130.909625116836),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 181</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 183</div>',
-    latlng: new kakao.maps.LatLng(37.4946673502269, 130.909639648169)
+    position: new kakao.maps.LatLng(37.4946673502269,130.909639648169),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 183</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 209</div>',
-    latlng: new kakao.maps.LatLng(37.4921384736704, 130.910083179589)
+    position: new kakao.maps.LatLng(37.4921384736704,130.910083179589),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 209</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 212-9</div>',
-    latlng: new kakao.maps.LatLng(37.4924801945274, 130.909719274815)
+    position: new kakao.maps.LatLng(37.4924801945274,130.909719274815),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 212-9</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 212-21</div>',
-    latlng: new kakao.maps.LatLng(37.4929024121182, 130.909640738524)
+    position: new kakao.maps.LatLng(37.4929024121182,130.909640738524),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 212-21</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 212-29</div>',
-    latlng: new kakao.maps.LatLng(37.4932802542957, 130.909569829836)
+    position: new kakao.maps.LatLng(37.4932802542957,130.909569829836),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 212-29</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 212-35</div>',
-    latlng: new kakao.maps.LatLng(37.4934341651979, 130.909571875397)
+    position: new kakao.maps.LatLng(37.4934341651979,130.909571875397),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 212-35</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 214-1</div>',
-    latlng: new kakao.maps.LatLng(37.4924483639083, 130.909614661309)
+    position: new kakao.maps.LatLng(37.4924483639083,130.909614661309),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 214-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 215-12</div>',
-    latlng: new kakao.maps.LatLng(37.4919621228411, 130.909375351481)
+    position: new kakao.maps.LatLng(37.4919621228411,130.909375351481),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 215-12</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 219-15</div>',
-    latlng: new kakao.maps.LatLng(37.4918692658896, 130.909305298217)
+    position: new kakao.maps.LatLng(37.4918692658896,130.909305298217),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 219-15</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 219-23</div>',
-    latlng: new kakao.maps.LatLng(37.4916784138055, 130.909303924411)
+    position: new kakao.maps.LatLng(37.4916784138055,130.909303924411),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 219-23</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 219-25</div>',
-    latlng: new kakao.maps.LatLng(37.4916413454874, 130.909243225102)
+    position: new kakao.maps.LatLng(37.4916413454874,130.909243225102),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 219-25</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 219-28</div>',
-    latlng: new kakao.maps.LatLng(37.4915155118231, 130.9088966151)
+    position: new kakao.maps.LatLng(37.4915155118231,130.9088966151),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 219-28</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 219-30</div>',
-    latlng: new kakao.maps.LatLng(37.4914455805196, 130.908890139914)
+    position: new kakao.maps.LatLng(37.4914455805196,130.908890139914),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 219-30</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 219-31</div>',
-    latlng: new kakao.maps.LatLng(37.4915726281835, 130.90918109986)
+    position: new kakao.maps.LatLng(37.4915726281835,130.90918109986),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 219-31</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 219-32</div>',
-    latlng: new kakao.maps.LatLng(37.4913760052162, 130.9088267273)
+    position: new kakao.maps.LatLng(37.4913760052162,130.9088267273),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 219-32</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 219-34</div>',
-    latlng: new kakao.maps.LatLng(37.4912734052098, 130.908803404093)
+    position: new kakao.maps.LatLng(37.4912734052098,130.908803404093),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 219-34</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 219-35</div>',
-    latlng: new kakao.maps.LatLng(37.4915170463751, 130.909062252206)
+    position: new kakao.maps.LatLng(37.4915170463751,130.909062252206),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 219-35</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 221-3</div>',
-    latlng: new kakao.maps.LatLng(37.4921178908998, 130.908685538544)
+    position: new kakao.maps.LatLng(37.4921178908998,130.908685538544),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 221-3</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 223-1</div>',
-    latlng: new kakao.maps.LatLng(37.4925244609609, 130.908394399641)
+    position: new kakao.maps.LatLng(37.4925244609609,130.908394399641),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 223-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 226-1</div>',
-    latlng: new kakao.maps.LatLng(37.4926866877994, 130.908525934029)
+    position: new kakao.maps.LatLng(37.4926866877994,130.908525934029),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 226-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 240-1</div>',
-    latlng: new kakao.maps.LatLng(37.4925199050027, 130.90715659198)
+    position: new kakao.maps.LatLng(37.4925199050027,130.90715659198),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 240-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 246-2</div>',
-    latlng: new kakao.maps.LatLng(37.4920875449229, 130.906886205876)
+    position: new kakao.maps.LatLng(37.4920875449229,130.906886205876),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 246-2</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉한마음회관-울릉순환로 286</div>',
-    latlng: new kakao.maps.LatLng(37.4906268792402, 130.904983477046)
+    position: new kakao.maps.LatLng(37.4906268792402,130.904983477046),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 286</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 391-4</div>',
-    latlng: new kakao.maps.LatLng(37.4853105113847, 130.899910979314)
+    position: new kakao.maps.LatLng(37.4853105113847,130.899910979314),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 391-4</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 507</div>',
-    latlng: new kakao.maps.LatLng(37.4777610158647, 130.89386206942)
+    position: new kakao.maps.LatLng(37.4777610158647,130.89386206942),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 507</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉군선거관리위원회-울릉순환로 519</div>',
-    latlng: new kakao.maps.LatLng(37.4766267528944, 130.894081412174)
+    position: new kakao.maps.LatLng(37.4766267528944,130.894081412174),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 519</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 529</div>',
-    latlng: new kakao.maps.LatLng(37.4759859497117, 130.893632213283)
+    position: new kakao.maps.LatLng(37.4759859497117,130.893632213283),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 529</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 531-4</div>',
-    latlng: new kakao.maps.LatLng(37.4759723393952, 130.893820869255)
+    position: new kakao.maps.LatLng(37.4759723393952,130.893820869255),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 531-4</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 532</div>',
-    latlng: new kakao.maps.LatLng(37.4756536182491, 130.893601274261)
+    position: new kakao.maps.LatLng(37.4756536182491,130.893601274261),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 532</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 534</div>',
-    latlng: new kakao.maps.LatLng(37.4755118368518, 130.893564531474)
+    position: new kakao.maps.LatLng(37.4755118368518,130.893564531474),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 534</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 535</div>',
-    latlng: new kakao.maps.LatLng(37.4758924024457, 130.89398382042)
+    position: new kakao.maps.LatLng(37.4758924024457,130.89398382042),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 535</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 546</div>',
-    latlng: new kakao.maps.LatLng(37.4749983496233, 130.893800425973)
+    position: new kakao.maps.LatLng(37.4749983496233,130.893800425973),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 546</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 564</div>',
-    latlng: new kakao.maps.LatLng(37.4746785274119, 130.891766604873)
+    position: new kakao.maps.LatLng(37.4746785274119,130.891766604873),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 564</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 574</div>',
-    latlng: new kakao.maps.LatLng(37.4743857117636, 130.890712294817)
+    position: new kakao.maps.LatLng(37.4743857117636,130.890712294817),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 574</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 586</div>',
-    latlng: new kakao.maps.LatLng(37.473984114497, 130.889474851447)
+    position: new kakao.maps.LatLng(37.473984114497,130.889474851447),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 586</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 590-4</div>',
-    latlng: new kakao.maps.LatLng(37.473789738152, 130.889055881226)
+    position: new kakao.maps.LatLng(37.473789738152,130.889055881226),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 590-4</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 590-8</div>',
-    latlng: new kakao.maps.LatLng(37.4737753518422, 130.888842163538)
+    position: new kakao.maps.LatLng(37.4737753518422,130.888842163538),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 590-8</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 590-9</div>',
-    latlng: new kakao.maps.LatLng(37.4736517082973, 130.888610235694)
+    position: new kakao.maps.LatLng(37.4736517082973,130.888610235694),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 590-9</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 606</div>',
-    latlng: new kakao.maps.LatLng(37.4726670613153, 130.887978651853)
+    position: new kakao.maps.LatLng(37.4726670613153,130.887978651853),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 606</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 608</div>',
-    latlng: new kakao.maps.LatLng(37.472601321, 130.887834016011)
+    position: new kakao.maps.LatLng(37.472601321,130.887834016011),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 608</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 612</div>',
-    latlng: new kakao.maps.LatLng(37.472667500876, 130.887500767615)
+    position: new kakao.maps.LatLng(37.472667500876,130.887500767615),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 612</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 692</div>',
-    latlng: new kakao.maps.LatLng(37.4680399787187, 130.880714958475)
+    position: new kakao.maps.LatLng(37.4680399787187,130.880714958475),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 692</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 696</div>',
-    latlng: new kakao.maps.LatLng(37.4676592971242, 130.880346953928)
+    position: new kakao.maps.LatLng(37.4676592971242,130.880346953928),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 696</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 706-13</div>',
-    latlng: new kakao.maps.LatLng(37.4669076567019, 130.879473972824)
+    position: new kakao.maps.LatLng(37.4669076567019,130.879473972824),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 706-13</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 706-17</div>',
-    latlng: new kakao.maps.LatLng(37.4669048929929, 130.879317024717)
+    position: new kakao.maps.LatLng(37.4669048929929,130.879317024717),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 706-17</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 706-18</div>',
-    latlng: new kakao.maps.LatLng(37.4677572540217, 130.879920241204)
+    position: new kakao.maps.LatLng(37.4677572540217,130.879920241204),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 706-18</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 720</div>',
-    latlng: new kakao.maps.LatLng(37.4661771731508, 130.87905285819)
+    position: new kakao.maps.LatLng(37.4661771731508,130.87905285819),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 720</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 726-8</div>',
-    latlng: new kakao.maps.LatLng(37.4655406533548, 130.877989296348)
+    position: new kakao.maps.LatLng(37.4655406533548,130.877989296348),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 726-8</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 734</div>',
-    latlng: new kakao.maps.LatLng(37.4649094864918, 130.877814756778)
+    position: new kakao.maps.LatLng(37.4649094864918,130.877814756778),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 734</div>'
     },
     {
-    content: '<div style="padding:3px;">사동항여객선터미널-울릉순환로 785-25</div>',
-    latlng: new kakao.maps.LatLng(37.4617789376465, 130.878287805297)
+    position: new kakao.maps.LatLng(37.4617789376465,130.878287805297),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 785-25</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 2</div>',
-    latlng: new kakao.maps.LatLng(37.4964508518747, 130.909526741115)
+    position: new kakao.maps.LatLng(37.4964508518747,130.909526741115),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 2</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 6-5</div>',
-    latlng: new kakao.maps.LatLng(37.4964510323515, 130.909195275596)
+    position: new kakao.maps.LatLng(37.4964510323515,130.909195275596),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 6-5</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 6-13</div>',
-    latlng: new kakao.maps.LatLng(37.4964665158094, 130.909328538335)
+    position: new kakao.maps.LatLng(37.4964665158094,130.909328538335),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 6-13</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 6-15</div>',
-    latlng: new kakao.maps.LatLng(37.4965253128311, 130.909353081077)
+    position: new kakao.maps.LatLng(37.4965253128311,130.909353081077),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 6-15</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 6-19</div>',
-    latlng: new kakao.maps.LatLng(37.4966782118722, 130.909344902605)
+    position: new kakao.maps.LatLng(37.4966782118722,130.909344902605),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 6-19</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 6-31</div>',
-    latlng: new kakao.maps.LatLng(37.4968282531841, 130.909406644992)
+    position: new kakao.maps.LatLng(37.4968282531841,130.909406644992),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 6-31</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 12</div>',
-    latlng: new kakao.maps.LatLng(37.4963989776475, 130.909048802131)
+    position: new kakao.maps.LatLng(37.4963989776475,130.909048802131),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 12</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 12-3</div>',
-    latlng: new kakao.maps.LatLng(37.4964925653282, 130.909061485993)
+    position: new kakao.maps.LatLng(37.4964925653282,130.909061485993),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 12-3</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉군노인복지회관-저동1길 21-20</div>',
-    latlng: new kakao.maps.LatLng(37.4959179795837, 130.908806138195)
+    position: new kakao.maps.LatLng(37.4959179795837,130.908806138195),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 21-20</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 36-23</div>',
-    latlng: new kakao.maps.LatLng(37.4970800015586, 130.90813015621)
+    position: new kakao.maps.LatLng(37.4970800015586,130.90813015621),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 36-23</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 49</div>',
-    latlng: new kakao.maps.LatLng(37.4967931947337, 130.907089451234)
+    position: new kakao.maps.LatLng(37.4967931947337,130.907089451234),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 49</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 57-33</div>',
-    latlng: new kakao.maps.LatLng(37.4964531170911, 130.906452492893)
+    position: new kakao.maps.LatLng(37.4964531170911,130.906452492893),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 57-33</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 57-40</div>',
-    latlng: new kakao.maps.LatLng(37.496725509771, 130.905704635663)
+    position: new kakao.maps.LatLng(37.496725509771,130.905704635663),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 57-40</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 62</div>',
-    latlng: new kakao.maps.LatLng(35.9016669953711, 126.892878139091)
+    position: new kakao.maps.LatLng(37.4973058026937,130.906747650729),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 62</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 91</div>',
-    latlng: new kakao.maps.LatLng(37.49756361932, 130.905156480652)
+    position: new kakao.maps.LatLng(37.49756361932,130.905156480652),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 91</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 108</div>',
-    latlng: new kakao.maps.LatLng(37.4982011009713, 130.904793373436)
+    position: new kakao.maps.LatLng(37.4982011009713,130.904793373436),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 108</div>'
     },
     {
-    content: '<div style="padding:3px;">저동1길 204</div>',
-    latlng: new kakao.maps.LatLng(37.5009744013467, 130.900608792011)
+    position: new kakao.maps.LatLng(37.5009744013467,130.900608792011),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동1길 204</div>'
     },
     {
-    content: '<div style="padding:3px;">저동2길 4-5</div>',
-    latlng: new kakao.maps.LatLng(37.4993423363894, 130.911875395176)
+    position: new kakao.maps.LatLng(37.4993423363894,130.911875395176),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동2길 4-5</div>'
     },
     {
-    content: '<div style="padding:3px;">저동2길 4-7</div>',
-    latlng: new kakao.maps.LatLng(37.4994085304574, 130.911918523774)
+    position: new kakao.maps.LatLng(37.4994085304574,130.911918523774),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동2길 4-7</div>'
     },
     {
-    content: '<div style="padding:3px;">저동2길 4-11</div>',
-    latlng: new kakao.maps.LatLng(37.4995032674232, 130.911931837226)
+    position: new kakao.maps.LatLng(37.4995032674232,130.911931837226),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동2길 4-11</div>'
     },
     {
-    content: '<div style="padding:3px;">저동2길 10</div>',
-    latlng: new kakao.maps.LatLng(37.4991396211258, 130.911468782744)
+    position: new kakao.maps.LatLng(37.4991396211258,130.911468782744),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동2길 10</div>'
     },
     {
-    content: '<div style="padding:3px;">저동2길 449-10</div>',
-    latlng: new kakao.maps.LatLng(37.5071345097685, 130.901905820134)
+    position: new kakao.maps.LatLng(37.5071345097685,130.901905820134),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동2길 449-10</div>'
     },
     {
-    content: '<div style="padding:3px;">저동3길 11</div>',
-    latlng: new kakao.maps.LatLng(37.4998732267149, 130.911876008866)
+    position: new kakao.maps.LatLng(37.4998732267149,130.911876008866),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동3길 11</div>'
     },
     {
-    content: '<div style="padding:3px;">저동3길 31-9</div>',
-    latlng: new kakao.maps.LatLng(37.5004014117554, 130.910768870023)
+    position: new kakao.maps.LatLng(37.5004014117554,130.910768870023),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동3길 31-9</div>'
     },
     {
-    content: '<div style="padding:3px;">저동3길 37</div>',
-    latlng: new kakao.maps.LatLng(37.5008873024281, 130.910996900284)
+    position: new kakao.maps.LatLng(37.5008873024281,130.910996900284),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동3길 37</div>'
     },
     {
-    content: '<div style="padding:3px;">저동3길 47-12</div>',
-    latlng: new kakao.maps.LatLng(37.5008703554319, 130.910636264954)
+    position: new kakao.maps.LatLng(37.5008703554319,130.910636264954),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동3길 47-12</div>'
     },
     {
-    content: '<div style="padding:3px;">저동4길 33-36</div>',
-    latlng: new kakao.maps.LatLng(37.50378000973, 130.913272362004)
+    position: new kakao.maps.LatLng(37.50378000973,130.913272362004),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동4길 33-36</div>'
     },
     {
-    content: '<div style="padding:3px;">저동4길 53-3</div>',
-    latlng: new kakao.maps.LatLng(37.5059634515703, 130.911898582771)
+    position: new kakao.maps.LatLng(37.5059634515703,130.911898582771),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동4길 53-3</div>'
     },
     {
-    content: '<div style="padding:3px;">저동4길 457</div>',
-    latlng: new kakao.maps.LatLng(37.5132544862782, 130.907467757477)
+    position: new kakao.maps.LatLng(37.5132544862782,130.907467757477),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동4길 457</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 24-3</div>',
-    latlng: new kakao.maps.LatLng(37.4948218755895, 130.907277941617)
+    position: new kakao.maps.LatLng(37.4948218755895,130.907277941617),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 24-3</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 28</div>',
-    latlng: new kakao.maps.LatLng(37.4946387055193, 130.907332801523)
+    position: new kakao.maps.LatLng(37.4946387055193,130.907332801523),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 28</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 30</div>',
-    latlng: new kakao.maps.LatLng(37.4946392227114, 130.907034474206)
+    position: new kakao.maps.LatLng(37.4946392227114,130.907034474206),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 30</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 32</div>',
-    latlng: new kakao.maps.LatLng(34.9635363887882, 126.340174191766)
+    position: new kakao.maps.LatLng(37.4946584448571,130.906943484514),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 32</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 34</div>',
-    latlng: new kakao.maps.LatLng(37.4946286145841, 130.906821908368)
+    position: new kakao.maps.LatLng(37.4946286145841,130.906821908368),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 34</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 38-7</div>',
-    latlng: new kakao.maps.LatLng(37.4949058041191, 130.906600850053)
+    position: new kakao.maps.LatLng(37.4949058041191,130.906600850053),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 38-7</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 71-44</div>',
-    latlng: new kakao.maps.LatLng(37.4951317337071, 130.904177528369)
+    position: new kakao.maps.LatLng(37.4951317337071,130.904177528369),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 71-44</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 72</div>',
-    latlng: new kakao.maps.LatLng(36.2846990176074, 126.762012036463)
+    position: new kakao.maps.LatLng(37.4951563522792,130.905076820108),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 72</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 74-17</div>',
-    latlng: new kakao.maps.LatLng(37.4952274662773, 130.905276042827)
+    position: new kakao.maps.LatLng(37.4952274662773,130.905276042827),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 74-17</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 74-25</div>',
-    latlng: new kakao.maps.LatLng(37.4951632317133, 130.90544017937)
+    position: new kakao.maps.LatLng(37.4951632317133,130.90544017937),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 74-25</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 74-33</div>',
-    latlng: new kakao.maps.LatLng(37.4951599202659, 130.905910031206)
+    position: new kakao.maps.LatLng(37.4951599202659,130.905910031206),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 74-33</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 81-11</div>',
-    latlng: new kakao.maps.LatLng(37.4949863340168, 130.904465139187)
+    position: new kakao.maps.LatLng(37.4949863340168,130.904465139187),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 81-11</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 81-15</div>',
-    latlng: new kakao.maps.LatLng(37.4951541961183, 130.904339518252)
+    position: new kakao.maps.LatLng(37.4951541961183,130.904339518252),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 81-15</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 81-19</div>',
-    latlng: new kakao.maps.LatLng(37.4952809061246, 130.904167675689)
+    position: new kakao.maps.LatLng(37.4952809061246,130.904167675689),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 81-19</div>'
     },
     {
-    content: '<div style="padding:3px;">저동길 90-6</div>',
-    latlng: new kakao.maps.LatLng(37.4956322098756, 130.904514864502)
+    position: new kakao.maps.LatLng(37.4956322098756,130.904514864502),
+    content: '<div style="width:185px; height:25px; padding:5px;">저동길 90-6</div>'
     },
     {
-    content: '<div style="padding:3px;">중령길 7</div>',
-    latlng: new kakao.maps.LatLng(37.4614816999977, 130.873454633702)
+    position: new kakao.maps.LatLng(37.4614816999977,130.873454633702),
+    content: '<div style="width:185px; height:25px; padding:5px;">중령길 7</div>'
     },
     {
-    content: '<div style="padding:3px;">중령길 93</div>',
-    latlng: new kakao.maps.LatLng(37.4640958519204, 130.875174410643)
+    position: new kakao.maps.LatLng(37.4640958519204,130.875174410643),
+    content: '<div style="width:185px; height:25px; padding:5px;">중령길 93</div>'
     },
     {
-    content: '<div style="padding:3px;">중령길 94</div>',
-    latlng: new kakao.maps.LatLng(37.4641903685861, 130.875597616756)
+    position: new kakao.maps.LatLng(37.4641903685861,130.875597616756),
+    content: '<div style="width:185px; height:25px; padding:5px;">중령길 94</div>'
     },
     {
-    content: '<div style="padding:3px;">중령길 97</div>',
-    latlng: new kakao.maps.LatLng(37.464365339288, 130.875367056547)
+    position: new kakao.maps.LatLng(37.464365339288,130.875367056547),
+    content: '<div style="width:185px; height:25px; padding:5px;">중령길 97</div>'
     },
     {
-    content: '<div style="padding:3px;">중령길 102</div>',
-    latlng: new kakao.maps.LatLng(37.464593903939, 130.875522568073)
+    position: new kakao.maps.LatLng(37.464593903939,130.875522568073),
+    content: '<div style="width:185px; height:25px; padding:5px;">중령길 102</div>'
     },
     {
-    content: '<div style="padding:3px;">중령길 155</div>',
-    latlng: new kakao.maps.LatLng(37.4666707250963, 130.874086630668)
+    position: new kakao.maps.LatLng(37.4666707250963,130.874086630668),
+    content: '<div style="width:185px; height:25px; padding:5px;">중령길 155</div>'
     },
     {
-    content: '<div style="padding:3px;">행남길 9</div>',
-    latlng: new kakao.maps.LatLng(37.4848949419891, 130.905368409991)
+    position: new kakao.maps.LatLng(37.4848949419891,130.905368409991),
+    content: '<div style="width:185px; height:25px; padding:5px;">행남길 9</div>'
     },
     {
-    content: '<div style="padding:3px;">행남길 18-28</div>',
-    latlng: new kakao.maps.LatLng(37.4850926108006, 130.906330615322)
+    position: new kakao.maps.LatLng(37.4850926108006,130.906330615322),
+    content: '<div style="width:185px; height:25px; padding:5px;">행남길 18-28</div>'
     },
     {
-    content: '<div style="padding:3px;">행남길 24-7</div>',
-    latlng: new kakao.maps.LatLng(37.4851583935541, 130.906519476518)
+    position: new kakao.maps.LatLng(37.4851583935541,130.906519476518),
+    content: '<div style="width:185px; height:25px; padding:5px;">행남길 24-7</div>'
     },
     {
-    content: '<div style="padding:3px;">나리1길 21-6</div>',
-    latlng: new kakao.maps.LatLng(37.5203071565608, 130.871201295738)
+    position: new kakao.maps.LatLng(37.5203071565608,130.871201295738),
+    content: '<div style="width:185px; height:25px; padding:5px;">나리1길 21-6</div>'
     },
     {
-    content: '<div style="padding:3px;">나리길 222</div>',
-    latlng: new kakao.maps.LatLng(37.5303912951111, 130.875930598016)
+    position: new kakao.maps.LatLng(37.5303912951111,130.875930598016),
+    content: '<div style="width:185px; height:25px; padding:5px;">나리길 222</div>'
     },
     {
-    content: '<div style="padding:3px;">나리길 234</div>',
-    latlng: new kakao.maps.LatLng(37.5301051464819, 130.874962832116)
+    position: new kakao.maps.LatLng(37.5301051464819,130.874962832116),
+    content: '<div style="width:185px; height:25px; padding:5px;">나리길 234</div>'
     },
     {
-    content: '<div style="padding:3px;">석포길 96</div>',
-    latlng: new kakao.maps.LatLng(37.5452862569088, 130.905691624885)
+    position: new kakao.maps.LatLng(37.5452862569088,130.905691624885),
+    content: '<div style="width:185px; height:25px; padding:5px;">석포길 96</div>'
     },
     {
-    content: '<div style="padding:3px;">석포길 426</div>',
-    latlng: new kakao.maps.LatLng(37.5378107543245, 130.90532177524)
+    position: new kakao.maps.LatLng(37.5378107543245,130.90532177524),
+    content: '<div style="width:185px; height:25px; padding:5px;">석포길 426</div>'
     },
     {
-    content: '<div style="padding:3px;">석포길 447-12</div>',
-    latlng: new kakao.maps.LatLng(37.5380765583602, 130.906607797385)
+    position: new kakao.maps.LatLng(37.5380765583602,130.906607797385),
+    content: '<div style="width:185px; height:25px; padding:5px;">석포길 447-12</div>'
     },
     {
-    content: '<div style="padding:3px;">안용복기념관-석포길 500</div>',
-    latlng: new kakao.maps.LatLng(37.5354756850203, 130.906561349232)
+    position: new kakao.maps.LatLng(37.5354756850203,130.906561349232),
+    content: '<div style="width:185px; height:25px; padding:5px;">석포길 500</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2403-7</div>',
-    latlng: new kakao.maps.LatLng(37.5179881021405, 130.814683063204)
+    position: new kakao.maps.LatLng(37.5179881021405,130.814683063204),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2403-7</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2505-3</div>',
-    latlng: new kakao.maps.LatLng(37.5223378713436, 130.819176969741)
+    position: new kakao.maps.LatLng(37.5223378713436,130.819176969741),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2505-3</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2511-15</div>',
-    latlng: new kakao.maps.LatLng(37.5231680775912, 130.818591420687)
+    position: new kakao.maps.LatLng(37.5231680775912,130.818591420687),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2511-15</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2511-37</div>',
-    latlng: new kakao.maps.LatLng(37.5232013648464, 130.817969371175)
+    position: new kakao.maps.LatLng(37.5232013648464,130.817969371175),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2511-37</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2511-41</div>',
-    latlng: new kakao.maps.LatLng(37.5229832851512, 130.818141284209)
+    position: new kakao.maps.LatLng(37.5229832851512,130.818141284209),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2511-41</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2596</div>',
-    latlng: new kakao.maps.LatLng(37.526583226028, 130.822111105515)
+    position: new kakao.maps.LatLng(37.526583226028,130.822111105515),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2596</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2620-3</div>',
-    latlng: new kakao.maps.LatLng(37.5260834996042, 130.824831659707)
+    position: new kakao.maps.LatLng(37.5260834996042,130.824831659707),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2620-3</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2620-40</div>',
-    latlng: new kakao.maps.LatLng(37.525370381019, 130.824657600117)
+    position: new kakao.maps.LatLng(37.525370381019,130.824657600117),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2620-40</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2620-45</div>',
-    latlng: new kakao.maps.LatLng(37.5256392769355, 130.824826583737)
+    position: new kakao.maps.LatLng(37.5256392769355,130.824826583737),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2620-45</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2620-55</div>',
-    latlng: new kakao.maps.LatLng(37.525467767135, 130.825031050325)
+    position: new kakao.maps.LatLng(37.525467767135,130.825031050325),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2620-55</div>'
     },
     {
-    content: '<div style="padding:3px;">해양경찰서 현포출장소-울릉순환로 2621-1</div>',
-    latlng: new kakao.maps.LatLng(37.5263714047331, 130.824347881932)
+    position: new kakao.maps.LatLng(37.5263714047331,130.824347881932),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2621-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2624-10</div>',
-    latlng: new kakao.maps.LatLng(37.5258213996104, 130.825244392998)
+    position: new kakao.maps.LatLng(37.5258213996104,130.825244392998),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2624-10</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2624-19</div>',
-    latlng: new kakao.maps.LatLng(37.5253826821979, 130.825438812275)
+    position: new kakao.maps.LatLng(37.5253826821979,130.825438812275),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2624-19</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2628-1</div>',
-    latlng: new kakao.maps.LatLng(37.5261056122991, 130.825854432579)
+    position: new kakao.maps.LatLng(37.5261056122991,130.825854432579),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2628-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2662-21</div>',
-    latlng: new kakao.maps.LatLng(37.5263193775937, 130.829106339597)
+    position: new kakao.maps.LatLng(37.5263193775937,130.829106339597),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2662-21</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2662-51</div>',
-    latlng: new kakao.maps.LatLng(37.5265549487244, 130.829175495883)
+    position: new kakao.maps.LatLng(37.5265549487244,130.829175495883),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2662-51</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2672-9</div>',
-    latlng: new kakao.maps.LatLng(37.5272380575758, 130.830841655907)
+    position: new kakao.maps.LatLng(37.5272380575758,130.830841655907),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2672-9</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 3086</div>',
-    latlng: new kakao.maps.LatLng(37.5393031918994, 130.870478829643)
+    position: new kakao.maps.LatLng(37.5393031918994,130.870478829643),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3086</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 3120</div>',
-    latlng: new kakao.maps.LatLng(37.5410505492721, 130.873171596277)
+    position: new kakao.maps.LatLng(37.5410505492721,130.873171596277),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3120</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 3122-3</div>',
-    latlng: new kakao.maps.LatLng(37.5412332711298, 130.873277976579)
+    position: new kakao.maps.LatLng(37.5412332711298,130.873277976579),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3122-3</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 3122-7</div>',
-    latlng: new kakao.maps.LatLng(37.5412679681109, 130.873411405087)
+    position: new kakao.maps.LatLng(37.5412679681109,130.873411405087),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3122-7</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 3124</div>',
-    latlng: new kakao.maps.LatLng(37.5413525271124, 130.873263234534)
+    position: new kakao.maps.LatLng(37.5413525271124,130.873263234534),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3124</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 3134-4</div>',
-    latlng: new kakao.maps.LatLng(37.5418419797713, 130.873985314989)
+    position: new kakao.maps.LatLng(37.5418419797713,130.873985314989),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3134-4</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 3316</div>',
-    latlng: new kakao.maps.LatLng(37.5410266361204, 130.892761294629)
+    position: new kakao.maps.LatLng(37.5410266361204,130.892761294629),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3316</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 3316-1</div>',
-    latlng: new kakao.maps.LatLng(37.5410214791819, 130.892857486648)
+    position: new kakao.maps.LatLng(37.5410214791819,130.892857486648),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3316-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 3318</div>',
-    latlng: new kakao.maps.LatLng(37.5411356348513, 130.893032717846)
+    position: new kakao.maps.LatLng(37.5411356348513,130.893032717846),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3318</div>'
     },
     {
-    content: '<div style="padding:3px;">관음도매표소-울릉순환로 3639</div>',
-    latlng: new kakao.maps.LatLng(37.5414363646271, 130.916871689583)
+    position: new kakao.maps.LatLng(37.5414363646271,130.916871689583),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 3639</div>'
     },
     {
-    content: '<div style="padding:3px;">죽암1길 233</div>',
-    latlng: new kakao.maps.LatLng(37.5356166822695, 130.888629174537)
+    position: new kakao.maps.LatLng(37.5356166822695,130.888629174537),
+    content: '<div style="width:185px; height:25px; padding:5px;">죽암1길 233</div>'
     },
     {
-    content: '<div style="padding:3px;">죽암길 4</div>',
-    latlng: new kakao.maps.LatLng(37.5414634211007, 130.893482109628)
+    position: new kakao.maps.LatLng(37.5414634211007,130.893482109628),
+    content: '<div style="width:185px; height:25px; padding:5px;">죽암길 4</div>'
     },
     {
-    content: '<div style="padding:3px;">죽암길 117-25</div>',
-    latlng: new kakao.maps.LatLng(37.5373323275233, 130.896558344588)
+    position: new kakao.maps.LatLng(37.5373323275233,130.896558344588),
+    content: '<div style="width:185px; height:25px; padding:5px;">죽암길 117-25</div>'
     },
     {
-    content: '<div style="padding:3px;">죽암길 342-11</div>',
-    latlng: new kakao.maps.LatLng(37.530573348229, 130.901692434036)
+    position: new kakao.maps.LatLng(37.530573348229,130.901692434036),
+    content: '<div style="width:185px; height:25px; padding:5px;">죽암길 342-11</div>'
     },
     {
-    content: '<div style="padding:3px;">죽암길 342-99</div>',
-    latlng: new kakao.maps.LatLng(37.5304294617445, 130.897515448205)
+    position: new kakao.maps.LatLng(37.5304294617445,130.897515448205),
+    content: '<div style="width:185px; height:25px; padding:5px;">죽암길 342-99</div>'
     },
     {
-    content: '<div style="padding:3px;">천부1길 1</div>',
-    latlng: new kakao.maps.LatLng(37.5407961650707, 130.873421111745)
+    position: new kakao.maps.LatLng(37.5407961650707,130.873421111745),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부1길 1</div>'
     },
     {
-    content: '<div style="padding:3px;">천부1길 16-6</div>',
-    latlng: new kakao.maps.LatLng(37.5410359838812, 130.874168586739)
+    position: new kakao.maps.LatLng(37.5410359838812,130.874168586739),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부1길 16-6</div>'
     },
     {
-    content: '<div style="padding:3px;">천부1길 19-1</div>',
-    latlng: new kakao.maps.LatLng(37.5413379959126, 130.87394947317)
+    position: new kakao.maps.LatLng(37.5413379959126,130.87394947317),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부1길 19-1</div>'
     },
     {
-    content: '<div style="padding:3px;">천부1길 29-6</div>',
-    latlng: new kakao.maps.LatLng(37.5419121766327, 130.874274268314)
+    position: new kakao.maps.LatLng(37.5419121766327,130.874274268314),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부1길 29-6</div>'
     },
     {
-    content: '<div style="padding:3px;">천부2길 9-4</div>',
-    latlng: new kakao.maps.LatLng(37.540863657143, 130.874321367027)
+    position: new kakao.maps.LatLng(37.540863657143,130.874321367027),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부2길 9-4</div>'
     },
     {
-    content: '<div style="padding:3px;">천부2길 10</div>',
-    latlng: new kakao.maps.LatLng(37.5406587915854, 130.874187375633)
+    position: new kakao.maps.LatLng(37.5406587915854,130.874187375633),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부2길 10</div>'
     },
     {
-    content: '<div style="padding:3px;">천부3길 3-1</div>',
-    latlng: new kakao.maps.LatLng(37.5416160174207, 130.874633119674)
+    position: new kakao.maps.LatLng(37.5416160174207,130.874633119674),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부3길 3-1</div>'
     },
     {
-    content: '<div style="padding:3px;">천부3길 14</div>',
-    latlng: new kakao.maps.LatLng(37.5411982971844, 130.874753504331)
+    position: new kakao.maps.LatLng(37.5411982971844,130.874753504331),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부3길 14</div>'
     },
     {
-    content: '<div style="padding:3px;">천부3길 14-10</div>',
-    latlng: new kakao.maps.LatLng(37.5411802239979, 130.874536236483)
+    position: new kakao.maps.LatLng(37.5411802239979,130.874536236483),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부3길 14-10</div>'
     },
     {
-    content: '<div style="padding:3px;">천부3길 14-21</div>',
-    latlng: new kakao.maps.LatLng(37.5411040703847, 130.874453243523)
+    position: new kakao.maps.LatLng(37.5411040703847,130.874453243523),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부3길 14-21</div>'
     },
     {
-    content: '<div style="padding:3px;">천부3길 27</div>',
-    latlng: new kakao.maps.LatLng(37.5407994685414, 130.875485408322)
+    position: new kakao.maps.LatLng(37.5407994685414,130.875485408322),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부3길 27</div>'
     },
     {
-    content: '<div style="padding:3px;">천부3길 29-4</div>',
-    latlng: new kakao.maps.LatLng(37.5406648409616, 130.87560892825)
+    position: new kakao.maps.LatLng(37.5406648409616,130.87560892825),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부3길 29-4</div>'
     },
     {
-    content: '<div style="padding:3px;">천부3길 31</div>',
-    latlng: new kakao.maps.LatLng(37.5406331422752, 130.875485719806)
+    position: new kakao.maps.LatLng(37.5406331422752,130.875485719806),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부3길 31</div>'
     },
     {
-    content: '<div style="padding:3px;">천부3길 36-8</div>',
-    latlng: new kakao.maps.LatLng(37.5403834894757, 130.875182945185)
+    position: new kakao.maps.LatLng(37.5403834894757,130.875182945185),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부3길 36-8</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 2</div>',
-    latlng: new kakao.maps.LatLng(37.5407913255859, 130.873088732703)
+    position: new kakao.maps.LatLng(37.5407913255859,130.873088732703),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 2</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 5</div>',
-    latlng: new kakao.maps.LatLng(37.5408647765801, 130.873333520645)
+    position: new kakao.maps.LatLng(37.5408647765801,130.873333520645),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 5</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 13</div>',
-    latlng: new kakao.maps.LatLng(37.5405156286658, 130.873622453832)
+    position: new kakao.maps.LatLng(37.5405156286658,130.873622453832),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 13</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 19-4</div>',
-    latlng: new kakao.maps.LatLng(37.540123539105, 130.87384526735)
+    position: new kakao.maps.LatLng(37.540123539105,130.87384526735),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 19-4</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 19-10</div>',
-    latlng: new kakao.maps.LatLng(37.540048672961, 130.874062917813)
+    position: new kakao.maps.LatLng(37.540048672961,130.874062917813),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 19-10</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 19-12</div>',
-    latlng: new kakao.maps.LatLng(37.5401933980972, 130.874106151584)
+    position: new kakao.maps.LatLng(37.5401933980972,130.874106151584),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 19-12</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 40</div>',
-    latlng: new kakao.maps.LatLng(37.5394135615081, 130.873446617323)
+    position: new kakao.maps.LatLng(37.5394135615081,130.873446617323),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 40</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 64</div>',
-    latlng: new kakao.maps.LatLng(37.5386938589259, 130.872431066952)
+    position: new kakao.maps.LatLng(37.5386938589259,130.872431066952),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 64</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 147</div>',
-    latlng: new kakao.maps.LatLng(37.5370803463817, 130.86950888676)
+    position: new kakao.maps.LatLng(37.5370803463817,130.86950888676),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 147</div>'
     },
     {
-    content: '<div style="padding:3px;">천부길 450-12</div>',
-    latlng: new kakao.maps.LatLng(37.529589952785, 130.872516162565)
+    position: new kakao.maps.LatLng(37.529589952785,130.872516162565),
+    content: '<div style="width:185px; height:25px; padding:5px;">천부길 450-12</div>'
     },
     {
-    content: '<div style="padding:3px;">추산길 116-4</div>',
-    latlng: new kakao.maps.LatLng(37.5330442827884, 130.856713902001)
+    position: new kakao.maps.LatLng(37.5330442827884,130.856713902001),
+    content: '<div style="width:185px; height:25px; padding:5px;">추산길 116-4</div>'
     },
     {
-    content: '<div style="padding:3px;">추산길 188-6</div>',
-    latlng: new kakao.maps.LatLng(37.5298619503168, 130.857379374961)
+    position: new kakao.maps.LatLng(37.5298619503168,130.857379374961),
+    content: '<div style="width:185px; height:25px; padding:5px;">추산길 188-6</div>'
     },
     {
-    content: '<div style="padding:3px;">평리1길 25-11</div>',
-    latlng: new kakao.maps.LatLng(37.528666466923, 130.840440489591)
+    position: new kakao.maps.LatLng(37.528666466923,130.840440489591),
+    content: '<div style="width:185px; height:25px; padding:5px;">평리1길 25-11</div>'
     },
     {
-    content: '<div style="padding:3px;">평리2길 204</div>',
-    latlng: new kakao.maps.LatLng(37.5305659566987, 130.84354070591)
+    position: new kakao.maps.LatLng(37.5305659566987,130.84354070591),
+    content: '<div style="width:185px; height:25px; padding:5px;">평리2길 204</div>'
     },
     {
-    content: '<div style="padding:3px;">평리길 291-26</div>',
-    latlng: new kakao.maps.LatLng(37.5261542347649, 130.837912191025)
+    position: new kakao.maps.LatLng(37.5261542347649,130.837912191025),
+    content: '<div style="width:185px; height:25px; padding:5px;">평리길 291-26</div>'
     },
     {
-    content: '<div style="padding:3px;">평리길 437</div>',
-    latlng: new kakao.maps.LatLng(37.5235552391117, 130.838773772658)
+    position: new kakao.maps.LatLng(37.5235552391117,130.838773772658),
+    content: '<div style="width:185px; height:25px; padding:5px;">평리길 437</div>'
     },
     {
-    content: '<div style="padding:3px;">현포1길 11</div>',
-    latlng: new kakao.maps.LatLng(37.5259033682249, 130.823385980266)
+    position: new kakao.maps.LatLng(37.5259033682249,130.823385980266),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포1길 11</div>'
     },
     {
-    content: '<div style="padding:3px;">현포1길 15</div>',
-    latlng: new kakao.maps.LatLng(37.5255162847568, 130.823390504193)
+    position: new kakao.maps.LatLng(37.5255162847568,130.823390504193),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포1길 15</div>'
     },
     {
-    content: '<div style="padding:3px;">현포1길 36</div>',
-    latlng: new kakao.maps.LatLng(37.5251768364495, 130.823142281531)
+    position: new kakao.maps.LatLng(37.5251768364495,130.823142281531),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포1길 36</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉도독도 해양연구기지-현포2길 121</div>',
-    latlng: new kakao.maps.LatLng(37.5226794325805, 130.814605469452)
+    position: new kakao.maps.LatLng(37.5226794325805,130.814605469452),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포2길 121</div>'
     },
     {
-    content: '<div style="padding:3px;">현포3길 69-7</div>',
-    latlng: new kakao.maps.LatLng(37.5211306342821, 130.822863832491)
+    position: new kakao.maps.LatLng(37.5211306342821,130.822863832491),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포3길 69-7</div>'
     },
     {
-    content: '<div style="padding:3px;">현포길 9-26</div>',
-    latlng: new kakao.maps.LatLng(37.5247242297343, 130.826299908455)
+    position: new kakao.maps.LatLng(37.5247242297343,130.826299908455),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포길 9-26</div>'
     },
     {
-    content: '<div style="padding:3px;">현포길 18</div>',
-    latlng: new kakao.maps.LatLng(37.5258582374081, 130.826146259522)
+    position: new kakao.maps.LatLng(37.5258582374081,130.826146259522),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포길 18</div>'
     },
     {
-    content: '<div style="padding:3px;">현포길 26</div>',
-    latlng: new kakao.maps.LatLng(37.5254558640779, 130.825886551354)
+    position: new kakao.maps.LatLng(37.5254558640779,130.825886551354),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포길 26</div>'
     },
     {
-    content: '<div style="padding:3px;">현포길 38</div>',
-    latlng: new kakao.maps.LatLng(37.5251557186155, 130.825534501601)
+    position: new kakao.maps.LatLng(37.5251557186155,130.825534501601),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포길 38</div>'
     },
     {
-    content: '<div style="padding:3px;">현포길 41-12</div>',
-    latlng: new kakao.maps.LatLng(37.5246057432486, 130.825924703019)
+    position: new kakao.maps.LatLng(37.5246057432486,130.825924703019),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포길 41-12</div>'
     },
     {
-    content: '<div style="padding:3px;">현포길 44</div>',
-    latlng: new kakao.maps.LatLng(37.5249068531624, 130.825292146393)
+    position: new kakao.maps.LatLng(37.5249068531624,130.825292146393),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포길 44</div>'
     },
     {
-    content: '<div style="padding:3px;">현포길 56-2</div>',
-    latlng: new kakao.maps.LatLng(37.5245479934144, 130.824901259256)
+    position: new kakao.maps.LatLng(37.5245479934144,130.824901259256),
+    content: '<div style="width:185px; height:25px; padding:5px;">현포길 56-2</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1008-168</div>',
-    latlng: new kakao.maps.LatLng(37.4666157923029, 130.863390098652)
+    position: new kakao.maps.LatLng(37.4666157923029,130.863390098652),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1008-168</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1008-178</div>',
-    latlng: new kakao.maps.LatLng(37.4668903669659, 130.86302646972)
+    position: new kakao.maps.LatLng(37.4668903669659,130.86302646972),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1008-178</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1065-8</div>',
-    latlng: new kakao.maps.LatLng(37.461034085936, 130.856241728367)
+    position: new kakao.maps.LatLng(37.461034085936,130.856241728367),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1065-8</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1065-12</div>',
-    latlng: new kakao.maps.LatLng(37.4610911689638, 130.856101425948)
+    position: new kakao.maps.LatLng(37.4610911689638,130.856101425948),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1065-12</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1066-1</div>',
-    latlng: new kakao.maps.LatLng(37.4612658164967, 130.856598752452)
+    position: new kakao.maps.LatLng(37.4612658164967,130.856598752452),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1066-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1256</div>',
-    latlng: new kakao.maps.LatLng(37.4651363962802, 130.839580388837)
+    position: new kakao.maps.LatLng(37.4651363962802,130.839580388837),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1256</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1258</div>',
-    latlng: new kakao.maps.LatLng(37.4653295613163, 130.8394278299)
+    position: new kakao.maps.LatLng(37.4653295613163,130.8394278299),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1258</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1262</div>',
-    latlng: new kakao.maps.LatLng(37.46563622819, 130.839077508502)
+    position: new kakao.maps.LatLng(37.46563622819,130.839077508502),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1262</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1264</div>',
-    latlng: new kakao.maps.LatLng(37.4658856342978, 130.838887383479)
+    position: new kakao.maps.LatLng(37.4658856342978,130.838887383479),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1264</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1278</div>',
-    latlng: new kakao.maps.LatLng(37.4664884921536, 130.837639403964)
+    position: new kakao.maps.LatLng(37.4664884921536,130.837639403964),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1278</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1278-1</div>',
-    latlng: new kakao.maps.LatLng(37.4664584887379, 130.837518116905)
+    position: new kakao.maps.LatLng(37.4664584887379,130.837518116905),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1278-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1282</div>',
-    latlng: new kakao.maps.LatLng(37.4668389774523, 130.837314924451)
+    position: new kakao.maps.LatLng(37.4668389774523,130.837314924451),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1282</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1282-1</div>',
-    latlng: new kakao.maps.LatLng(37.4668935970939, 130.837017098181)
+    position: new kakao.maps.LatLng(37.4668935970939,130.837017098181),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1282-1</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1288-7</div>',
-    latlng: new kakao.maps.LatLng(37.4670900486227, 130.836622142953)
+    position: new kakao.maps.LatLng(37.4670900486227,130.836622142953),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1288-7</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1292</div>',
-    latlng: new kakao.maps.LatLng(37.466940677132, 130.836128599037)
+    position: new kakao.maps.LatLng(37.466940677132,130.836128599037),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1292</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1298</div>',
-    latlng: new kakao.maps.LatLng(37.4671257304632, 130.835375043895)
+    position: new kakao.maps.LatLng(37.4671257304632,130.835375043895),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1298</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1310</div>',
-    latlng: new kakao.maps.LatLng(37.4674843087224, 130.834144684553)
+    position: new kakao.maps.LatLng(37.4674843087224,130.834144684553),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1310</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1588</div>',
-    latlng: new kakao.maps.LatLng(37.4772156614755, 130.809263963311)
+    position: new kakao.maps.LatLng(37.4772156614755,130.809263963311),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1588</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1594</div>',
-    latlng: new kakao.maps.LatLng(37.4776602741758, 130.809259898856)
+    position: new kakao.maps.LatLng(37.4776602741758,130.809259898856),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1594</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 1954</div>',
-    latlng: new kakao.maps.LatLng(37.4997679283625, 130.808653597053)
+    position: new kakao.maps.LatLng(37.4997679283625,130.808653597053),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 1954</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2006</div>',
-    latlng: new kakao.maps.LatLng(37.503322683321, 130.810220851517)
+    position: new kakao.maps.LatLng(37.503322683321,130.810220851517),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2006</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2103-6</div>',
-    latlng: new kakao.maps.LatLng(37.5091079216116, 130.813473312646)
+    position: new kakao.maps.LatLng(37.5091079216116,130.813473312646),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2103-6</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2147-67</div>',
-    latlng: new kakao.maps.LatLng(37.5115423692171, 130.807974871042)
+    position: new kakao.maps.LatLng(37.5115423692171,130.807974871042),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2147-67</div>'
     },
     {
-    content: '<div style="padding:3px;">울릉순환로 2150</div>',
-    latlng: new kakao.maps.LatLng(37.511476169322, 130.811186979342)
+    position: new kakao.maps.LatLng(37.511476169322,130.811186979342),
+    content: '<div style="width:185px; height:25px; padding:5px;">울릉순환로 2150</div>'
     }
 ];
 
-for (var i = 0; i < positions.length; i ++) {
-    // 마커를 생성합니다
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
     var marker = new kakao.maps.Marker({
-        map: map, // 마커를 표시할 지도
-        position: positions[i].latlng // 마커의 위치
+        position: markerInfos[i].position,
+        clickable: true
     });
+    markers.push(marker);
 
-    // 마커에 표시할 인포윈도우를 생성합니다 
     var infowindow = new kakao.maps.InfoWindow({
-        content: positions[i].content // 인포윈도우에 표시할 내용
+        content: markerInfos[i].content,
+        removable: true
     });
+    infowindows.push(infowindow);
 
-    infowindow.open(map, marker); 
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
 }
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
 </script>
 </body>
 </html>
