@@ -16,15 +16,27 @@
             height: 100%;
             min-height: 300px;
         }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+        
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <p>
+    <div class="button-container">
         <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
         <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
         <button onclick="">스카이뷰는 지도 오른쪽 위에 버튼 있음</button>
-    </p>
+    </div>
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
     <script>
         var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
@@ -126,7 +138,7 @@
 
         // 마커와 인포윈도우 정보를 담은 객체 배열입니다
         var markerInfos = [
-{
+    {
     position: new kakao.maps.LatLng(35.9649359430208,128.924356080106),
     content: '<div style="width:250px; height:25px; padding:5px;">131 // 교촌동 257-15</div>'
     },
