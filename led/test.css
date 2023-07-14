@@ -1,12 +1,11 @@
 body {
     margin: 0;
     padding: 0;
-    height: 100vh;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    min-height: 100vh;
 }
 
 .header {
@@ -96,4 +95,11 @@ body {
 
 .next {
     right: 5px;
+}
+
+/* Media Query for Mobile Devices */
+@media only screen and (max-width: 600px) {
+    .slider {
+        max-width: 100%;
+    }
 }
