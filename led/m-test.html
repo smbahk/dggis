@@ -106,19 +106,6 @@
     </div>
 
     <script src="img_slide.js"></script>
-
-    <script>
-    // 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
-    function setMapHeight() {
-    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
-    var mapContainer = document.getElementById('map');
-    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
-    }
-
-    // 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
-    window.addEventListener('DOMContentLoaded', setMapHeight);
-    window.addEventListener('resize', setMapHeight);
-    </script>
     
 </body>
 </html>
