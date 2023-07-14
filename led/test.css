@@ -1,6 +1,8 @@
 body {
     margin: 0;
     padding: 0;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .header {
@@ -13,7 +15,7 @@ body {
 .slider {
     width: 100%;
     max-width: 300px;
-    height: auto;
+    height: calc(100% - 130px);
     position: relative;
     margin: 0 auto;
     margin-top: 10px;
