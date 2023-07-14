@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TEST (Mobile)</title>
+    <link rel="stylesheet" href="test.css">
+</head>
+<body>
+    <div class="header">
+        <h1>TEST PAGE</h1>
+    </div>
+    <div class="slider">
+        <img src="images/image01.jpg" class="active">
+        <img src="images/image02.jpg">
+        <img src="images/image03.jpg">
+        <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
+        <a class="next" onclick="changeSlide(1)">&#10095;</a>
+    </div>
+
+    <div class="thumbnails">
+        <div class="thumbnail-box">
+            <div class="thumbnail-row">
+                <div class="thumbnail-column">
+                    <img src="images/image01.jpg" onclick="currentSlide(1)">
+                </div>
+                <div class="thumbnail-column">
+                    <img src="images/image02.jpg" onclick="currentSlide(2)">
+                </div>
+                <div class="thumbnail-column">
+                    <img src="images/image03.jpg" onclick="currentSlide(3)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="test.js" async></script>
+</body>
+</html>
