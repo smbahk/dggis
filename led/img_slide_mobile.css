@@ -10,7 +10,7 @@ body {
     color: blue;
 }
 
-@media (max-width: 768px) { /* 화면 너비가 768px 이하일 때 */
+@media (max-width: 480px) { /* 화면 너비가 768px 이하일 때 */
   .slider {
     height: auto;
     align-items: flex-start;
