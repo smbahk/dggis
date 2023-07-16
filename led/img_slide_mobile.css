@@ -19,8 +19,8 @@ body {
 
 .slider {
     width: 100%;
-    max-width: 300px;
-    height: auto;
+    max-width: auto;
+    height: inherit;
     position: relative;
     margin: 0 auto;
     margin-top: 10px;
