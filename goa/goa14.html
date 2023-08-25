@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>외예리-구미 고아읍</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.647385344894055, 128.73400975376777), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.647385344894055, 128.73400975376777),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(36.1860810392522,128.280296668353),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예1길 30-12</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1863838598059,128.278218956616),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예1길 39</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1844423848501,128.275302016634),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예1길 43-38</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.186763144976,128.276657268045),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예1길 71</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1897084197947,128.275770044732),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예1길 84-26</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1880333746343,128.273181509014),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예1길 105</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1890107274682,128.272971661939),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예1길 117</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1826581804457,128.281869197892),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 15-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1816566562672,128.282323514359),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 19</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1804175938968,128.283105409535),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 20-21</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1800589225373,128.283090333998),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 20-27</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1797837407131,128.282684358748),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 20-31</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1815459368317,128.282640283338),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 23</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1814875208278,128.282911441136),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 27</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1813654765572,128.283082409551),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 29</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1798441395017,128.282926102655),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 34-14</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1811559750092,128.283518279809),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 35</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1812261529149,128.283730287264),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 35-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1809580470836,128.284286357734),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 41-5</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1811026059271,128.284528369083),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예2길 41-7</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1834743983281,128.283142151902),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1833485855173,128.283193900502),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 8</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1830901390046,128.283647768377),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 9</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1829575084002,128.283797446211),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 11</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1827453491084,128.283355021217),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 12</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1824986291252,128.283538852482),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 14</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.182616894304,128.283972407595),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 17-3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1825564915023,128.284268879534),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 17-5</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1823708987819,128.283660153082),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 18-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1824142493102,128.283138531644),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 18-6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1821775131858,128.28417276641),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 19-10</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1822026656479,128.283449210562),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 22-4</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1819768614012,128.284035435815),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 23</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1817601559018,128.284126159402),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예4길 25</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1830722300688,128.284569534766),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예6길 13</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1826488072351,128.284626313807),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예6길 21</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1824244646747,128.284941560938),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예6길 23-3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1824639048415,128.285565354043),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예6길 23-7</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1824170711893,128.284261823636),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예6길 24</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1816751204143,128.284643871654),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예6길 34</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1812487935696,128.284870448121),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예6길 36</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1803197142948,128.285936807069),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예6길 37-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1897636609109,128.280183750916),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예7길 67-19</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1932094987788,128.282087871716),
+    content: '<div style="width:185px; height:25px; padding:5px;">외예7길 68-35</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1822828516868,128.273190141945),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 388-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1819466688455,128.273187146436),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 388-5</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1822999148257,128.273398949417),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 390</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1827946018049,128.273360159611),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 391-3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1815991998813,128.27338104868),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 392-8</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.183197757499,128.27502906356),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 399-9</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1798126369123,128.274859378153),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 402-33</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1824340379984,128.275427078758),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 407</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1803852199944,128.277749785676),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 436-23</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1824681009953,128.282881302262),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 478-24</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1825755087055,128.282688639091),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 478-26</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.182973109037,128.282468248301),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 478-34</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1828635440263,128.282921098639),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 478-40</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1839380181789,128.282723195124),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 481</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1839402149468,128.284770123747),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 498</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1826287647095,128.285997672785),
+    content: '<div style="width:185px; height:25px; padding:5px;">포아로 498-26</div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>

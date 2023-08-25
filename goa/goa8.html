@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>송림리-구미 고아읍</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.647385344894055, 128.73400975376777), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.647385344894055, 128.73400975376777),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(36.1609152255376,128.362686573434),
+    content: '<div style="width:185px; height:25px; padding:5px;">문성12길 81-6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.162442143541,128.361502818624),
+    content: '<div style="width:185px; height:25px; padding:5px;">문성12길 81-26</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1637127782492,128.357658805557),
+    content: '<div style="width:185px; height:25px; padding:5px;">문성12길 81-59</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1687179440008,128.354396024249),
+    content: '<div style="width:185px; height:25px; padding:5px;">선산대로 443-3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1685886,128.351131),
+    content: '<div style="width:185px; height:25px; padding:5px;">선산대로 443-9</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1721830443203,128.35445343654),
+    content: '<div style="width:185px; height:25px; padding:5px;">선산대로 468-14</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1712248,128.3526657),
+    content: '<div style="width:185px; height:25px; padding:5px;">선산대로 471</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.168342453426,128.356607515129),
+    content: '<div style="width:185px; height:25px; padding:5px;">송림2길 14</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1691198508758,128.356003767674),
+    content: '<div style="width:185px; height:25px; padding:5px;">송림2길 15</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1686567357633,128.356642161365),
+    content: '<div style="width:185px; height:25px; padding:5px;">송림2길 18</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1696330526274,128.356416709126),
+    content: '<div style="width:185px; height:25px; padding:5px;">송림2길 25</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1686414354099,128.364244885701),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1688638642674,128.364313423118),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 5</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.169300396271,128.364690745887),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 10</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1695784693115,128.364510300337),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 12</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.169380967528,128.364373621741),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 14</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1694431712961,128.363912699423),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 15</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1692004296491,128.363966062005),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 15-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1695504947679,128.364205407918),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 16</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1696288045521,128.363975931159),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 17</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1699067550657,128.363853605748),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 17-2</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1693425581776,128.363695348324),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 17-3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.169715356358,128.363679469167),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 17-11</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1697873087749,128.364031691281),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 19</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1700639765044,128.364377793993),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 22</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1703863775148,128.364158437321),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 22-3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1704477188836,128.364342547235),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 22-5</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1705688575555,128.364577373636),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 22-6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1701314528031,128.364063106828),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 23</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1703226077604,128.363855255467),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 25</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1704267950931,128.363735141117),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 25-3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1702924462052,128.363251691401),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 25-7</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1706837409809,128.363629342997),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 25-12</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1705863243644,128.363598091888),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 25-14</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.170562213053,128.364116695996),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 28</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1707334541007,128.363940395667),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 29</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.170884058176,128.364009356452),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 31</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1707292189352,128.364272519193),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 32</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1709439763607,128.364263016478),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 33</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1711507345258,128.364488881596),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 33-2</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1711977464459,128.364317317833),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 33-4</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1707443885664,128.364530737733),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구1길 34-2</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1690720372456,128.364652333555),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 5</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1691511486612,128.364858531862),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1693328253332,128.365173868694),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 6-2</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1693751709,128.364858415914),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 8</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1697074550363,128.364886739569),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 13</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1697168624249,128.364788767529),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 13-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1699193608061,128.364724262303),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 13-2</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1698557181163,128.364599794867),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 13-5</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1699973007374,128.364479886001),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 13-6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1698522572852,128.364974494127),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 15</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.170226318767,128.364997986163),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 17</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1700534728145,128.365567686752),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 18</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1703799967711,128.3649869815),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 19</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1701199740983,128.365354564777),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 20</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1706034452531,128.36505298416),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 21-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1706711840085,128.365047379594),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 21-3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1708444657825,128.365103176731),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 21-4</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1704825934935,128.365298840075),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 22</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1706317968423,128.365537933739),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 24</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1709258478895,128.365236622824),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 27</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1709823250315,128.365523121662),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 28</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1710233196063,128.365089163583),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 29</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1711615821933,128.365307841164),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 31</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1712174303026,128.365096420586),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 31-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1711943723554,128.36544311228),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 32</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1713930178765,128.36516337233),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 33</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1714978908892,128.364920014786),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 33-2</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1713249981475,128.36464038701),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 33-6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1716185272142,128.365246194487),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 34</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1717314293042,128.36509688997),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 35-2</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1715372854624,128.364657849701),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 35-8</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1714646404234,128.364635362065),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 35-10</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1721992577915,128.364807811929),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 37-4</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1720143836548,128.364598993602),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 37-6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1722545909266,128.363874512158),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구3길 37-15</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1677318165646,128.362196893263),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 7-2</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1679792638607,128.361618934594),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 7-10</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1679978951667,128.360669822032),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 7-18</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1675696222903,128.362995705622),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 14</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.168055038816,128.36260980109),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 17-5</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1684025147541,128.362483119848),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 17-8</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1682519052247,128.362335368539),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 17-9</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1683620373611,128.362247032021),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 17-10</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1678237222311,128.363749049643),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 24</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1682618291994,128.363727300836),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 25</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1683407940936,128.363804130719),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 27</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1685348659771,128.364059996265),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 29</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1685284382774,128.364244482942),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 31</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1681292601002,128.36437692846),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 32</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1685180256334,128.364478134055),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 35</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1688349391997,128.365095882834),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 39</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1689845155997,128.365136375053),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 41</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1689556653527,128.365508962545),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 43</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1688838953098,128.36627856487),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평구길 50</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1637724328846,128.355463903654),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로 21</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1638989671725,128.355892267144),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로 25</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1640545902015,128.355908394507),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로 25-3</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1639975135876,128.356269474286),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로 29</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1641407186548,128.356411299457),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로 31</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1642419373498,128.3611968882),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로 56-35</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1642351588726,128.364792070184),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로 56-67</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1630005310975,128.365620800817),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로 114-55</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1691123273587,128.366997255717),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로 141</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1642351039126,128.356447820914),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로1길 1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1645992079174,128.356523218854),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로1길 7</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1647422250458,128.357047334605),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로1길 8</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1646365928171,128.356770796906),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로1길 8-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1649604703943,128.356928852209),
+    content: '<div style="width:185px; height:25px; padding:5px;">송평로1길 10</div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
