@@ -39,7 +39,7 @@
 <script>
 var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
     mapOption = { 
-        center: new kakao.maps.LatLng(35.647385344894055, 128.73400975376777), // 지도의 중심좌표
+        center: new kakao.maps.LatLng(35.64738980952236, 128.73401261036213), // 지도의 중심좌표
         level: 3 // 지도의 확대 레벨
     };
 
@@ -76,7 +76,7 @@ if (navigator.geolocation) {
     
 } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
     
-    var locPosition = new kakao.maps.LatLng(35.647385344894055, 128.73400975376777),    
+    var locPosition = new kakao.maps.LatLng(35.64738980952236, 128.73401261036213),    
         message = '내위치를 찾을수 없음'
         
     displayMarker(locPosition, message);
@@ -148,1473 +148,1361 @@ var infowindows = [];
 // 마커와 인포윈도우 정보를 담은 객체 배열입니다
 var markerInfos = [
 {
-    position: new kakao.maps.LatLng(35.5728534,128.7843753),
-    content: '<div style="width:210px; height:50px; padding:5px;">기초번호판<br />도로표지판</div>'
+    position: new kakao.maps.LatLng(35.6583351046,128.7296672211),
+    content: '<div style="width:190px; height:45px; padding:5px;">산성강변길 373<br />둔치//청도천 둔치1</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7176617,128.9182643),
-    content: '<div style="width:210px; height:50px; padding:5px;">둔치주차장<br />운문댐하류보주차장</div>'
+    position: new kakao.maps.LatLng(35.6580769405,128.7304700629),
+    content: '<div style="width:190px; height:45px; padding:5px;">산성강변길 391<br />둔치//청도천 둔치1</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6571003,128.7226892),
-    content: '<div style="width:210px; height:50px; padding:5px;">둔치주차장<br />청도천 둔치1</div>'
+    position: new kakao.maps.LatLng(35.6555728392,128.7346593565),
+    content: '<div style="width:190px; height:45px; padding:5px;">산성강변길 437<br />둔치//청도천 둔치2</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6584808,128.7284336),
-    content: '<div style="width:210px; height:50px; padding:5px;">둔치주차장<br />청도천 둔치1</div>'
+    position: new kakao.maps.LatLng(35.7168922054,128.9186579537),
+    content: '<div style="width:190px; height:45px; padding:5px;">방지강변길 11_둔치<br />둔치//운문댐하류보주차장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6556144,128.7343933),
-    content: '<div style="width:210px; height:50px; padding:5px;">둔치주차장<br />청도천 둔치2</div>'
+    position: new kakao.maps.LatLng(35.6469749056,128.7477619185),
+    content: '<div style="width:190px; height:45px; padding:5px;">한내길 147<br />둔치//청도천 고수부지</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6457744,128.7471567),
-    content: '<div style="width:210px; height:50px; padding:5px;">둔치주차장<br />청도천 고수부지</div>'
+    position: new kakao.maps.LatLng(35.6462225423,128.7477824377),
+    content: '<div style="width:190px; height:45px; padding:5px;">한내길 165<br />둔치//청도천 고수부지</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6488161,128.7464782),
-    content: '<div style="width:210px; height:50px; padding:5px;">둔치주차장<br />청도천 고수부지</div>'
+    position: new kakao.maps.LatLng(35.6402734413,128.7481841139),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 219-21<br />지진//청도고등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6874573,128.7242003),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />삼신2리(소싸움경기장정문)</div>'
+    position: new kakao.maps.LatLng(35.6464017899,128.7521520124),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로 83-1<br />지진//청도중앙초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6762529,128.6779019),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />고철1리</div>'
+    position: new kakao.maps.LatLng(35.5727221171,128.7650761645),
+    content: '<div style="width:190px; height:45px; padding:5px;">유천강변길 68<br />지진//청도유천초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6857662,128.7281181),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />삼신2리(용암온천)</div>'
+    position: new kakao.maps.LatLng(35.6500102406,128.7417250939),
+    content: '<div style="width:190px; height:45px; padding:5px;">한내길 52-1<br />지진//새마을공원</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6766916,128.5948891),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />삼평1리</div>'
+    position: new kakao.maps.LatLng(35.6344098354,128.7519439836),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 1136<br />지진//월곡쉼터</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6658698,128.5545264),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />상수월</div>'
+    position: new kakao.maps.LatLng(35.6472101262,128.7062273028),
+    content: '<div style="width:190px; height:45px; padding:5px;">동헌길 15<br />지진//화양초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6170462,128.6205202),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />덕양1리(송월)</div>'
+    position: new kakao.maps.LatLng(35.648196115,128.7349552136),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 67<br />지진//모계중고등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7274421,128.9263571),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />공암리</div>'
+    position: new kakao.maps.LatLng(35.647922426,128.7313158968),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 38-10<br />지진//경북청도초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7037225,128.8123639),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />관하2리</div>'
+    position: new kakao.maps.LatLng(35.6962558955,128.7160246355),
+    content: '<div style="width:190px; height:45px; padding:5px;">삼신길 90<br />지진//남성현초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.653959,128.6785528),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />서원리</div>'
+    position: new kakao.maps.LatLng(35.6485385509,128.7203362533),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 1848<br />지진//청도공설운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7054988,128.8149346),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />관하2리</div>'
+    position: new kakao.maps.LatLng(35.6419971961,128.6571735037),
+    content: '<div style="width:190px; height:45px; padding:5px;">각남로 59<br />지진//각남초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.691633,128.5899838),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />덕촌1리(지촌)</div>'
+    position: new kakao.maps.LatLng(35.6182826666,128.6370218666),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기길 18-3<br />지진//(구)대산초등학교</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6154577,128.6330475),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />옥산1리</div>'
+    position: new kakao.maps.LatLng(35.6413950918,128.620720315),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 185<br />지진//청도전자고등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.705313,128.8184026),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />관하리</div>'
+    position: new kakao.maps.LatLng(35.7053069709,128.5830035556),
+    content: '<div style="width:190px; height:45px; padding:5px;">덕남길 5<br />지진//청도덕산초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7183671,128.8099925),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />관하리</div>'
+    position: new kakao.maps.LatLng(35.661923743,128.6702700178),
+    content: '<div style="width:190px; height:45px; padding:5px;">학산1길 22<br />지진//이서중학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7112952,128.8825507),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />사전1리</div>'
+    position: new kakao.maps.LatLng(35.6630473743,128.6688317598),
+    content: '<div style="width:190px; height:45px; padding:5px;">학산2길 56<br />지진//이서초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6461901,128.6703818),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />구곡리</div>'
+    position: new kakao.maps.LatLng(35.684499854,128.9610536253),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문로 1558<br />지진//금천초등학교문명분교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6309759,128.8282429),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />지전1리</div>'
+    position: new kakao.maps.LatLng(35.6872729104,128.8943934098),
+    content: '<div style="width:190px; height:45px; padding:5px;">선암로 574-11<br />지진//금천중고등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7216927,128.5954887),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />지슬2리</div>'
+    position: new kakao.maps.LatLng(35.7121122136,128.9086872266),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 4649<br />지진//방지초등학교</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6378755,128.7491037),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />고수8리</div>'
+    position: new kakao.maps.LatLng(35.6670440774,128.8547488362),
+    content: '<div style="width:190px; height:45px; padding:5px;">동산길 43<br />지진//동산초등학교</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6816647,128.8428517),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />하평리(수문리)</div>'
+    position: new kakao.maps.LatLng(35.7038154161,128.8119498808),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3017<br />지진//(구)관하초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.570144,128.774045),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />내호리</div>'
+    position: new kakao.maps.LatLng(35.6122457374,128.8223955368),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 825<br />지진//청도군농촌체험관광센터 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6868745,128.7516385),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />내리</div>'
+    position: new kakao.maps.LatLng(35.642480987,128.8374912858),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 1288<br />지진//(구)매전초등학교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.80998,128.9680559),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />정상리(약수터)</div>'
+    position: new kakao.maps.LatLng(35.6898713264,128.5883212648),
+    content: '<div style="width:190px; height:45px; padding:5px;">남산길 26<br />지진//풍각중학교 각북분교 운동장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6464172,128.6684402),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />구곡리</div>'
+    position: new kakao.maps.LatLng(35.6472482102,128.6414484599),
+    content: '<div style="width:190px; height:45px; padding:5px;">가금구라길 119<br />버스//가금2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6602205,128.5827062),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />성곡1리(성수월)</div>'
+    position: new kakao.maps.LatLng(35.6466842583,128.6367958357),
+    content: '<div style="width:190px; height:45px; padding:5px;">가금구라길 75<br />버스//가금리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.663291,128.5758586),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />성곡1리(신기)</div>'
+    position: new kakao.maps.LatLng(35.7470357748,128.8588773006),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 766<br />버스//갈고개</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7333415,128.8108185),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />마당</div>'
+    position: new kakao.maps.LatLng(35.6030443381,128.7683637547),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 720<br />버스//거연리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6507589,128.655832),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />구라리</div>'
+    position: new kakao.maps.LatLng(35.6377651939,128.7486493967),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 245<br />버스//고수8리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5944989,128.8096366),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />구촌리(덕정)</div>'
+    position: new kakao.maps.LatLng(35.6768735401,128.6786224124),
+    content: '<div style="width:190px; height:45px; padding:5px;">이서로 363<br />버스//고철1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7429354,128.862126),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />구터</div>'
+    position: new kakao.maps.LatLng(35.674014897,128.6728661829),
+    content: '<div style="width:190px; height:45px; padding:5px;">이서로 299<br />버스//고철2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6977466,128.6879953),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />팔조리</div>'
+    position: new kakao.maps.LatLng(35.6676901416,128.7189959463),
+    content: '<div style="width:190px; height:45px; padding:5px;">고평길 8-54<br />버스//고평리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6760239,128.7755742),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />운산2리</div>'
+    position: new kakao.maps.LatLng(35.7575494102,128.9539737162),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 5696<br />버스//공암리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6604539,128.8785119),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />남양1리(서보기)</div>'
+    position: new kakao.maps.LatLng(35.7041742298,128.8127806909),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3023<br />버스//관하2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.8124752,128.9870631),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />마일리</div>'
+    position: new kakao.maps.LatLng(35.7053574859,128.8151348178),
+    content: '<div style="width:190px; height:45px; padding:5px;">관방로 1<br />버스//관하2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6348439,128.5567742),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />금곡리</div>'
+    position: new kakao.maps.LatLng(35.7055441457,128.8191265912),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3085<br />버스//관하리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7092819,128.9060562),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />방지1리</div>'
+    position: new kakao.maps.LatLng(35.7181354825,128.810338202),
+    content: '<div style="width:190px; height:45px; padding:5px;">관방로 158<br />버스//관하리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6305847,128.6377485),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />녹명1리</div>'
+    position: new kakao.maps.LatLng(35.6671346449,128.7477494877),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 29<br />버스//교육지원청</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6997741,128.9177939),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />임당1리</div>'
+    position: new kakao.maps.LatLng(35.6459558203,128.6706626868),
+    content: '<div style="width:190px; height:45px; padding:5px;">각남로 189<br />버스//구곡리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7064681,128.6854512),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />팔조리</div>'
+    position: new kakao.maps.LatLng(35.6459211446,128.6709660085),
+    content: '<div style="width:190px; height:45px; padding:5px;">각남로 192<br />버스//구곡리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.711477,128.907794),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />방지2리</div>'
+    position: new kakao.maps.LatLng(35.650655744,128.656008271),
+    content: '<div style="width:190px; height:45px; padding:5px;">가금구라길 264<br />버스//구라리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.713188,128.9103774),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />방지리</div>'
+    position: new kakao.maps.LatLng(35.5953602686,128.8100310602),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 571<br />버스//구촌리(덕정)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5857216,128.7436192),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />음지리</div>'
+    position: new kakao.maps.LatLng(35.7429827713,128.8622295752),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 711<br />버스//구터</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6107459,128.5918176),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />월봉1리</div>'
+    position: new kakao.maps.LatLng(35.6342896815,128.556028737),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 214<br />버스//금곡리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6411392,128.6027965),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />봉기1리</div>'
+    position: new kakao.maps.LatLng(35.678051858,128.8660976318),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3855<br />버스//금곡리(아랫마을)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6424338,128.6016688),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />봉기1리</div>'
+    position: new kakao.maps.LatLng(35.6715223781,128.6692144835),
+    content: '<div style="width:190px; height:45px; padding:5px;">학산길 127<br />버스//금촌리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.8068435,128.968051),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />봉하리(숲걸)</div>'
+    position: new kakao.maps.LatLng(35.7355132691,128.8686783581),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 610<br />버스//김전</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6405645,128.7428019),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />성조아파트</div>'
+    position: new kakao.maps.LatLng(35.7365394011,128.8669367842),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 627<br />버스//김전</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6670452,128.7799717),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />부야1리</div>'
+    position: new kakao.maps.LatLng(35.6924617595,128.58432853),
+    content: '<div style="width:190px; height:45px; padding:5px;">낙산길 52<br />버스//남산2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6657516,128.7765131),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />부야2리</div>'
+    position: new kakao.maps.LatLng(35.6956128397,128.5693288531),
+    content: '<div style="width:190px; height:45px; padding:5px;">낙산길 225<br />버스//남산3리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5713748,128.7690372),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />유호출장소</div>'
+    position: new kakao.maps.LatLng(35.6962632294,128.7181221285),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 475<br />버스//남성현출장소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6638095,128.7266485),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />소라리</div>'
+    position: new kakao.maps.LatLng(35.6606600436,128.8787150328),
+    content: '<div style="width:190px; height:45px; padding:5px;">선암로 197<br />버스//남양1리(서보기)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6281928,128.755251),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />유호2리</div>'
+    position: new kakao.maps.LatLng(35.613013633,128.8234335519),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 839<br />버스//내리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6786595,128.6952881),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />유등1리</div>'
+    position: new kakao.maps.LatLng(35.6866735245,128.7517002966),
+    content: '<div style="width:190px; height:45px; padding:5px;">내리길 12<br />버스//내리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.614872,128.5959101),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />월봉리(하월산)</div>'
+    position: new kakao.maps.LatLng(35.5705771264,128.773969888),
+    content: '<div style="width:190px; height:45px; padding:5px;">유천길 27<br />버스//내호리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6612008,128.7735753),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />부야2리</div>'
+    position: new kakao.maps.LatLng(35.630792375,128.6377157622),
+    content: '<div style="width:190px; height:45px; padding:5px;">녹명길 16<br />버스//녹명1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7415547,128.9029061),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />소천1리</div>'
+    position: new kakao.maps.LatLng(35.6728885561,128.8692181638),
+    content: '<div style="width:190px; height:45px; padding:5px;">당호길 1<br />버스//당호리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6605816,128.7745523),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />부야2리</div>'
+    position: new kakao.maps.LatLng(35.7002876184,128.6916440734),
+    content: '<div style="width:190px; height:45px; padding:5px;">대곡길 41<br />버스//대곡2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6281928,128.755251),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />월곡2리</div>'
+    position: new kakao.maps.LatLng(35.6350570033,128.7486518516),
+    content: '<div style="width:190px; height:45px; padding:5px;">고수산복길 177<br />버스//대안아파트</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6506766,128.8416095),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />북지리</div>'
+    position: new kakao.maps.LatLng(35.6532138962,128.6340925449),
+    content: '<div style="width:190px; height:45px; padding:5px;">대전칠엽길 77<br />버스//대전2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7356152,128.906476),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />소천2리</div>'
+    position: new kakao.maps.LatLng(35.7022349333,128.8055428176),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2953<br />버스//덕산리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7421624,128.9011993),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />소천3리</div>'
+    position: new kakao.maps.LatLng(35.6991660025,128.8023638825),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2909<br />버스//덕산리(사촌)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6281928,128.755251),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />월곡2리</div>'
+    position: new kakao.maps.LatLng(35.702489076,128.8066226918),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2964<br />버스//덕산리(송정)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.63302,128.7544462),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />월곡1리</div>'
+    position: new kakao.maps.LatLng(35.70404937,128.8007576067),
+    content: '<div style="width:190px; height:45px; padding:5px;">두곡길 47<br />버스//덕산리(신촌)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6463095,128.7524179),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />원정2리</div>'
+    position: new kakao.maps.LatLng(35.6825677099,128.747049406),
+    content: '<div style="width:190px; height:45px; padding:5px;">덕암길 170-8<br />버스//덕암(새각단)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6625793,128.6666421),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />학산2리</div>'
+    position: new kakao.maps.LatLng(35.6881074055,128.7460187449),
+    content: '<div style="width:190px; height:45px; padding:5px;">덕암길 227<br />버스//덕암1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.835946,129.0000272),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />마일2리(괴기)</div>'
+    position: new kakao.maps.LatLng(35.6176485052,128.619246415),
+    content: '<div style="width:190px; height:45px; padding:5px;">차옥길 173-52<br />버스//덕양1리(송월)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7064681,128.6854512),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />팔조리</div>'
+    position: new kakao.maps.LatLng(35.6922350193,128.5898569738),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 859<br />버스//덕촌1리(지촌)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6730855,128.8692722),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />당호리</div>'
+    position: new kakao.maps.LatLng(35.714383566,128.7940407736),
+    content: '<div style="width:190px; height:45px; padding:5px;">숲실길 97<br />버스//두곡(숲실)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6121141,128.6598543),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />사2리</div>'
+    position: new kakao.maps.LatLng(35.7334862907,128.811131716),
+    content: '<div style="width:190px; height:45px; padding:5px;">마당길 57<br />버스//마당</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.668601,128.6681281),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />학산리</div>'
+    position: new kakao.maps.LatLng(35.8356920736,128.9994359542),
+    content: '<div style="width:190px; height:45px; padding:5px;">운북로 895<br />버스//마일2리(괴기)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7068761,128.7265198),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />송금리</div>'
+    position: new kakao.maps.LatLng(35.8121754268,128.9879309857),
+    content: '<div style="width:190px; height:45px; padding:5px;">운북로 601<br />버스//마일리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7110204,128.7223357),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />송금리</div>'
+    position: new kakao.maps.LatLng(35.7093217929,128.90629747),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 4611<br />버스//방지1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7062864,128.7211769),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />송금리(송금교회)</div>'
+    position: new kakao.maps.LatLng(35.7114281739,128.9078481146),
+    content: '<div style="width:190px; height:45px; padding:5px;">방지3길 1<br />버스//방지2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6629027,128.7481446),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />송읍리</div>'
+    position: new kakao.maps.LatLng(35.713237454,128.911079619),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 4673<br />버스//방지리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6708633,128.6516995),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />수야1리</div>'
+    position: new kakao.maps.LatLng(35.6407334065,128.6033524457),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉수길 59<br />버스//봉기1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6671403,128.5700431),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />수월(하)리</div>'
+    position: new kakao.maps.LatLng(35.6422222304,128.6016186091),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉수길 83<br />버스//봉기1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6951891,128.7169556),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />남성현출장소</div>'
+    position: new kakao.maps.LatLng(35.8068314587,128.9684933876),
+    content: '<div style="width:190px; height:45px; padding:5px;">구룡로 1350<br />버스//봉하리(숲걸)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7266667,128.8807748),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />학일</div>'
+    position: new kakao.maps.LatLng(35.7975473275,128.9734586701),
+    content: '<div style="width:190px; height:45px; padding:5px;">운북로 377<br />버스//봉하리(오동)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6375109,128.6404204),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신당1리</div>'
+    position: new kakao.maps.LatLng(35.6671425192,128.7795443196),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔치길 464<br />버스//부야1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5992143,128.7667099),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신도1리</div>'
+    position: new kakao.maps.LatLng(35.6656701945,128.7776735459),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2443<br />버스//부야2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5992143,128.7667099),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신도1리</div>'
+    position: new kakao.maps.LatLng(35.661460757,128.7736693116),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2384<br />버스//부야2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.589603,128.7586181),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신도2리</div>'
+    position: new kakao.maps.LatLng(35.6615925834,128.7736004363),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2385<br />버스//부야2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6531878,128.7651161),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />원정1리</div>'
+    position: new kakao.maps.LatLng(35.6504665911,128.8418640558),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 1418<br />버스//북지리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6575902,128.5767343),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />현리리</div>'
+    position: new kakao.maps.LatLng(35.620230832,128.6538922453),
+    content: '<div style="width:190px; height:45px; padding:5px;">한재로 1232<br />버스//사1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6675105,128.7478341),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />교육지원청</div>'
+    position: new kakao.maps.LatLng(35.612191805,128.6597488948),
+    content: '<div style="width:190px; height:45px; padding:5px;">한재로 1126<br />버스//사2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6976889,128.7164365),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />삼신1리</div>'
+    position: new kakao.maps.LatLng(35.7147048966,128.885898865),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 315<br />버스//사전1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6287273,128.5956044),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />흑석1리</div>'
+    position: new kakao.maps.LatLng(35.7294950539,128.8765513249),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 510<br />버스//사전2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6114949,128.7674562),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />원리</div>'
+    position: new kakao.maps.LatLng(35.5791031678,128.7961719628),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 331<br />버스//사촌2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6983579,128.7176027),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />삼신1리(청도원탕)</div>'
+    position: new kakao.maps.LatLng(35.5776256594,128.7949704355),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 311<br />버스//사촌2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6463585,128.6359966),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />가금리</div>'
+    position: new kakao.maps.LatLng(35.6674836212,129.0023760727),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문로 1071<br />버스//삼계리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7474285,128.8589681),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />갈고개</div>'
+    position: new kakao.maps.LatLng(35.6978010407,128.7171262189),
+    content: '<div style="width:190px; height:45px; padding:5px;">삼신길 113<br />버스//삼신1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6375109,128.6404204),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신당1리</div>'
+    position: new kakao.maps.LatLng(35.6982004892,128.7175454586),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 498<br />버스//삼신1리(청도원탕)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7295442,128.8767607),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />사전2리</div>'
+    position: new kakao.maps.LatLng(35.6858439551,128.72345458),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 350<br />버스//삼신2리(소싸움경기장정문)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.702727,128.8062651),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />덕산리(송정)</div>'
+    position: new kakao.maps.LatLng(35.6857986846,128.7232534476),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 349<br />버스//삼신2리(소싸움경기장정문)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6635049,128.6671358),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />금촌리</div>'
+    position: new kakao.maps.LatLng(35.689228848,128.7217493596),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 390<br />버스//삼신2리(용암온천)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6504681,128.67743),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />화리</div>'
+    position: new kakao.maps.LatLng(35.6890227829,128.7211826318),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 1871<br />버스//삼신2리(용암온천)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.695346,128.5695035),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />남산3리</div>'
+    position: new kakao.maps.LatLng(35.6767175989,128.5951103346),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 672<br />버스//삼평1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6841419,128.9609544),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신원리</div>'
+    position: new kakao.maps.LatLng(35.6661111661,128.6004574366),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 546<br />버스//삼평2리(율정)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.662915,128.6839301),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />토평1리</div>'
+    position: new kakao.maps.LatLng(35.6661079266,128.5546971312),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉수길 780<br />버스//상수월</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6409469,128.690655),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />칠성1리</div>'
+    position: new kakao.maps.LatLng(35.654289961,128.6790216749),
+    content: '<div style="width:190px; height:45px; padding:5px;">서원길 2<br />버스//서원리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6896696,128.905989),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />임당2리</div>'
+    position: new kakao.maps.LatLng(35.6602609286,128.5824600931),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉수길 443<br />버스//성곡1리(성수월)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.8069861,128.9671344),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />정상리</div>'
+    position: new kakao.maps.LatLng(35.6621352948,128.5778963875),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉수길 493<br />버스//성곡1리(신기)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.580611,128.7971946),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />사촌2리</div>'
+    position: new kakao.maps.LatLng(35.64105117,128.7420588051),
+    content: '<div style="width:190px; height:45px; padding:5px;">고수산복길 87<br />버스//성조아파트</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6940967,128.6879197),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />칠곡2리</div>'
+    position: new kakao.maps.LatLng(35.6637085622,128.7267606045),
+    content: '<div style="width:190px; height:45px; padding:5px;">소라2길 4<br />버스//소라리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6683544,128.8913449),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신지2리</div>'
+    position: new kakao.maps.LatLng(35.7429157736,128.9028783589),
+    content: '<div style="width:190px; height:45px; padding:5px;">운용로 304<br />버스//소천1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6523794,128.7503545),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />충혼탑</div>'
+    position: new kakao.maps.LatLng(35.7349370419,128.9072021063),
+    content: '<div style="width:190px; height:45px; padding:5px;">소천길 358<br />버스//소천2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5737884,128.755093),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />초현리</div>'
+    position: new kakao.maps.LatLng(35.7513749012,128.893364136),
+    content: '<div style="width:190px; height:45px; padding:5px;">운용로 446<br />버스//소천3리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6232479,128.6062831),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />차산2리</div>'
+    position: new kakao.maps.LatLng(35.7069380556,128.7263436899),
+    content: '<div style="width:190px; height:45px; padding:5px;">송금3길 2-4<br />버스//송금리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7071424,128.7914903),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />덕산리(신촌)</div>'
+    position: new kakao.maps.LatLng(35.7108752555,128.7228530614),
+    content: '<div style="width:190px; height:45px; padding:5px;">송금2길 2<br />버스//송금리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6725124,128.7347469),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />진라2리</div>'
+    position: new kakao.maps.LatLng(35.7067641337,128.7213284649),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 619<br />버스//송금리(송금교회)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6709225,128.7397361),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />진라1리</div>'
+    position: new kakao.maps.LatLng(35.6626973305,128.7481498091),
+    content: '<div style="width:190px; height:45px; padding:5px;">송읍길 92<br />버스//송읍리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6700704,128.7419926),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />진라1리</div>'
+    position: new kakao.maps.LatLng(35.6622511267,128.7475813468),
+    content: '<div style="width:190px; height:45px; padding:5px;">송읍길 85<br />버스//송읍리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.575974,128.7937174),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />사촌2리</div>'
+    position: new kakao.maps.LatLng(35.6707261415,128.6520032097),
+    content: '<div style="width:190px; height:45px; padding:5px;">수야길 169<br />버스//수야1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6646428,128.6844197),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />토평2리</div>'
+    position: new kakao.maps.LatLng(35.672494708,128.6495952489),
+    content: '<div style="width:190px; height:45px; padding:5px;">수야길 201<br />버스//수야2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6808505,128.6793548),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신촌3리</div>'
+    position: new kakao.maps.LatLng(35.6667859101,128.5702587937),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉수길 586-2<br />버스//수월(하)리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6672247,129.0028889),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />삼계리</div>'
+    position: new kakao.maps.LatLng(35.6390416762,128.6408536278),
+    content: '<div style="width:190px; height:45px; padding:5px;">한재로 1511<br />버스//신당1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6388901,128.6798718),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />일곡리</div>'
+    position: new kakao.maps.LatLng(35.598318947,128.7657030608),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 661<br />버스//신도1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6844927,128.8354022),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />하평리</div>'
+    position: new kakao.maps.LatLng(35.598239446,128.7658566278),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 662<br />버스//신도1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6294637,128.5738715),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />흑석2리</div>'
+    position: new kakao.maps.LatLng(35.5895896026,128.7588734153),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 542<br />버스//신도2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6286648,128.5693835),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />안산1리</div>'
+    position: new kakao.maps.LatLng(35.6842633424,128.9610402288),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문로 1555<br />버스//신원리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6352583,128.8228329),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />온막리(광명대)</div>'
+    position: new kakao.maps.LatLng(35.6677883586,128.8908953629),
+    content: '<div style="width:190px; height:45px; padding:5px;">선암로 341<br />버스//신지2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6255536,128.5791537),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />안산2리</div>'
+    position: new kakao.maps.LatLng(35.680383398,128.6812694374),
+    content: '<div style="width:190px; height:45px; padding:5px;">상당길 1<br />버스//신촌3리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6815852,128.7557206),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />안인리</div>'
+    position: new kakao.maps.LatLng(35.6287563865,128.5695243237),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 356<br />버스//안산1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7196674,128.5931194),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />지슬1리</div>'
+    position: new kakao.maps.LatLng(35.6253237585,128.5791006128),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 450<br />버스//안산2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.693908,128.6878076),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />양원리</div>'
+    position: new kakao.maps.LatLng(35.6811538286,128.7558447333),
+    content: '<div style="width:190px; height:45px; padding:5px;">안내길 76<br />버스//안인리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6131374,128.8231361),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />내리</div>'
+    position: new kakao.maps.LatLng(35.6939054116,128.6872115132),
+    content: '<div style="width:190px; height:45px; padding:5px;">이서로 571<br />버스//양원리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6990322,128.8021284),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />덕산리(사촌)</div>'
+    position: new kakao.maps.LatLng(35.6869165394,128.6857440469),
+    content: '<div style="width:190px; height:45px; padding:5px;">양원길 44<br />버스//양원리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6620887,128.7471429),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />송읍리</div>'
+    position: new kakao.maps.LatLng(35.6903701749,128.6864008139),
+    content: '<div style="width:190px; height:45px; padding:5px;">양원길 83<br />버스//양원리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6905253,128.6867069),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />양원리</div>'
+    position: new kakao.maps.LatLng(35.6331783009,128.8208288073),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 1086<br />버스//예전1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7005462,128.6917653),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />대곡2리</div>'
+    position: new kakao.maps.LatLng(35.621807583,128.8199866907),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 950<br />버스//예전2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7922064,128.9713913),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />지촌리</div>'
+    position: new kakao.maps.LatLng(35.7092935009,128.5762447433),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 1116<br />버스//오산1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6347635,128.7480368),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />대안아파트</div>'
+    position: new kakao.maps.LatLng(35.7159039279,128.5609388729),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 1282<br />버스//오산2리(오리)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6757557,128.7752291),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />운산2리</div>'
+    position: new kakao.maps.LatLng(35.7019021398,128.9687559628),
+    content: '<div style="width:190px; height:45px; padding:5px;">오진길 1<br />버스//오진리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6332903,128.8206377),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />예전1리</div>'
+    position: new kakao.maps.LatLng(35.6154261974,128.6326594441),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥산길 70<br />버스//옥산1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.621743,128.8194931),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />예전2리</div>'
+    position: new kakao.maps.LatLng(35.6197931046,128.6374796142),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥산길 2<br />버스//옥산3리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7091292,128.5767296),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />오산1리</div>'
+    position: new kakao.maps.LatLng(35.6347794356,128.8226955793),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 1110<br />버스//온막리(광명대)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7158801,128.5615151),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />오산2리(오리)</div>'
+    position: new kakao.maps.LatLng(35.6569182892,128.6048651093),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 435<br />버스//우산리(객실)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6192681,128.6369191),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />옥산3리</div>'
+    position: new kakao.maps.LatLng(35.6885301389,128.7775233697),
+    content: '<div style="width:190px; height:45px; padding:5px;">운산3길 137<br />버스//운산1리(모과마을)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6565202,128.6055847),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />우산리(객실)</div>'
+    position: new kakao.maps.LatLng(35.6758413507,128.7755076604),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔치길 355<br />버스//운산2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7366033,128.8665682),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />김전</div>'
+    position: new kakao.maps.LatLng(35.6757360398,128.7754053904),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔치길 356<br />버스//운산2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6883517,128.7773507),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />운산1리(모과마을)</div>'
+    position: new kakao.maps.LatLng(35.6113534446,128.7679831358),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 812<br />버스//원리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7353479,128.8681685),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />김전</div>'
+    position: new kakao.maps.LatLng(35.6521781231,128.7642127829),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2248<br />버스//원정1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6816647,128.8428517),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />금곡리(아랫마을)</div>'
+    position: new kakao.maps.LatLng(35.6461031703,128.7524388951),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로 84-2<br />버스//원정2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6187917,128.6535066),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />사1리</div>'
+    position: new kakao.maps.LatLng(35.633043881,128.7546713618),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 1107<br />버스//월곡1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6513923,128.7496385),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />청도알뜰주유소</div>'
+    position: new kakao.maps.LatLng(35.6273620537,128.7612150817),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 1016<br />버스//월곡2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6826335,128.7466053),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />덕암(새각단)</div>'
+    position: new kakao.maps.LatLng(35.6107015081,128.5920612863),
+    content: '<div style="width:190px; height:45px; padding:5px;">월봉길 333<br />버스//월봉1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6531572,128.6338087),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />대전2리</div>'
+    position: new kakao.maps.LatLng(35.6138036256,128.5953514151),
+    content: '<div style="width:190px; height:45px; padding:5px;">월봉길 285<br />버스//월봉리(하월산)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6464136,128.640911),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />가금2리</div>'
+    position: new kakao.maps.LatLng(35.678500465,128.6953589214),
+    content: '<div style="width:190px; height:45px; padding:5px;">이슬미로 28<br />버스//유등1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7025595,128.8056998),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />덕산리</div>'
+    position: new kakao.maps.LatLng(35.581928122,128.7752495861),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 332<br />버스//유호2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.662639,128.6817408),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />토평2리(와촌)</div>'
+    position: new kakao.maps.LatLng(35.5713951682,128.7686705175),
+    content: '<div style="width:190px; height:45px; padding:5px;">유천길 79<br />버스//유호출장소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6596548,128.6802687),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />토평3리</div>'
+    position: new kakao.maps.LatLng(35.5860183715,128.7437750151),
+    content: '<div style="width:190px; height:45px; padding:5px;">음지1길 1<br />버스//음지리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6868707,128.685858),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />양원리</div>'
+    position: new kakao.maps.LatLng(35.6389246667,128.6799975989),
+    content: '<div style="width:190px; height:45px; padding:5px;">일곡길 24-2<br />버스//일곡리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.589603,128.7586181),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신도2리</div>'
+    position: new kakao.maps.LatLng(35.6995684185,128.917044108),
+    content: '<div style="width:190px; height:45px; padding:5px;">임당1길 2<br />버스//임당1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6660448,128.6007193),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />삼평2리(율정)</div>'
+    position: new kakao.maps.LatLng(35.6900151925,128.9061087938),
+    content: '<div style="width:190px; height:45px; padding:5px;">명포길 143<br />버스//임당2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7990259,128.974041),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />봉하리(오동)</div>'
+    position: new kakao.maps.LatLng(35.8119008398,128.9658869207),
+    content: '<div style="width:190px; height:45px; padding:5px;">구룡로 1283<br />버스//정상리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.667476,128.7224845),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />고평리</div>'
+    position: new kakao.maps.LatLng(35.8098953208,128.9683563292),
+    content: '<div style="width:190px; height:45px; padding:5px;">구룡로 1315<br />버스//정상리(약수터)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6480479,128.7049392),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />화양-서상1리(2)</div>'
+    position: new kakao.maps.LatLng(35.7198412148,128.5929219014),
+    content: '<div style="width:190px; height:45px; padding:5px;">지슬2길 39<br />버스//지슬1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6155472,128.6400024),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />함박</div>'
+    position: new kakao.maps.LatLng(35.7166633423,128.5920326593),
+    content: '<div style="width:190px; height:45px; padding:5px;">지슬2길 2<br />버스//지슬2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6900456,128.7967462),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />덕산리-곰티</div>'
+    position: new kakao.maps.LatLng(35.6087583634,128.8141452628),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 739<br />버스//지전1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.647118,128.7382799),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />마디연합정형외과</div>'
+    position: new kakao.maps.LatLng(35.6056139317,128.8102333431),
+    content: '<div style="width:190px; height:45px; padding:5px;">비파길 2<br />버스//지전2리(영지암)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6732171,128.8457343),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />동산</div>'
+    position: new kakao.maps.LatLng(35.7699584187,128.967874633),
+    content: '<div style="width:190px; height:45px; padding:5px;">운북로 2<br />버스//지촌리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6413996,128.6224862),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />풍각</div>'
+    position: new kakao.maps.LatLng(35.6698875616,128.7424357956),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 90<br />버스//진라1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6557415,128.7298002),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />송북리</div>'
+    position: new kakao.maps.LatLng(35.6708204916,128.7397195319),
+    content: '<div style="width:190px; height:45px; padding:5px;">진라1길 1<br />버스//진라1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6414144,128.8372282),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />온막리-광명대</div>'
+    position: new kakao.maps.LatLng(35.672489484,128.7344177623),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 165<br />버스//진라2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6412728,128.6225956),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />풍각</div>'
+    position: new kakao.maps.LatLng(35.6230835804,128.6061565118),
+    content: '<div style="width:190px; height:45px; padding:5px;">월봉길 139<br />버스//차산2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7038783,128.6953855),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />송정</div>'
+    position: new kakao.maps.LatLng(35.6521573261,128.7497774455),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 1359-9<br />버스//청도알뜰주유소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6870513,128.663277),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />흥선리</div>'
+    position: new kakao.maps.LatLng(35.5739912146,128.7558914904),
+    content: '<div style="width:190px; height:45px; padding:5px;">초현길 1<br />버스//초현리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6685168,128.8578127),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />매전</div>'
+    position: new kakao.maps.LatLng(35.6526115256,128.7499474213),
+    content: '<div style="width:190px; height:45px; padding:5px;">새마을로 1358<br />버스//충혼탑</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7017723,128.8893409),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />동곡2리</div>'
+    position: new kakao.maps.LatLng(35.693932187,128.6875562039),
+    content: '<div style="width:190px; height:45px; padding:5px;">칠곡길 2<br />버스//칠곡2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6831485,128.8661886),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />금곡리</div>'
+    position: new kakao.maps.LatLng(35.6518175558,128.6822272272),
+    content: '<div style="width:190px; height:45px; padding:5px;">칠성길 1<br />버스//칠성1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7165493,128.6972529),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />대곡4리</div>'
+    position: new kakao.maps.LatLng(35.6681180584,128.6885449857),
+    content: '<div style="width:190px; height:45px; padding:5px;">학산토평길 231<br />버스//토평1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7002341,128.8889261),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />동곡2리</div>'
+    position: new kakao.maps.LatLng(35.6647081102,128.6842558383),
+    content: '<div style="width:190px; height:45px; padding:5px;">토평길 60<br />버스//토평2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6749499,128.7530843),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />안인-하리</div>'
+    position: new kakao.maps.LatLng(35.6627104868,128.6819008705),
+    content: '<div style="width:190px; height:45px; padding:5px;">토평길 7<br />버스//토평2리(와촌)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7262175,128.8100057),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />금천리</div>'
+    position: new kakao.maps.LatLng(35.6594696619,128.6802971816),
+    content: '<div style="width:190px; height:45px; padding:5px;">학산토평길 76<br />버스//토평3리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6426435,128.6597408),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />각남-예1리</div>'
+    position: new kakao.maps.LatLng(35.6983913612,128.6874175416),
+    content: '<div style="width:190px; height:45px; padding:5px;">이서로 621<br />버스//팔조리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.711118,128.8130246),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />관하</div>'
+    position: new kakao.maps.LatLng(35.7060482759,128.6848862448),
+    content: '<div style="width:190px; height:45px; padding:5px;">이서로 712-2<br />버스//팔조리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6515039,128.7195246),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />국민체육센터</div>'
+    position: new kakao.maps.LatLng(35.7059309868,128.6845879928),
+    content: '<div style="width:190px; height:45px; padding:5px;">이서로 711<br />버스//팔조리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6159959,128.6249275),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />오리밭</div>'
+    position: new kakao.maps.LatLng(35.5911810295,128.7317743817),
+    content: '<div style="width:190px; height:45px; padding:5px;">한재로 373<br />버스//평양1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6415354,128.6206211),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />풍각</div>'
+    position: new kakao.maps.LatLng(35.6845050324,128.8346942727),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3386<br />버스//하평리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7127631,128.812334),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />관하</div>'
+    position: new kakao.maps.LatLng(35.6947624989,128.830137385),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3253<br />버스//하평리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6672746,128.8499572),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />구동창</div>'
+    position: new kakao.maps.LatLng(35.6894026474,128.8298101495),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3316<br />버스//하평리(수문리)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7044844,128.7165305),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />다로리</div>'
+    position: new kakao.maps.LatLng(35.6626942036,128.666801775),
+    content: '<div style="width:190px; height:45px; padding:5px;">학산1길 51-2<br />버스//학산2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6786526,128.6645774),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />금촌리</div>'
+    position: new kakao.maps.LatLng(35.6697250832,128.6686245633),
+    content: '<div style="width:190px; height:45px; padding:5px;">학산길 107<br />버스//학산리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6899624,128.661677),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />문수리</div>'
+    position: new kakao.maps.LatLng(35.7258605974,128.8805565389),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 455<br />버스//학일</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6804553,128.627617),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />칠엽1리</div>'
+    position: new kakao.maps.LatLng(35.6449601911,128.5984510694),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉수길 125<br />버스//현리리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6591164,128.715628),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />눌미리</div>'
+    position: new kakao.maps.LatLng(35.6520772292,128.8468935884),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 1469<br />버스//호화2리(동화)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.8022677,128.9688142),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />봉하</div>'
+    position: new kakao.maps.LatLng(35.6495900998,128.6778651715),
+    content: '<div style="width:190px; height:45px; padding:5px;">각남로 268<br />버스//화리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7139991,128.5686083),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />오산2리-삼천동</div>'
+    position: new kakao.maps.LatLng(35.6284710182,128.5955794896),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 606<br />버스//흑석1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6793226,128.8963275),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신지1리</div>'
+    position: new kakao.maps.LatLng(35.6263578431,128.5830492536),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 488<br />버스//흑석2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.649448,128.7286608),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />범곡1리-범실</div>'
+    position: new kakao.maps.LatLng(35.6263426909,128.5826747399),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 483<br />버스//흑석2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6128672,128.5725057),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />안산2리-정해</div>'
+    position: new kakao.maps.LatLng(35.6273905261,128.7610281658),
+    content: '<div style="width:190px; height:45px; padding:5px;">삼성산길 195<br />버스//흥선리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6610684,128.6725163),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />이서면사무소</div>'
+    position: new kakao.maps.LatLng(35.6481496812,128.7047982047),
+    content: '<div style="width:190px; height:45px; padding:5px;">도주관로 139<br />버스//화양-서상1리(1)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7769771,128.9620813),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />지촌</div>'
+    position: new kakao.maps.LatLng(35.6480356658,128.7049371045),
+    content: '<div style="width:190px; height:45px; padding:5px;">도주관로 142-1<br />버스//화양-서상1리(2)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6477737,128.7357129),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />청도군청</div>'
+    position: new kakao.maps.LatLng(35.6155720512,128.6399831399),
+    content: '<div style="width:190px; height:45px; padding:5px;">함박길 33<br />버스//함박</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6514411,128.6082851),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />우산리-점촌</div>'
+    position: new kakao.maps.LatLng(35.6415307336,128.620635352),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 188-1<br />버스//풍각</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6479819,128.7355713),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />청도군청</div>'
+    position: new kakao.maps.LatLng(35.641407527,128.6224724093),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 172<br />버스//풍각</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6669589,128.8499981),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />구동창</div>'
+    position: new kakao.maps.LatLng(35.6412782131,128.6226618428),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 169-1<br />버스//풍각</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6511653,128.7203829),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />국민체육센터</div>'
+    position: new kakao.maps.LatLng(35.6739871201,128.6290587555),
+    content: '<div style="width:190px; height:45px; padding:5px;">대전칠엽길 348<br />버스//칠엽2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6867368,128.8931844),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />금천면사무소</div>'
+    position: new kakao.maps.LatLng(35.6805581086,128.6275185696),
+    content: '<div style="width:190px; height:45px; padding:5px;">대전칠엽길 422<br />버스//칠엽1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6760685,128.8939493),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신지2리</div>'
+    position: new kakao.maps.LatLng(35.6430690905,128.6881752942),
+    content: '<div style="width:190px; height:45px; padding:5px;">화리길 81-64<br />버스//칠성2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6401023,128.6496719),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />신당2리</div>'
+    position: new kakao.maps.LatLng(35.6479830721,128.7355801123),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 73-1<br />버스//청도군청</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.655511,128.6971968),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />서상</div>'
+    position: new kakao.maps.LatLng(35.6477525539,128.7357481672),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 76-2<br />버스//청도군청</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7083786,128.9529902),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />방음리</div>'
+    position: new kakao.maps.LatLng(35.7721615915,128.9631046835),
+    content: '<div style="width:190px; height:45px; padding:5px;">운북로 51<br />버스//지촌리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7113951,128.5834763),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />월암</div>'
+    position: new kakao.maps.LatLng(35.777013676,128.9620968206),
+    content: '<div style="width:190px; height:45px; padding:5px;">운북로 105-1<br />버스//지촌</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6740034,128.6290247),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />칠엽2리</div>'
+    position: new kakao.maps.LatLng(35.6467288425,128.7385841024),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 106-1<br />버스//제일의원</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6481656,128.7048409),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />화양-서상1리(1)</div>'
+    position: new kakao.maps.LatLng(35.6610228364,128.672590355),
+    content: '<div style="width:190px; height:45px; padding:5px;">이서로 133<br />버스//이서면사무소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6467286,128.7385855),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />제일의원</div>'
+    position: new kakao.maps.LatLng(35.7114136085,128.583488989),
+    content: '<div style="width:190px; height:45px; padding:5px;">각북금천길 66<br />버스//월암</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.772219,128.9631078),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />지촌리</div>'
+    position: new kakao.maps.LatLng(35.6560255415,128.7689373516),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2310<br />버스//원정1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6560118,128.76892),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />원정1리</div>'
+    position: new kakao.maps.LatLng(35.6513756098,128.6082616357),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 367<br />버스//우산리-점촌</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6430794,128.6881558),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />칠성2리</div>'
+    position: new kakao.maps.LatLng(35.6413511975,128.8372125981),
+    content: '<div style="width:190px; height:45px; padding:5px;">청매로 1274-1<br />버스//온막리-광명대</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6281928,128.755251),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />거연리</div>'
+    position: new kakao.maps.LatLng(35.7139761793,128.5686147385),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 1205<br />버스//오산2리-삼천동</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.687746,128.7462994),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />덕암1리</div>'
+    position: new kakao.maps.LatLng(35.6160020953,128.6249118092),
+    content: '<div style="width:190px; height:45px; padding:5px;">차옥길 201<br />버스//오리밭</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6874573,128.7242003),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />삼신2리(소싸움경기장정문)</div>'
+    position: new kakao.maps.LatLng(35.6749325665,128.7530104784),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔치길 115<br />버스//안인-하리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6949517,128.8296773),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />하평리</div>'
+    position: new kakao.maps.LatLng(35.6128187027,128.5724638934),
+    content: '<div style="width:190px; height:45px; padding:5px;">안태길 174<br />버스//안산2리-정해</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6309759,128.8282429),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />호화2리(동화)</div>'
+    position: new kakao.maps.LatLng(35.6759969024,128.893906182),
+    content: '<div style="width:190px; height:45px; padding:5px;">선암로 439<br />버스//신지2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6056999,128.8100364),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />지전2리(영지암)</div>'
+    position: new kakao.maps.LatLng(35.6793195732,128.896285717),
+    content: '<div style="width:190px; height:45px; padding:5px;">선암로 481<br />버스//신지1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6724626,128.6493044),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />수야2리</div>'
+    position: new kakao.maps.LatLng(35.6401109602,128.6495847387),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 1119-2<br />버스//신당2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6928602,128.58417),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />남산2리</div>'
+    position: new kakao.maps.LatLng(35.7039098155,128.6952483543),
+    content: '<div style="width:190px; height:45px; padding:5px;">대곡길 95<br />버스//송정</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6287273,128.5956044),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />흑석리</div>'
+    position: new kakao.maps.LatLng(35.6557244936,128.7297854525),
+    content: '<div style="width:190px; height:45px; padding:5px;">범송길 75<br />버스//송북리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6294637,128.5738715),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />흑석2리</div>'
+    position: new kakao.maps.LatLng(35.6554624533,128.6972083931),
+    content: '<div style="width:190px; height:45px; padding:5px;">도주관로 16<br />버스//서상</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5911196,128.7320051),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />평양1리</div>'
+    position: new kakao.maps.LatLng(35.80224174,128.9687579221),
+    content: '<div style="width:190px; height:45px; padding:5px;">구룡로 1402<br />버스//봉하</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6281928,128.755251),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />삼신2리(용암온천)</div>'
+    position: new kakao.maps.LatLng(35.6493220872,128.7287416574),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 9<br />버스//범곡1리-범실</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6737346,128.6721034),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />고철2리</div>'
+    position: new kakao.maps.LatLng(35.7083262864,128.9529410287),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문로 2001<br />버스//방음리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7018021,128.9706471),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />오진리</div>'
+    position: new kakao.maps.LatLng(35.6899116952,128.6616968607),
+    content: '<div style="width:190px; height:45px; padding:5px;">삼성산길 233<br />버스//문수리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7134862,128.7958301),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />두곡(숲실)</div>'
+    position: new kakao.maps.LatLng(35.6684539415,128.8578843081),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3719<br />버스//매전</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6506444,128.7094345),
-    content: '<div style="width:210px; height:50px; padding:5px;">버스정류장<br />동천리</div>'
+    position: new kakao.maps.LatLng(35.6471184236,128.7382807971),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 99-2<br />버스//마디연합정형외과</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6853609,128.7771007),
-    content: '<div style="width:210px; height:50px; padding:5px;">비상급수시설<br />청도읍 운산리 비상급수시설</div>'
+    position: new kakao.maps.LatLng(35.6731645849,128.8456720709),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3554<br />버스//동산</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6446356,128.7134781),
-    content: '<div style="width:210px; height:50px; padding:5px;">비상급수시설<br />화양읍 동천리 비상급수시설</div>'
+    position: new kakao.maps.LatLng(35.7018536681,128.8893000203),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 159<br />버스//동곡2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6423919,128.7475448),
-    content: '<div style="width:210px; height:50px; padding:5px;">어린이공원<br />고수제4공원</div>'
+    position: new kakao.maps.LatLng(35.7001544199,128.8889109617),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 142<br />버스//동곡2리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6424778,128.7467726),
-    content: '<div style="width:210px; height:50px; padding:5px;">어린이공원<br />고수제4공원</div>'
+    position: new kakao.maps.LatLng(35.6900556821,128.7967426876),
+    content: '<div style="width:190px; height:45px; padding:5px;">곰티로 395<br />버스//덕산리-곰티</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6420606,128.7471994),
-    content: '<div style="width:210px; height:50px; padding:5px;">어린이공원<br />고수제4공원</div>'
+    position: new kakao.maps.LatLng(35.7165758275,128.6972840736),
+    content: '<div style="width:190px; height:45px; padding:5px;">대곡길 243<br />버스//대곡4리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.645003,128.7407008),
-    content: '<div style="width:210px; height:50px; padding:5px;">어린이공원<br />바르게살기공원</div>'
+    position: new kakao.maps.LatLng(35.7045092383,128.7164412899),
+    content: '<div style="width:190px; height:45px; padding:5px;">다로 길 41<br />버스//다로리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6442524,128.7411134),
-    content: '<div style="width:210px; height:50px; padding:5px;">어린이공원<br />바르게살기공원</div>'
+    position: new kakao.maps.LatLng(35.6591041449,128.7156255658),
+    content: '<div style="width:190px; height:45px; padding:5px;">동고길 85-1<br />버스//눌미리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6444854,128.7413254),
-    content: '<div style="width:210px; height:50px; padding:5px;">어린이공원<br />바르게살기공원</div>'
+    position: new kakao.maps.LatLng(35.678679741,128.6645297881),
+    content: '<div style="width:190px; height:45px; padding:5px;">삼성산길 93<br />버스//금촌리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6631175,128.6703466),
-    content: '<div style="width:210px; height:50px; padding:5px;">어린이공원<br />학산제1호어린이공원</div>'
+    position: new kakao.maps.LatLng(35.6867673375,128.8931833897),
+    content: '<div style="width:190px; height:45px; padding:5px;">선암로 573<br />버스//금천면사무소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6631175,128.6703466),
-    content: '<div style="width:210px; height:50px; padding:5px;">어린이공원<br />학산제1호어린이공원</div>'
+    position: new kakao.maps.LatLng(35.7262307739,128.8100460121),
+    content: '<div style="width:190px; height:45px; padding:5px;">관방로 254<br />버스//금천리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6058684,128.6224537),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />대산</div>'
+    position: new kakao.maps.LatLng(35.6831273337,128.8661992674),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3913<br />버스//금곡리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6637956,128.6552427),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />각계</div>'
+    position: new kakao.maps.LatLng(35.6511636787,128.7202771678),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 1846-1<br />버스//국민체육센터</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6259931,128.5487973),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />금곡</div>'
+    position: new kakao.maps.LatLng(35.651483181,128.7195304578),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 1837<br />버스//국민체육센터</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7076955,128.9155861),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />운문댐 하류보3</div>'
+    position: new kakao.maps.LatLng(35.6673484076,128.8498969722),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3631<br />버스//구동창</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6983579,128.7176027),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />삼신</div>'
+    position: new kakao.maps.LatLng(35.6668959992,128.8500010291),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3636<br />버스//구동창</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6754515,128.6516374),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />수야</div>'
+    position: new kakao.maps.LatLng(35.7127732093,128.812309861),
+    content: '<div style="width:190px; height:45px; padding:5px;">관방로 91<br />버스//관하</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7076955,128.9155861),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />강정보</div>'
+    position: new kakao.maps.LatLng(35.7111529359,128.8129871877),
+    content: '<div style="width:190px; height:45px; padding:5px;">관방로 71<br />버스//관하</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6208792,128.6458183),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />구만</div>'
+    position: new kakao.maps.LatLng(35.6426585303,128.6597463265),
+    content: '<div style="width:190px; height:45px; padding:5px;">각남로 83<br />버스//각남-예1리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6061484,128.8143785),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />구촌숲(구천교)</div>'
+    position: new kakao.maps.LatLng(35.6506413703,128.7094119871),
+    content: '<div style="width:190px; height:45px; padding:5px;">도주관로 194-2<br />버스//동천리</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7216347,128.5796824),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />금천</div>'
+    position: new kakao.maps.LatLng(35.6932319702,128.8903817771),
+    content: '<div style="width:190px; height:45px; padding:5px;">동곡5길 38<br />택시//청도군 금천면 동곡5길 36</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6148709,128.7652588),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />금호교</div>'
+    position: new kakao.maps.LatLng(35.6404098735,128.6159424393),
+    content: '<div style="width:190px; height:45px; padding:5px;">송서11길 7<br />택시//청도군 풍각면 봉기로 156</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7293355,128.850594),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />김전</div>'
+    position: new kakao.maps.LatLng(35.6424290041,128.7472899702),
+    content: '<div style="width:190px; height:45px; padding:5px;">고수동4길 15<br />고수제4공원</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6951172,128.7184245),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />남성현</div>'
+    position: new kakao.maps.LatLng(35.6448758716,128.7410808146),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 136<br />바르게살기공원</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6713439,128.8607811),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />남양</div>'
+    position: new kakao.maps.LatLng(35.6635071888,128.6708234473),
+    content: '<div style="width:190px; height:45px; padding:5px;">이서로 145-26<br />학산제1호어린이공원</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6736308,128.8674003),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />당호교(강마을팬션)</div>'
+    position: new kakao.maps.LatLng(35.6852251736,128.7769967255),
+    content: '<div style="width:190px; height:45px; padding:5px;">운산3길 100<br />급수//청도읍 운산리 비상급수시설</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6698552,128.9111995),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />대비</div>'
+    position: new kakao.maps.LatLng(35.6445666596,128.7139544902),
+    content: '<div style="width:190px; height:45px; padding:5px;">화양남산길 90<br />급수//화양읍 동천리 비상급수시설</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5950265,128.8169364),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />덕정잠수교</div>'
+    position: new kakao.maps.LatLng(35.6645115281,128.6548072135),
+    content: '<div style="width:190px; height:45px; padding:5px;">서녁길 21-30<br />구조//각계</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6516479,128.849626),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />동화교</div>'
+    position: new kakao.maps.LatLng(35.6688913835,128.6333684186),
+    content: '<div style="width:190px; height:45px; padding:5px;">대전칠엽길 271<br />구조//강정</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6519814,128.7418474),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />떡버들공원</div>'
+    position: new kakao.maps.LatLng(35.7079832617,128.9166950953),
+    content: '<div style="width:190px; height:45px; padding:5px;">방지강변길 133<br />구조//강정보</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6750777,128.6423552),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />명곡</div>'
+    position: new kakao.maps.LatLng(35.6218299331,128.6454188739),
+    content: '<div style="width:190px; height:45px; padding:5px;">녹명길 75-101<br />구조//구만</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6503034,128.8523836),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />무심교</div>'
+    position: new kakao.maps.LatLng(35.6064634889,128.8145462765),
+    content: '<div style="width:190px; height:45px; padding:5px;">구촌2길 28-2<br />구조//구촌숲(구천교)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6710328,128.7877095),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />부야</div>'
+    position: new kakao.maps.LatLng(35.6271172601,128.551131416),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 170-93<br />구조//금곡</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6115616,128.6619911),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />사동</div>'
+    position: new kakao.maps.LatLng(35.7228766905,128.5796058321),
+    content: '<div style="width:190px; height:45px; padding:5px;">각북금천길 210<br />구조//금천</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6512175,128.7429447),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />산성철교</div>'
+    position: new kakao.maps.LatLng(35.6134518885,128.7677230666),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호길 9<br />구조//금호교</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6736308,128.8674003),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />삼족대(매전교)</div>'
+    position: new kakao.maps.LatLng(35.728579965,128.8530804707),
+    content: '<div style="width:190px; height:45px; padding:5px;">교동길 63<br />구조//김전</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6899797,128.8982918),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />새들보</div>'
+    position: new kakao.maps.LatLng(35.6934136235,128.7196034728),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 441<br />구조//남성현</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6744151,128.9566292),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />소머리야영장</div>'
+    position: new kakao.maps.LatLng(35.6720140881,128.8621217464),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3774<br />구조//남양</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7123169,128.9194518),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />운문댐 하류보1</div>'
+    position: new kakao.maps.LatLng(35.6736794677,128.8674200114),
+    content: '<div style="width:190px; height:45px; padding:5px;">선암로 1-5<br />구조//당호교(강마을팬션)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7123932,128.9224365),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />운문댐 하류보2</div>'
+    position: new kakao.maps.LatLng(35.6651932828,128.9316769467),
+    content: '<div style="width:190px; height:45px; padding:5px;">박곡길 392<br />구조//대비</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7176617,128.9182643),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />운문댐 하류보4</div>'
+    position: new kakao.maps.LatLng(35.6036908468,128.6224166121),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥산길 248-17<br />구조//대산</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6998884,128.9181709),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />임당보</div>'
+    position: new kakao.maps.LatLng(35.5941754208,128.8154155684),
+    content: '<div style="width:190px; height:45px; padding:5px;">구촌1길 54<br />구조//덕정잠수교</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7216927,128.5954887),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />지슬</div>'
+    position: new kakao.maps.LatLng(35.6507918522,128.8490581324),
+    content: '<div style="width:190px; height:45px; padding:5px;">동화길 7-9<br />구조//동화교</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5933612,128.7672279),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />하지교</div>'
+    position: new kakao.maps.LatLng(35.6748929359,128.6420127016),
+    content: '<div style="width:190px; height:45px; padding:5px;">행정명곡길 73<br />구조//명곡</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6392837,128.8505993),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />호화새들보</div>'
+    position: new kakao.maps.LatLng(35.6505771577,128.8487744321),
+    content: '<div style="width:190px; height:45px; padding:5px;">동화길 2<br />구조//무심교</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6456974,128.7092031),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />화강</div>'
+    position: new kakao.maps.LatLng(35.6681037546,128.7833106169),
+    content: '<div style="width:190px; height:45px; padding:5px;">부야4길 15<br />구조//부야</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6605721,128.6326965),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />강정</div>'
+    position: new kakao.maps.LatLng(35.6119610608,128.666682433),
+    content: '<div style="width:190px; height:45px; padding:5px;">상사1길 21-52<br />구조//사동</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6589478,128.6085739),
-    content: '<div style="width:210px; height:50px; padding:5px;">인명구조함<br />우산</div>'
+    position: new kakao.maps.LatLng(35.651873749,128.7428594744),
+    content: '<div style="width:190px; height:45px; padding:5px;">한내길 75<br />구조//산성철교</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6808191,128.9795951),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />대박레스토랑 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6985164818,128.7184283521),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 500-12<br />구조//삼신</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7123084,128.5483495),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />용천사 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6738416753,128.8678296155),
+    content: '<div style="width:190px; height:45px; padding:5px;">선암로 1-7<br />구조//삼족대(매전교)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6508538,128.7197065),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도 종합스포츠파크 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6887881558,128.8985171971),
+    content: '<div style="width:190px; height:45px; padding:5px;">동곡1길 61-6<br />구조//새들보</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6399973,128.7485162),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도지사 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6740368579,128.9562119223),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문사길 110-7<br />구조//소머리야영장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7439242,128.8625015),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />코스모스커피 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6808721553,128.6492594694),
+    content: '<div style="width:190px; height:45px; padding:5px;">수야길 325<br />구조//수야</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.685249,128.7242135),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도소싸움테마파크 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.670591544,128.6072353471),
+    content: '<div style="width:190px; height:45px; padding:5px;">우산3길 89-102<br />구조//우산</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6786731,128.9595522),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />운문산생태탐방안내센터 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.711530575,128.9201432961),
+    content: '<div style="width:190px; height:45px; padding:5px;">방지강변길 67<br />구조//운문댐 하류보1</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6418726,128.6589615),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />각남면사무소 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7113317173,128.9210385575),
+    content: '<div style="width:190px; height:45px; padding:5px;">신화랑길 90<br />구조//운문댐 하류보2</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6942317,128.686363),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도박물관 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7077294628,128.9163316034),
+    content: '<div style="width:190px; height:45px; padding:5px;">방지강변길 131<br />구조//운문댐 하류보3</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.63878,128.6183363),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />풍각면 사무소 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7168883629,128.9189463634),
+    content: '<div style="width:190px; height:45px; padding:5px;">방지강변길 11<br />구조//운문댐 하류보4</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7146175,128.9226942),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />회상 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7065772571,128.9171270758),
+    content: '<div style="width:190px; height:45px; padding:5px;">임당길 91<br />구조//임당보</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7156097,128.9131347),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />운문면사무소 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.723550059,128.5962232587),
+    content: '<div style="width:190px; height:45px; padding:5px;">지슬2길 93<br />구조//지슬</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6631175,128.6703466),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />이서면사무소 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.5929852678,128.7641837605),
+    content: '<div style="width:190px; height:45px; padding:5px;">하지길 46-5<br />구조//하지교</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5959281,128.7675394),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도새마을휴게소(부산) 하행 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6389767974,128.8500254305),
+    content: '<div style="width:190px; height:45px; padding:5px;">온장길 123-1<br />구조//호화새들보</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5938704,128.7693626),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도새마을휴게소(대구방향) 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6448169107,128.7082266368),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌길 48<br />구조//화강</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6485232,128.7190672),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />문화체육사업시설소 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.642115099,128.6587064877),
+    content: '<div style="width:190px; height:45px; padding:5px;">각남로 74<br />전기//각남면사무소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.647431,128.7342632),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도군청 주차장 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6872818559,128.589834879),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 801<br />전기//각북면 사무소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6733027,128.9992646),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />거림가든 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7147019555,128.5663087215),
+    content: '<div style="width:190px; height:45px; padding:5px;">헐티로 1229<br />전기//감꽃요양병원</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7130536,128.9221126),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />김주철 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6734365409,128.9991205345),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문로 1158-16<br />전기//거림가든</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.719003,128.917307),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도군 k-water 운문권지사 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6638030953,128.6456367104),
+    content: '<div style="width:190px; height:45px; padding:5px;">서녁길 91<br />전기//그레이스CC</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6886077,128.7202443),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도 용암온천 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6868927287,128.8930561765),
+    content: '<div style="width:190px; height:45px; padding:5px;">선암로 575<br />전기//금천면 사무소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7143884,128.5663122),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />감꽃요양병원 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7131271713,128.9221494651),
+    content: '<div style="width:190px; height:45px; padding:5px;">신화랑길 72-3<br />전기//김주철</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6505306,128.7195048),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도 종합스포츠파크 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6502702627,128.7095222541),
+    content: '<div style="width:190px; height:45px; padding:5px;">도주관로 194-1<br />전기//남천목욕탕</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6397731,128.7483485),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도지사(고객) 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7016571225,128.9690532739),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문로 1822<br />전기//다조아경영가든</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6410606,128.616532),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />산서농업협동조합 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6809774156,128.9797173835),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문로 1375<br />전기//대박레스토랑</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6934521,128.8759567),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />동곡재휴게소 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6933402826,128.8763744129),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 4069<br />전기//동곡재휴게소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7015158,128.9692624),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />다조아경영가든 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7013318991,128.6929543162),
+    content: '<div style="width:190px; height:45px; padding:5px;">대곡길 57<br />전기//렛츠커피</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6895191,128.7185621),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />시골곰탕 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.640903558,128.7466169779),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 205<br />전기//맑은길 주차장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6394479,128.621654),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />윤해카정비센타 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6480318884,128.7177240389),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 1846<br />전기//문화체육사업시설소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7144698,128.9219631),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />탬스커피 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6639508823,128.5562147401),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉수길 749-8<br />전기//봉식이놀이터</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.687096,128.8921499),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />금천면 사무소 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6432821868,128.6617630652),
+    content: '<div style="width:190px; height:45px; padding:5px;">각남로 103<br />전기//산서농협각남지점</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6871656,128.5893101),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />각북면 사무소 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6731231005,128.9570651159),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문사길 125<br />전기//산유화식당</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6639564,128.6471591),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />그레이스CC 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6894218844,128.7184842397),
+    content: '<div style="width:190px; height:45px; padding:5px;">온천길 28-4<br />전기//시골곰탕</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6433128,128.6609499),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />산서농협각남지점 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7151176346,128.9228390061),
+    content: '<div style="width:190px; height:45px; padding:5px;">신화랑길 57-5<br />전기//신화랑빌</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6632037,128.5560654),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />봉식이놀이터 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7172591839,128.5559872744),
+    content: '<div style="width:190px; height:45px; padding:5px;">비슬산길 6<br />전기//용천사</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.701324,128.692877),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />렛츠커피 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7153107791,128.9133207147),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 4707<br />전기//운문면사무소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7164647,128.9215772),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />운문파크랜드 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6785529817,128.9595287732),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문사길 61<br />전기//운문산생태탐방안내센터</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6466898,128.7226838),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도군 범실상회 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7160635249,128.9218708199),
+    content: '<div style="width:190px; height:45px; padding:5px;">신화랑길 40<br />전기//운문파크랜드</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6647216,129.0025815),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />카페쿠시 물레방아집 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6393386987,128.6214259561),
+    content: '<div style="width:190px; height:45px; padding:5px;">송서로 97<br />전기//윤해카정비센타</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6506166,128.7095668),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />남천목욕탕 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6629602494,128.6703711295),
+    content: '<div style="width:190px; height:45px; padding:5px;">이서로 145-18<br />전기//이서면사무소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6864468,128.6858985),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />목장원가든 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6907994949,128.5716827589),
+    content: '<div style="width:190px; height:45px; padding:5px;">낙산1길 51<br />전기//청도 군불로</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6407305,128.7465687),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />맑은길 주차장 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6886664161,128.7207445524),
+    content: '<div style="width:190px; height:45px; padding:5px;">온천길 11<br />전기//청도 용암온천</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.673149,128.9571664),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />산유화식당 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6506179369,128.7198363807),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 1844-1<br />전기//청도 종합스포츠파크</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.7150219,128.9228426),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />신화랑빌 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6509240987,128.719911731),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 1844<br />전기//청도 종합스포츠파크</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6902977,128.5715668),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도 군불로 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.7179908648,128.9168111932),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문로 2490<br />전기//청도군 k-water 운문권지사</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6916037,128.6872686),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도청정한우식육식당 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6467365167,128.7227963931),
+    content: '<div style="width:190px; height:45px; padding:5px;">범곡길 56<br />전기//청도군 범실상회</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6824042,128.7100138),
-    content: '<div style="width:210px; height:50px; padding:5px;">전기차충전소<br />청도프로방스포토랜드(출구 주차장) 전기차충전소</div>'
+    position: new kakao.maps.LatLng(35.6472364538,128.7350749552),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 70<br />전기//청도군청 주차장</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6462832,128.7522962),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도중앙초등학교 운동장</div>'
+    position: new kakao.maps.LatLng(35.5950041256,128.7694541245),
+    content: '<div style="width:190px; height:45px; padding:5px;">하지길 59-50<br />전기//청도새마을휴게소(대구방향)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6125746,128.8223908),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도군농촌체험관광센터 운동장</div>'
+    position: new kakao.maps.LatLng(35.5949289521,128.7673196164),
+    content: '<div style="width:190px; height:45px; padding:5px;">하지길 59-49<br />전기//청도새마을휴게소(부산) 하행</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.5733737,128.7651177),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도유천초등학교 운동장</div>'
+    position: new kakao.maps.LatLng(35.6847447242,128.724200661),
+    content: '<div style="width:190px; height:45px; padding:5px;">남성현로 346<br />전기//청도소싸움테마파크</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6183428,128.6363377),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />(구)대산초등학교</div>'
+    position: new kakao.maps.LatLng(35.639946344,128.7488837566),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 219-25<br />전기//청도지사</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6672115,128.8550485),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />동산초등학교</div>'
+    position: new kakao.maps.LatLng(35.6400744546,128.7482727552),
+    content: '<div style="width:190px; height:45px; padding:5px;">청화로 219-22<br />전기//청도지사(고객)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6673272,128.8539893),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />동산초등학교</div>'
+    position: new kakao.maps.LatLng(35.6906994625,128.6865897333),
+    content: '<div style="width:190px; height:45px; padding:5px;">양원길 86-5<br />전기//청도청정한우식육식당</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6495827,128.7361492),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />모계중고등학교 운동장</div>'
+    position: new kakao.maps.LatLng(35.6875152807,128.7163784006),
+    content: '<div style="width:190px; height:45px; padding:5px;">이슬미로 304<br />전기//청도프로방스포토랜드(출구 주차장)</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6477127,128.7067694),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />화양초등학교 운동장</div>'
+    position: new kakao.maps.LatLng(35.6647464663,129.0026847329),
+    content: '<div style="width:190px; height:45px; padding:5px;">운문로 1039<br />전기//카페쿠시 물레방아집</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6879612,128.8945901),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />금천중고등학교 운동장</div>'
+    position: new kakao.maps.LatLng(35.7436749893,128.8624343444),
+    content: '<div style="width:190px; height:45px; padding:5px;">금천로 718-3<br />전기//코스모스커피</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6425069,128.8382555),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />(구)매전초등학교 운동장</div>'
+    position: new kakao.maps.LatLng(35.7145108043,128.9220808177),
+    content: '<div style="width:190px; height:45px; padding:5px;">신화랑길 58<br />전기//탬스커피</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.6477923,128.7311745),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />경북청도초등학교 운동장</div>'
+    position: new kakao.maps.LatLng(35.6392269183,128.6185503559),
+    content: '<div style="width:190px; height:45px; padding:5px;">송서로 70<br />전기//풍각면 사무소</div>'
 },
 {
-    position: new kakao.maps.LatLng(35.642587,128.6568694),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />각남초등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.641985,128.6565222),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />각남초등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6619136,128.6696518),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />이서중학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6633951,128.6690567),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />이서초등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6410726,128.7480846),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도고등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.7029537,128.6916093),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />풍각중학교 각북분교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6900329,128.894779),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />(구)금천초등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6342354,128.7517968),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />월곡쉼터</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6352933,128.7512657),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />월곡쉼터</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6352933,128.7512657),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />월곡쉼터</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6964723,128.7164035),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />남성현초등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6964668,128.7158068),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />남성현초등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.7040979,128.8115057),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />(구)관하초등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6488647,128.7207377),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도공설운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6512175,128.7429447),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />새마을공원</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6512175,128.7429447),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />새마을공원</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6512175,128.7429447),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />새마을공원</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6496569,128.7416934),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />새마을공원</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.7126973,128.9085262),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />방지초등학교</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.7053929,128.5833221),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도덕산초등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.7054056,128.5825597),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도덕산초등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6849306,128.9615162),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />금천초등학교문명분교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6942317,128.686363),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도박물관 앞마당</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6410227,128.6204184),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도전자고등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6401251,128.6214273),
-    content: '<div style="width:210px; height:50px; padding:5px;">지진옥외대피장소<br />청도전자고등학교 운동장</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6399428,128.7471355),
-    content: '<div style="width:210px; height:50px; padding:5px;">택시승강장<br />법인택시</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6413519,128.7466517),
-    content: '<div style="width:210px; height:50px; padding:5px;">택시승강장<br />개인택시</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6406141,128.6157335),
-    content: '<div style="width:210px; height:50px; padding:5px;">택시승강장<br />청도군 풍각면 봉기로 156</div>'
-},
-{
-    position: new kakao.maps.LatLng(35.6932724,128.8906277),
-    content: '<div style="width:210px; height:50px; padding:5px;">택시승강장<br />청도군 금천면 동곡5길 36</div>'
-}        
+    position: new kakao.maps.LatLng(35.7146603515,128.9227170138),
+    content: '<div style="width:190px; height:45px; padding:5px;">신화랑길 57-4<br />전기//회상</div>'
+}      
 ];
 
 // 마커와 인포윈도우를 생성하고 지도에 표시합니다
