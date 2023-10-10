@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>화산면-영천시 경로당</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.973227781760684, 128.93854660598504), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.973227781760684, 128.93854660598504),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(36.0148785901273,128.887132899879),
+    content: '<div style="width:185px; height:25px; padding:5px;">가래실로 162</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0337159565149,128.887913243425),
+    content: '<div style="width:185px; height:25px; padding:5px;">가래실로 390</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0214380107092,128.867411097904),
+    content: '<div style="width:185px; height:25px; padding:5px;">당곡길 48-10</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0276041879656,128.826825658817),
+    content: '<div style="width:185px; height:25px; padding:5px;">대안1길 45</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0298934751724,128.816050832722),
+    content: '<div style="width:185px; height:25px; padding:5px;">대안2길 81-25</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0114455670419,128.89497709338),
+    content: '<div style="width:185px; height:25px; padding:5px;">대암길 112-1</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0361427851087,128.833801704037),
+    content: '<div style="width:185px; height:25px; padding:5px;">덕암2길 6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0254074106352,128.828936570568),
+    content: '<div style="width:185px; height:25px; padding:5px;">덕암길 12-5</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0082752553498,128.861570579053),
+    content: '<div style="width:185px; height:25px; padding:5px;">부계길 115-6</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0728975859307,128.836889810346),
+    content: '<div style="width:185px; height:25px; padding:5px;">산성길 10</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0099694338761,128.872100597257),
+    content: '<div style="width:185px; height:25px; padding:5px;">석촌2길 60</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0571812584517,128.839764867442),
+    content: '<div style="width:185px; height:25px; padding:5px;">섭재골길 24</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0307689227826,128.80836481539),
+    content: '<div style="width:185px; height:25px; padding:5px;">신정길 12</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0244875990484,128.848084529149),
+    content: '<div style="width:185px; height:25px; padding:5px;">연유길 66-34</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0500116085788,128.833208888867),
+    content: '<div style="width:185px; height:25px; padding:5px;">옛서당길 74</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0172774341179,128.846461574255),
+    content: '<div style="width:185px; height:25px; padding:5px;">용평2길 18</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0195800305919,128.856918935986),
+    content: '<div style="width:185px; height:25px; padding:5px;">유성길 13</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0220892669007,128.858954683285),
+    content: '<div style="width:185px; height:25px; padding:5px;">유정안길 14-4</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0207001225334,128.845700448003),
+    content: '<div style="width:185px; height:25px; padding:5px;">율전길 32-4</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0022626230874,128.883357952677),
+    content: '<div style="width:185px; height:25px; padding:5px;">장수로 577-25</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0182990500992,128.85610424794),
+    content: '<div style="width:185px; height:25px; padding:5px;">장수로 921</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0191359925031,128.855561858612),
+    content: '<div style="width:185px; height:25px; padding:5px;">장수로 926-7</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0186153231348,128.849737907886),
+    content: '<div style="width:185px; height:25px; padding:5px;">장수로 982</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.057288231669,128.855369445158),
+    content: '<div style="width:185px; height:25px; padding:5px;">화촌길 65</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0500001033747,128.831256025468),
+    content: '<div style="width:185px; height:25px; padding:5px;">효자문안길 13</div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0462706922094,128.86849244397),
+    content: '<div style="width:185px; height:25px; padding:5px;">효지길 98-14</div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
