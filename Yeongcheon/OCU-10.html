@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>화남면</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.84286976071042, 128.76509411608637), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.84286976071042, 128.76509411608637),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 새로운 마커 이미지를 생성합니다.
+var newImageUrl = 'https://smbahk.github.io/dggis/icon_mylocation.png';
+var newMarkerImage = new kakao.maps.MarkerImage(newImageUrl, new kakao.maps.Size(40, 40));
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+// 파란색
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(36.0758538718166,128.912259794583),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호리 22-1<br><a href="https://map.kakao.com/link/to/금호리 22-1,36.0758538718166,128.912259794583" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0756705032294,128.913129117525),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호리 602-5<br><a href="https://map.kakao.com/link/to/금호리 602-5,36.0756705032294,128.913129117525" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0753622529646,128.914037143632),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호리 625-2<br><a href="https://map.kakao.com/link/to/금호리 625-2,36.0753622529646,128.914037143632" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0752193183392,128.91432637463),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호리 626-1<br><a href="https://map.kakao.com/link/to/금호리 626-1,36.0752193183392,128.91432637463" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0681701565938,128.95793003165),
+    content: '<div style="width:190px; height:45px; padding:5px;">죽곡리 157-1<br><a href="https://map.kakao.com/link/to/죽곡리 157-1,36.0681701565938,128.95793003165" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0362080210908,128.936034359103),
+    content: '<div style="width:190px; height:45px; padding:5px;">신호리 374-1<br><a href="https://map.kakao.com/link/to/신호리 374-1,36.0362080210908,128.936034359103" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.038409215313,128.919097667255),
+    content: '<div style="width:190px; height:45px; padding:5px;">사천리 511-1<br><a href="https://map.kakao.com/link/to/사천리 511-1,36.038409215313,128.919097667255" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0662015600626,128.889201361866),
+    content: '<div style="width:190px; height:45px; padding:5px;">삼창리 734-1<br><a href="https://map.kakao.com/link/to/삼창리 734-1,36.0662015600626,128.889201361866" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0418255243688,128.880187646262),
+    content: '<div style="width:190px; height:45px; padding:5px;">귀호리 240-6<br><a href="https://map.kakao.com/link/to/귀호리 240-6,36.0418255243688,128.880187646262" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1070224224893,128.864968106697),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 6<br><a href="https://map.kakao.com/link/to/구전리 6,36.1070224224893,128.864968106697" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1068907299422,128.86513888339),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 7<br><a href="https://map.kakao.com/link/to/구전리 7,36.1068907299422,128.86513888339" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1064582452295,128.865449452581),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 9<br><a href="https://map.kakao.com/link/to/구전리 9,36.1064582452295,128.865449452581" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1059237628979,128.865684541365),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 10-1<br><a href="https://map.kakao.com/link/to/구전리 10-1,36.1059237628979,128.865684541365" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1054466527194,128.865759311172),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 13-1<br><a href="https://map.kakao.com/link/to/구전리 13-1,36.1054466527194,128.865759311172" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1052387795037,128.86607141027),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 64-1<br><a href="https://map.kakao.com/link/to/구전리 64-1,36.1052387795037,128.86607141027" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1050063231419,128.866203154452),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 65-1<br><a href="https://map.kakao.com/link/to/구전리 65-1,36.1050063231419,128.866203154452" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.104727593588,128.866361118396),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 67-2<br><a href="https://map.kakao.com/link/to/구전리 67-2,36.104727593588,128.866361118396" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1042899450706,128.866557626001),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 67-3<br><a href="https://map.kakao.com/link/to/구전리 67-3,36.1042899450706,128.866557626001" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1039533471302,128.866763074206),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 69<br><a href="https://map.kakao.com/link/to/구전리 69,36.1039533471302,128.866763074206" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1037283782089,128.866888440392),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 72-1<br><a href="https://map.kakao.com/link/to/구전리 72-1,36.1037283782089,128.866888440392" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1035312189315,128.867079531543),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 75-3<br><a href="https://map.kakao.com/link/to/구전리 75-3,36.1035312189315,128.867079531543" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1034724726418,128.867033060208),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 77-2<br><a href="https://map.kakao.com/link/to/구전리 77-2,36.1034724726418,128.867033060208" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1034218480039,128.867049405706),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 77-3<br><a href="https://map.kakao.com/link/to/구전리 77-3,36.1034218480039,128.867049405706" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1074264548159,128.864609778213),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 591-1<br><a href="https://map.kakao.com/link/to/구전리 591-1,36.1074264548159,128.864609778213" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.109948136212,128.862783400185),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 634<br><a href="https://map.kakao.com/link/to/구전리 634,36.109948136212,128.862783400185" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1096742237913,128.862927396489),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 635-1<br><a href="https://map.kakao.com/link/to/구전리 635-1,36.1096742237913,128.862927396489" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.109489989776,128.863029425546),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 636-1<br><a href="https://map.kakao.com/link/to/구전리 636-1,36.109489989776,128.863029425546" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1076614227481,128.864426561254),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 642-1<br><a href="https://map.kakao.com/link/to/구전리 642-1,36.1076614227481,128.864426561254" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1078981951249,128.864237389571),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 643-1<br><a href="https://map.kakao.com/link/to/구전리 643-1,36.1078981951249,128.864237389571" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.108186886275,128.864093417008),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 652-1<br><a href="https://map.kakao.com/link/to/구전리 652-1,36.108186886275,128.864093417008" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1084384424587,128.863706935028),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 653-1<br><a href="https://map.kakao.com/link/to/구전리 653-1,36.1084384424587,128.863706935028" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.108962790083,128.863404848921),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 654-1<br><a href="https://map.kakao.com/link/to/구전리 654-1,36.108962790083,128.863404848921" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1093664584749,128.863237603545),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 655<br><a href="https://map.kakao.com/link/to/구전리 655,36.1093664584749,128.863237603545" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1090647142177,128.863450342443),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 656-1<br><a href="https://map.kakao.com/link/to/구전리 656-1,36.1090647142177,128.863450342443" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1097733497694,128.862990591017),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 663<br><a href="https://map.kakao.com/link/to/구전리 663,36.1097733497694,128.862990591017" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.110001459252,128.862871608566),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 664-3<br><a href="https://map.kakao.com/link/to/구전리 664-3,36.110001459252,128.862871608566" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.110197990714,128.862784193947),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 669-3<br><a href="https://map.kakao.com/link/to/구전리 669-3,36.110197990714,128.862784193947" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1109710069692,128.862732827431),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 670-4<br><a href="https://map.kakao.com/link/to/구전리 670-4,36.1109710069692,128.862732827431" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1105884302447,128.862662159675),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 670-5<br><a href="https://map.kakao.com/link/to/구전리 670-5,36.1105884302447,128.862662159675" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1106826400176,128.862751778698),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 670-6<br><a href="https://map.kakao.com/link/to/구전리 670-6,36.1106826400176,128.862751778698" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1114199875344,128.862711118184),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 671-1<br><a href="https://map.kakao.com/link/to/구전리 671-1,36.1114199875344,128.862711118184" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.111285471034,128.862814546384),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 672<br><a href="https://map.kakao.com/link/to/구전리 672,36.111285471034,128.862814546384" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1115437817769,128.862810432003),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 673-4<br><a href="https://map.kakao.com/link/to/구전리 673-4,36.1115437817769,128.862810432003" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1112835752258,128.862936431826),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 673-5<br><a href="https://map.kakao.com/link/to/구전리 673-5,36.1112835752258,128.862936431826" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1110452530892,128.862854623286),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 673-6<br><a href="https://map.kakao.com/link/to/구전리 673-6,36.1110452530892,128.862854623286" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1115793026713,128.862687563654),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 687-2<br><a href="https://map.kakao.com/link/to/구전리 687-2,36.1115793026713,128.862687563654" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1117169322398,128.862494037279),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 688-1<br><a href="https://map.kakao.com/link/to/구전리 688-1,36.1117169322398,128.862494037279" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1121673497785,128.861811953232),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 691-1<br><a href="https://map.kakao.com/link/to/구전리 691-1,36.1121673497785,128.861811953232" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1125015817795,128.861508906699),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 691-2<br><a href="https://map.kakao.com/link/to/구전리 691-2,36.1125015817795,128.861508906699" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1125395374051,128.861339453),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 692-1<br><a href="https://map.kakao.com/link/to/구전리 692-1,36.1125395374051,128.861339453" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1126097775771,128.861533559744),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 693<br><a href="https://map.kakao.com/link/to/구전리 693,36.1126097775771,128.861533559744" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1082316227628,128.863992203586),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 산 10-5<br><a href="https://map.kakao.com/link/to/구전리 산 10-5,36.1082316227628,128.863992203586" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1085663450649,128.86377380771),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 산 11-1<br><a href="https://map.kakao.com/link/to/구전리 산 11-1,36.1085663450649,128.86377380771" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1121008175805,128.861657579296),
+    content: '<div style="width:190px; height:45px; padding:5px;">구전리 산 21-1<br><a href="https://map.kakao.com/link/to/구전리 산 21-1,36.1121008175805,128.861657579296" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1249526836179,128.871213841969),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 378-3<br><a href="https://map.kakao.com/link/to/용계리 378-3,36.1249526836179,128.871213841969" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1247037998787,128.87078188276),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 379-1<br><a href="https://map.kakao.com/link/to/용계리 379-1,36.1247037998787,128.87078188276" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1247673943307,128.870737077508),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 379-4<br><a href="https://map.kakao.com/link/to/용계리 379-4,36.1247673943307,128.870737077508" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1247258509343,128.870495077454),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 381-2<br><a href="https://map.kakao.com/link/to/용계리 381-2,36.1247258509343,128.870495077454" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1383772560376,128.866471933486),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 426-1<br><a href="https://map.kakao.com/link/to/용계리 426-1,36.1383772560376,128.866471933486" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1210679345031,128.867281124633),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 748-1<br><a href="https://map.kakao.com/link/to/용계리 748-1,36.1210679345031,128.867281124633" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1208097192267,128.867082650599),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 760-1<br><a href="https://map.kakao.com/link/to/용계리 760-1,36.1208097192267,128.867082650599" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1206269703854,128.8672394712),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 761-2<br><a href="https://map.kakao.com/link/to/용계리 761-2,36.1206269703854,128.8672394712" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1204084779399,128.867417545375),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 762<br><a href="https://map.kakao.com/link/to/용계리 762,36.1204084779399,128.867417545375" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1205121613699,128.86743099653),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 762-1<br><a href="https://map.kakao.com/link/to/용계리 762-1,36.1205121613699,128.86743099653" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1197712465749,128.868099015013),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 764-1<br><a href="https://map.kakao.com/link/to/용계리 764-1,36.1197712465749,128.868099015013" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1211826346332,128.867489527422),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 766-1<br><a href="https://map.kakao.com/link/to/용계리 766-1,36.1211826346332,128.867489527422" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1141134929047,128.863728790848),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 801-1<br><a href="https://map.kakao.com/link/to/용계리 801-1,36.1141134929047,128.863728790848" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1155095694505,128.86191819113),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 814-3<br><a href="https://map.kakao.com/link/to/용계리 814-3,36.1155095694505,128.86191819113" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1161613177001,128.864211642083),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 821<br><a href="https://map.kakao.com/link/to/용계리 821,36.1161613177001,128.864211642083" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1170057510908,128.863792161775),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 826-1<br><a href="https://map.kakao.com/link/to/용계리 826-1,36.1170057510908,128.863792161775" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1168908400948,128.863637410363),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 826-2<br><a href="https://map.kakao.com/link/to/용계리 826-2,36.1168908400948,128.863637410363" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1173081784809,128.863616624037),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 827-1<br><a href="https://map.kakao.com/link/to/용계리 827-1,36.1173081784809,128.863616624037" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1172329362516,128.863425717191),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 827-2<br><a href="https://map.kakao.com/link/to/용계리 827-2,36.1172329362516,128.863425717191" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1176187450309,128.863358096067),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 830-1<br><a href="https://map.kakao.com/link/to/용계리 830-1,36.1176187450309,128.863358096067" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1177262732548,128.863500902045),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 831-1<br><a href="https://map.kakao.com/link/to/용계리 831-1,36.1177262732548,128.863500902045" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1228454362821,128.869108581741),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 91-3<br><a href="https://map.kakao.com/link/to/용계리 산 91-3,36.1228454362821,128.869108581741" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.120978618842,128.867201488256),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 106-4<br><a href="https://map.kakao.com/link/to/용계리 산 106-4,36.120978618842,128.867201488256" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1206883476376,128.867151854328),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 106-6<br><a href="https://map.kakao.com/link/to/용계리 산 106-6,36.1206883476376,128.867151854328" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1209423664453,128.867087791475),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 106-7<br><a href="https://map.kakao.com/link/to/용계리 산 106-7,36.1209423664453,128.867087791475" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1199028597511,128.868147335141),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 107-2<br><a href="https://map.kakao.com/link/to/용계리 산 107-2,36.1199028597511,128.868147335141" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1196481012314,128.868489801885),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 107-4<br><a href="https://map.kakao.com/link/to/용계리 산 107-4,36.1196481012314,128.868489801885" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1192779669576,128.867679518153),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 107-5<br><a href="https://map.kakao.com/link/to/용계리 산 107-5,36.1192779669576,128.867679518153" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1185754638243,128.865756457467),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 108-2<br><a href="https://map.kakao.com/link/to/용계리 산 108-2,36.1185754638243,128.865756457467" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1184187184529,128.865910005406),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 108-5<br><a href="https://map.kakao.com/link/to/용계리 산 108-5,36.1184187184529,128.865910005406" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1167444321285,128.863977998739),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 118-2<br><a href="https://map.kakao.com/link/to/용계리 산 118-2,36.1167444321285,128.863977998739" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1163747426585,128.863953599836),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 118-4<br><a href="https://map.kakao.com/link/to/용계리 산 118-4,36.1163747426585,128.863953599836" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.116287045359,128.864267698973),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 118-5<br><a href="https://map.kakao.com/link/to/용계리 산 118-5,36.116287045359,128.864267698973" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1157045692664,128.863441345752),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 119-3<br><a href="https://map.kakao.com/link/to/용계리 산 119-3,36.1157045692664,128.863441345752" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1157019775687,128.8641058303),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 119-6<br><a href="https://map.kakao.com/link/to/용계리 산 119-6,36.1157019775687,128.8641058303" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1144161247406,128.86355748362),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 123-3<br><a href="https://map.kakao.com/link/to/용계리 산 123-3,36.1144161247406,128.86355748362" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1147432723259,128.862876024341),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 123-4<br><a href="https://map.kakao.com/link/to/용계리 산 123-4,36.1147432723259,128.862876024341" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1152147167378,128.861925443044),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 123-6<br><a href="https://map.kakao.com/link/to/용계리 산 123-6,36.1152147167378,128.861925443044" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1136722967772,128.86382930239),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 123-7<br><a href="https://map.kakao.com/link/to/용계리 산 123-7,36.1136722967772,128.86382930239" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.114461588393,128.863004075323),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 123-8<br><a href="https://map.kakao.com/link/to/용계리 산 123-8,36.114461588393,128.863004075323" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1129009686017,128.863048269057),
+    content: '<div style="width:190px; height:45px; padding:5px;">용계리 산 124-2<br><a href="https://map.kakao.com/link/to/용계리 산 124-2,36.1129009686017,128.863048269057" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.104095151587,128.894153062343),
+    content: '<div style="width:190px; height:45px; padding:5px;">월곡리 241-1<br><a href="https://map.kakao.com/link/to/월곡리 241-1,36.104095151587,128.894153062343" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1048991341309,128.88221512377999),
+    content: '<div style="width:190px; height:45px; padding:5px;">월곡리 730<br><a href="https://map.kakao.com/link/to/월곡리 730,36.1048991341309,128.88221512377999" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 붉은색
+var newmarkerInfos1 = [];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < newmarkerInfos1.length; i++) {
+    var newmarker = new kakao.maps.Marker({
+        position: newmarkerInfos1[i].position,
+        image: newMarkerImage,
+        clickable: true
+    });
+    markers.push(newmarker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos1[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker, 'click', makeClickListener(newmarker, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>

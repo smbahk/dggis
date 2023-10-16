@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>동지역</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.84286976071042, 128.76509411608637), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.84286976071042, 128.76509411608637),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 새로운 마커 이미지를 생성합니다.
+var newImageUrl = 'https://smbahk.github.io/dggis/icon_mylocation.png';
+var newMarkerImage = new kakao.maps.MarkerImage(newImageUrl, new kakao.maps.Size(40, 40));
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+// 파란색
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(35.9771103300808,128.96277066474),
+    content: '<div style="width:190px; height:45px; padding:5px;">조교동 382<br><a href="https://map.kakao.com/link/to/조교동 382,35.9771103300808,128.96277066474" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9771670576528,128.962745574955),
+    content: '<div style="width:190px; height:45px; padding:5px;">조교동 382-2<br><a href="https://map.kakao.com/link/to/조교동 382-2,35.9771670576528,128.962745574955" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9770795247134,128.9625276792),
+    content: '<div style="width:190px; height:45px; padding:5px;">조교동 387-2<br><a href="https://map.kakao.com/link/to/조교동 387-2,35.9770795247134,128.9625276792" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9771667328579,128.962462548689),
+    content: '<div style="width:190px; height:45px; padding:5px;">조교동 392<br><a href="https://map.kakao.com/link/to/조교동 392,35.9771667328579,128.962462548689" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9778715804743,128.962383668695),
+    content: '<div style="width:190px; height:45px; padding:5px;">조교동 403-2<br><a href="https://map.kakao.com/link/to/조교동 403-2,35.9778715804743,128.962383668695" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9726176529196,128.95305062667),
+    content: '<div style="width:190px; height:45px; padding:5px;">조교동 716-5<br><a href="https://map.kakao.com/link/to/조교동 716-5,35.9726176529196,128.95305062667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9825573814003,128.954135753444),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 60-3<br><a href="https://map.kakao.com/link/to/망정동 60-3,35.9825573814003,128.954135753444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9752128198963,128.951972223795),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 196-6<br><a href="https://map.kakao.com/link/to/망정동 196-6,35.9752128198963,128.951972223795" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9816662544915,128.95201435039),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 330-1<br><a href="https://map.kakao.com/link/to/망정동 330-1,35.9816662544915,128.95201435039" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9815254898002,128.9522534516),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 330-2<br><a href="https://map.kakao.com/link/to/망정동 330-2,35.9815254898002,128.9522534516" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9816159310072,128.952304903481),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 332-13<br><a href="https://map.kakao.com/link/to/망정동 332-13,35.9816159310072,128.952304903481" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9816386634657,128.952292270853),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 332-16<br><a href="https://map.kakao.com/link/to/망정동 332-16,35.9816386634657,128.952292270853" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.981590586729,128.952306385391),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 332-17<br><a href="https://map.kakao.com/link/to/망정동 332-17,35.981590586729,128.952306385391" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9815087321033,128.952292062615),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 332-18<br><a href="https://map.kakao.com/link/to/망정동 332-18,35.9815087321033,128.952292062615" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9818642485557,128.952377983998),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 344-6<br><a href="https://map.kakao.com/link/to/망정동 344-6,35.9818642485557,128.952377983998" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.981904714521,128.9521892929),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 345-6<br><a href="https://map.kakao.com/link/to/망정동 345-6,35.981904714521,128.9521892929" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9816562284378,128.952242815032),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 345-7<br><a href="https://map.kakao.com/link/to/망정동 345-7,35.9816562284378,128.952242815032" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9818197371097,128.951652613604),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 346-4<br><a href="https://map.kakao.com/link/to/망정동 346-4,35.9818197371097,128.951652613604" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9886211670235,128.951932381764),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 473-3<br><a href="https://map.kakao.com/link/to/망정동 473-3,35.9886211670235,128.951932381764" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9888555736269,128.951847019896),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 473-4<br><a href="https://map.kakao.com/link/to/망정동 473-4,35.9888555736269,128.951847019896" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9891648415389,128.947406035432),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 산 14-15<br><a href="https://map.kakao.com/link/to/망정동 산 14-15,35.9891648415389,128.947406035432" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.98845073311,128.950345356649),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 산 14-16<br><a href="https://map.kakao.com/link/to/망정동 산 14-16,35.98845073311,128.950345356649" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9760905381184,128.946839376947),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 115-10<br><a href="https://map.kakao.com/link/to/야사동 115-10,35.9760905381184,128.946839376947" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9762887336649,128.946097851008),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 116-3<br><a href="https://map.kakao.com/link/to/야사동 116-3,35.9762887336649,128.946097851008" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9795455331327,128.939062785646),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 339-4<br><a href="https://map.kakao.com/link/to/야사동 339-4,35.9795455331327,128.939062785646" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9797772172173,128.939223328491),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 340-3<br><a href="https://map.kakao.com/link/to/야사동 340-3,35.9797772172173,128.939223328491" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9885385738473,128.942734953201),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 577-5<br><a href="https://map.kakao.com/link/to/야사동 577-5,35.9885385738473,128.942734953201" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9885886752347,128.942573530516),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 609-7<br><a href="https://map.kakao.com/link/to/야사동 609-7,35.9885886752347,128.942573530516" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9886857277581,128.9423617027),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 610-1<br><a href="https://map.kakao.com/link/to/야사동 610-1,35.9886857277581,128.9423617027" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9886136313883,128.942590440953),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 610-3<br><a href="https://map.kakao.com/link/to/야사동 610-3,35.9886136313883,128.942590440953" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9887527704571,128.942250255437),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 610-4<br><a href="https://map.kakao.com/link/to/야사동 610-4,35.9887527704571,128.942250255437" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9704989036316,128.934224175565),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 147-4<br><a href="https://map.kakao.com/link/to/문외동 147-4,35.9704989036316,128.934224175565" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9705428783256,128.934358155905),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 154-15<br><a href="https://map.kakao.com/link/to/문외동 154-15,35.9705428783256,128.934358155905" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9722996642327,128.933293408071),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 384-2<br><a href="https://map.kakao.com/link/to/문외동 384-2,35.9722996642327,128.933293408071" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9722796367026,128.93236099616),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 385<br><a href="https://map.kakao.com/link/to/문외동 385,35.9722796367026,128.93236099616" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9717794105387,128.934141248038),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 386<br><a href="https://map.kakao.com/link/to/문외동 386,35.9717794105387,128.934141248038" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9703495139964,128.930263138716),
+    content: '<div style="width:190px; height:45px; padding:5px;">창구동 130-3<br><a href="https://map.kakao.com/link/to/창구동 130-3,35.9703495139964,128.930263138716" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.973797179631,128.926987146185),
+    content: '<div style="width:190px; height:45px; padding:5px;">창구동 209-3<br><a href="https://map.kakao.com/link/to/창구동 209-3,35.973797179631,128.926987146185" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9735438032485,128.925971227673),
+    content: '<div style="width:190px; height:45px; padding:5px;">창구동 산 10<br><a href="https://map.kakao.com/link/to/창구동 산 10,35.9735438032485,128.925971227673" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9715797619035,128.9258789407),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 11-12<br><a href="https://map.kakao.com/link/to/교촌동 11-12,35.9715797619035,128.9258789407" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.965806984211,128.925307187275),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 248-7<br><a href="https://map.kakao.com/link/to/교촌동 248-7,35.965806984211,128.925307187275" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9658085820124,128.925100949149),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 248-10<br><a href="https://map.kakao.com/link/to/교촌동 248-10,35.9658085820124,128.925100949149" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.965835126293,128.925254888232),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 248-12<br><a href="https://map.kakao.com/link/to/교촌동 248-12,35.965835126293,128.925254888232" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9657457235245,128.92527832159),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 248-16<br><a href="https://map.kakao.com/link/to/교촌동 248-16,35.9657457235245,128.92527832159" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9656613670721,128.925329809577),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 248-17<br><a href="https://map.kakao.com/link/to/교촌동 248-17,35.9656613670721,128.925329809577" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9656051653879,128.925277679194),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 248-18<br><a href="https://map.kakao.com/link/to/교촌동 248-18,35.9656051653879,128.925277679194" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9655863577801,128.925163831425),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 248-21<br><a href="https://map.kakao.com/link/to/교촌동 248-21,35.9655863577801,128.925163831425" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9655624776796,128.925197612444),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 248-22<br><a href="https://map.kakao.com/link/to/교촌동 248-22,35.9655624776796,128.925197612444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9730347395785,128.927174571886),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 341-4<br><a href="https://map.kakao.com/link/to/교촌동 341-4,35.9730347395785,128.927174571886" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9666567985323,128.929305653062),
+    content: '<div style="width:190px; height:45px; padding:5px;">과전동 70-1<br><a href="https://map.kakao.com/link/to/과전동 70-1,35.9666567985323,128.929305653062" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9667020804383,128.929269068401),
+    content: '<div style="width:190px; height:45px; padding:5px;">과전동 70-7<br><a href="https://map.kakao.com/link/to/과전동 70-7,35.9667020804383,128.929269068401" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9766862829437,128.917091770533),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 489-3<br><a href="https://map.kakao.com/link/to/화룡동 489-3,35.9766862829437,128.917091770533" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9769155917106,128.917013842012),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 490-2<br><a href="https://map.kakao.com/link/to/화룡동 490-2,35.9769155917106,128.917013842012" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9738890630169,128.913768006958),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 728-8<br><a href="https://map.kakao.com/link/to/화룡동 728-8,35.9738890630169,128.913768006958" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.978056788951,128.923038157673),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 839-7<br><a href="https://map.kakao.com/link/to/화룡동 839-7,35.978056788951,128.923038157673" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9774331019012,128.923496498248),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 850<br><a href="https://map.kakao.com/link/to/화룡동 850,35.9774331019012,128.923496498248" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9777913748372,128.923428812947),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 산 72<br><a href="https://map.kakao.com/link/to/화룡동 산 72,35.9777913748372,128.923428812947" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.977294410256,128.923446903981),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 산 73<br><a href="https://map.kakao.com/link/to/화룡동 산 73,35.977294410256,128.923446903981" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9412272422463,128.930872850419),
+    content: '<div style="width:190px; height:45px; padding:5px;">도동 518-18<br><a href="https://map.kakao.com/link/to/도동 518-18,35.9412272422463,128.930872850419" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9379653774634,128.934092418307),
+    content: '<div style="width:190px; height:45px; padding:5px;">도동 800-17<br><a href="https://map.kakao.com/link/to/도동 800-17,35.9379653774634,128.934092418307" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9428790249245,128.945532383309),
+    content: '<div style="width:190px; height:45px; padding:5px;">도동 산 12-18<br><a href="https://map.kakao.com/link/to/도동 산 12-18,35.9428790249245,128.945532383309" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9579679477971,128.932905826371),
+    content: '<div style="width:190px; height:45px; padding:5px;">금노동 371-18<br><a href="https://map.kakao.com/link/to/금노동 371-18,35.9579679477971,128.932905826371" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9515681493721,128.945958928779),
+    content: '<div style="width:190px; height:45px; padding:5px;">금노동 산 44-3<br><a href="https://map.kakao.com/link/to/금노동 산 44-3,35.9515681493721,128.945958928779" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9622785982213,128.963793546264),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 58-2<br><a href="https://map.kakao.com/link/to/완산동 58-2,35.9622785982213,128.963793546264" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9598209268553,128.951872446061),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 411-5<br><a href="https://map.kakao.com/link/to/완산동 411-5,35.9598209268553,128.951872446061" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9607222390964,128.951021479814),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 475-5<br><a href="https://map.kakao.com/link/to/완산동 475-5,35.9607222390964,128.951021479814" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9681618236404,128.946126878067),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 687-10<br><a href="https://map.kakao.com/link/to/완산동 687-10,35.9681618236404,128.946126878067" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9681574017133,128.946826976333),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 689-9<br><a href="https://map.kakao.com/link/to/완산동 689-9,35.9681574017133,128.946826976333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9646244420368,128.941423890503),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 960-10<br><a href="https://map.kakao.com/link/to/완산동 960-10,35.9646244420368,128.941423890503" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9627133085661,128.936274694882),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 1077-5<br><a href="https://map.kakao.com/link/to/완산동 1077-5,35.9627133085661,128.936274694882" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9598791987188,128.934383496227),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 1108-19<br><a href="https://map.kakao.com/link/to/완산동 1108-19,35.9598791987188,128.934383496227" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9574887876576,128.934977532704),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 1163-65<br><a href="https://map.kakao.com/link/to/완산동 1163-65,35.9574887876576,128.934977532704" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9664407196107,128.939871349612),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 1324-15<br><a href="https://map.kakao.com/link/to/완산동 1324-15,35.9664407196107,128.939871349612" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9616813107326,128.945113925853),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 1437-1<br><a href="https://map.kakao.com/link/to/완산동 1437-1,35.9616813107326,128.945113925853" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9524010631789,128.976466628015),
+    content: '<div style="width:190px; height:45px; padding:5px;">범어동 75-1<br><a href="https://map.kakao.com/link/to/범어동 75-1,35.9524010631789,128.976466628015" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.946057367667,128.968609815541),
+    content: '<div style="width:190px; height:45px; padding:5px;">범어동 491-4<br><a href="https://map.kakao.com/link/to/범어동 491-4,35.946057367667,128.968609815541" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9461132130389,128.969550013469),
+    content: '<div style="width:190px; height:45px; padding:5px;">범어동 500<br><a href="https://map.kakao.com/link/to/범어동 500,35.9461132130389,128.969550013469" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.938008248008,128.934250249242),
+    content: '<div style="width:190px; height:45px; padding:5px;">작산동 372-5<br><a href="https://map.kakao.com/link/to/작산동 372-5,35.938008248008,128.934250249242" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9356484173561,128.942060056651),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉동 714-14<br><a href="https://map.kakao.com/link/to/봉동 714-14,35.9356484173561,128.942060056651" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9328631704686,128.941386520278),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉동 304-14<br><a href="https://map.kakao.com/link/to/봉동 304-14,35.9328631704686,128.941386520278" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9327331818193,128.941306227345),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉동 693-2<br><a href="https://map.kakao.com/link/to/봉동 693-2,35.9327331818193,128.941306227345" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9260153511783,128.956155873995),
+    content: '<div style="width:190px; height:45px; padding:5px;">본촌동 245<br><a href="https://map.kakao.com/link/to/본촌동 245,35.9260153511783,128.956155873995" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9230637466875,128.952981602879),
+    content: '<div style="width:190px; height:45px; padding:5px;">본촌동 577-10<br><a href="https://map.kakao.com/link/to/본촌동 577-10,35.9230637466875,128.952981602879" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.923910926176,128.952201702188),
+    content: '<div style="width:190px; height:45px; padding:5px;">본촌동 603-1<br><a href="https://map.kakao.com/link/to/본촌동 603-1,35.923910926176,128.952201702188" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9302020830692,128.947216004684),
+    content: '<div style="width:190px; height:45px; padding:5px;">본촌동 793-3<br><a href="https://map.kakao.com/link/to/본촌동 793-3,35.9302020830692,128.947216004684" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9870205738653,128.913593811061),
+    content: '<div style="width:190px; height:45px; padding:5px;">대전동 414-4<br><a href="https://map.kakao.com/link/to/대전동 414-4,35.9870205738653,128.913593811061" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9850918614045,128.914132944614),
+    content: '<div style="width:190px; height:45px; padding:5px;">대전동 447-3<br><a href="https://map.kakao.com/link/to/대전동 447-3,35.9850918614045,128.914132944614" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0090877838817,128.912463955947),
+    content: '<div style="width:190px; height:45px; padding:5px;">녹전동 783-1<br><a href="https://map.kakao.com/link/to/녹전동 783-1,36.0090877838817,128.912463955947" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0183324387182,128.931586403623),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 689-3<br><a href="https://map.kakao.com/link/to/도림동 689-3,36.0183324387182,128.931586403623" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.018329312903,128.931400100254),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 689-4<br><a href="https://map.kakao.com/link/to/도림동 689-4,36.018329312903,128.931400100254" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0182787792218,128.931231273592),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 746-1<br><a href="https://map.kakao.com/link/to/도림동 746-1,36.0182787792218,128.931231273592" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0183012378201,128.931638215863),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 746-2<br><a href="https://map.kakao.com/link/to/도림동 746-2,36.0183012378201,128.931638215863" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0104187029003,128.929021673259),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 1052-4<br><a href="https://map.kakao.com/link/to/도림동 1052-4,36.0104187029003,128.929021673259" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0104676501911,128.933266735508),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 1060-3<br><a href="https://map.kakao.com/link/to/도림동 1060-3,36.0104676501911,128.933266735508" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0099204528548,128.932549797178),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 1060-4<br><a href="https://map.kakao.com/link/to/도림동 1060-4,36.0099204528548,128.932549797178" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0107256624111,128.935593497522),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 1099-2<br><a href="https://map.kakao.com/link/to/도림동 1099-2,36.0107256624111,128.935593497522" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0111836696199,128.92700154165),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 1390-5<br><a href="https://map.kakao.com/link/to/도림동 1390-5,36.0111836696199,128.92700154165" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0112445583453,128.926610529155),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 1392-2<br><a href="https://map.kakao.com/link/to/도림동 1392-2,36.0112445583453,128.926610529155" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0103152012991,128.926183660515),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 1400-1<br><a href="https://map.kakao.com/link/to/도림동 1400-1,36.0103152012991,128.926183660515" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9863931104796,128.940046723506),
+    content: '<div style="width:190px; height:45px; padding:5px;">오미동 310-1<br><a href="https://map.kakao.com/link/to/오미동 310-1,35.9863931104796,128.940046723506" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9919493095813,128.923859841653),
+    content: '<div style="width:190px; height:45px; padding:5px;">오미동 1132-4<br><a href="https://map.kakao.com/link/to/오미동 1132-4,35.9919493095813,128.923859841653" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9844397258164,128.927244644087),
+    content: '<div style="width:190px; height:45px; padding:5px;">오미동 1222-1<br><a href="https://map.kakao.com/link/to/오미동 1222-1,35.9844397258164,128.927244644087" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9832887535075,128.924182120127),
+    content: '<div style="width:190px; height:45px; padding:5px;">오미동 1264-8<br><a href="https://map.kakao.com/link/to/오미동 1264-8,35.9832887535075,128.924182120127" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0079446343835,128.936957995941),
+    content: '<div style="width:190px; height:45px; padding:5px;">오미동 산 14-2<br><a href="https://map.kakao.com/link/to/오미동 산 14-2,36.0079446343835,128.936957995941" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.984529053012,128.927769782179),
+    content: '<div style="width:190px; height:45px; padding:5px;">오미동 산 113-26<br><a href="https://map.kakao.com/link/to/오미동 산 113-26,35.984529053012,128.927769782179" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.989204774078,128.935554985507),
+    content: '<div style="width:190px; height:45px; padding:5px;">오미동 산 121-11<br><a href="https://map.kakao.com/link/to/오미동 산 121-11,35.989204774078,128.935554985507" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9594543117393,128.91464683394),
+    content: '<div style="width:190px; height:45px; padding:5px;">오수동 94-2<br><a href="https://map.kakao.com/link/to/오수동 94-2,35.9594543117393,128.91464683394" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9330155832808,128.94096069282),
+    content: '<div style="width:190px; height:45px; padding:5px;">도남동 75-2<br><a href="https://map.kakao.com/link/to/도남동 75-2,35.9330155832808,128.94096069282" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9327256065442,128.941122786503),
+    content: '<div style="width:190px; height:45px; padding:5px;">도남동 77-4<br><a href="https://map.kakao.com/link/to/도남동 77-4,35.9327256065442,128.941122786503" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9329083796845,128.941064989128),
+    content: '<div style="width:190px; height:45px; padding:5px;">도남동 76<br><a href="https://map.kakao.com/link/to/도남동 76,35.9329083796845,128.941064989128" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0280665349101,128.923370505522),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 42<br><a href="https://map.kakao.com/link/to/매산동 42,36.0280665349101,128.923370505522" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.025975719269,128.923587553745),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 56-2<br><a href="https://map.kakao.com/link/to/매산동 56-2,36.025975719269,128.923587553745" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0229427924551,128.926539649229),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 121-1<br><a href="https://map.kakao.com/link/to/매산동 121-1,36.0229427924551,128.926539649229" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0114224461239,128.921505423555),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 413-3<br><a href="https://map.kakao.com/link/to/매산동 413-3,36.0114224461239,128.921505423555" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0122659503105,128.92057132471),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 463-4<br><a href="https://map.kakao.com/link/to/매산동 463-4,36.0122659503105,128.92057132471" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0137329469107,128.916773235814),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 564-1<br><a href="https://map.kakao.com/link/to/매산동 564-1,36.0137329469107,128.916773235814" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0129636106451,128.920303886667),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 582-7<br><a href="https://map.kakao.com/link/to/매산동 582-7,36.0129636106451,128.920303886667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0289546528134,128.920227252748),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 933-3<br><a href="https://map.kakao.com/link/to/매산동 933-3,36.0289546528134,128.920227252748" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0285833298226,128.921407630223),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 944-1<br><a href="https://map.kakao.com/link/to/매산동 944-1,36.0285833298226,128.921407630223" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.988176820437,128.970513875359),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 66-7<br><a href="https://map.kakao.com/link/to/언하동 66-7,35.988176820437,128.970513875359" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9882246843561,128.970490895857),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 66-8<br><a href="https://map.kakao.com/link/to/언하동 66-8,35.9882246843561,128.970490895857" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9873179257411,128.969553652281),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 154-1<br><a href="https://map.kakao.com/link/to/언하동 154-1,35.9873179257411,128.969553652281" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.987946740382,128.969704329326),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 540-4<br><a href="https://map.kakao.com/link/to/언하동 540-4,35.987946740382,128.969704329326" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9884367999843,128.969892803035),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 552-1<br><a href="https://map.kakao.com/link/to/언하동 552-1,35.9884367999843,128.969892803035" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.001731324658,128.956575447002),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 산 27-38<br><a href="https://map.kakao.com/link/to/언하동 산 27-38,36.001731324658,128.956575447002" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0053935854712,128.954268703148),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 98-1<br><a href="https://map.kakao.com/link/to/신기동 98-1,36.0053935854712,128.954268703148" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0050747421341,128.954376496889),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 101-1<br><a href="https://map.kakao.com/link/to/신기동 101-1,36.0050747421341,128.954376496889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0046599251912,128.954617545907),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 104-3<br><a href="https://map.kakao.com/link/to/신기동 104-3,36.0046599251912,128.954617545907" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9987346711915,128.955474024385),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 169-4<br><a href="https://map.kakao.com/link/to/신기동 169-4,35.9987346711915,128.955474024385" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9988799328366,128.955810496638),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 207-5<br><a href="https://map.kakao.com/link/to/신기동 207-5,35.9988799328366,128.955810496638" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9933700094309,128.956266959733),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 233-3<br><a href="https://map.kakao.com/link/to/신기동 233-3,35.9933700094309,128.956266959733" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9918339092944,128.957363075556),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 271<br><a href="https://map.kakao.com/link/to/신기동 271,35.9918339092944,128.957363075556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9916736262586,128.957494495869),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 271-1<br><a href="https://map.kakao.com/link/to/신기동 271-1,35.9916736262586,128.957494495869" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9799428925541,128.887999823927),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 539-3<br><a href="https://map.kakao.com/link/to/서산동 539-3,35.9799428925541,128.887999823927" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9799220152348,128.887162092889),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 541-2<br><a href="https://map.kakao.com/link/to/서산동 541-2,35.9799220152348,128.887162092889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9798425999196,128.88687761326),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 541-3<br><a href="https://map.kakao.com/link/to/서산동 541-3,35.9798425999196,128.88687761326" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9789100568545,128.888504355211),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 541-8<br><a href="https://map.kakao.com/link/to/서산동 541-8,35.9789100568545,128.888504355211" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9793783827058,128.888050119114),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 541-9<br><a href="https://map.kakao.com/link/to/서산동 541-9,35.9793783827058,128.888050119114" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9787075263859,128.885810488724),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 951-5<br><a href="https://map.kakao.com/link/to/서산동 951-5,35.9787075263859,128.885810488724" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9788893437238,128.885949401015),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 951-6<br><a href="https://map.kakao.com/link/to/서산동 951-6,35.9788893437238,128.885949401015" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 붉은색
+var newmarkerInfos1 = [
+{
+    position: new kakao.maps.LatLng(35.9041202420848,128.963017353047),
+    content: '<div style="width:190px; height:45px; padding:5px;">괴연동 산 12<br><a href="https://map.kakao.com/link/to/괴연동 산 12,35.9041202420848,128.963017353047" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9016423093444,128.965239724271),
+    content: '<div style="width:190px; height:45px; padding:5px;">괴연동 산 20<br><a href="https://map.kakao.com/link/to/괴연동 산 20,35.9016423093444,128.965239724271" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9013919208788,128.964974152799),
+    content: '<div style="width:190px; height:45px; padding:5px;">괴연동 산 21-4<br><a href="https://map.kakao.com/link/to/괴연동 산 21-4,35.9013919208788,128.964974152799" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9012086444484,128.964494942559),
+    content: '<div style="width:190px; height:45px; padding:5px;">괴연동 산 21-5<br><a href="https://map.kakao.com/link/to/괴연동 산 21-5,35.9012086444484,128.964494942559" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9010455420722,128.964456799287),
+    content: '<div style="width:190px; height:45px; padding:5px;">괴연동 산 21-6<br><a href="https://map.kakao.com/link/to/괴연동 산 21-6,35.9010455420722,128.964456799287" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9005698560057,128.964936105702),
+    content: '<div style="width:190px; height:45px; padding:5px;">괴연동 산 23-15<br><a href="https://map.kakao.com/link/to/괴연동 산 23-15,35.9005698560057,128.964936105702" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9013036925022,128.965497816953),
+    content: '<div style="width:190px; height:45px; padding:5px;">괴연동 28-2<br><a href="https://map.kakao.com/link/to/괴연동 28-2,35.9013036925022,128.965497816953" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9011329915791,128.965246842154),
+    content: '<div style="width:190px; height:45px; padding:5px;">괴연동 29<br><a href="https://map.kakao.com/link/to/괴연동 29,35.9011329915791,128.965246842154" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9025851559688,128.958051922638),
+    content: '<div style="width:190px; height:45px; padding:5px;">괴연동 산 191<br><a href="https://map.kakao.com/link/to/괴연동 산 191,35.9025851559688,128.958051922638" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9701543743338,128.921230034341),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 산 6<br><a href="https://map.kakao.com/link/to/교촌동 산 6,35.9701543743338,128.921230034341" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9722070890745,128.925980203907),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 11-45<br><a href="https://map.kakao.com/link/to/교촌동 11-45,35.9722070890745,128.925980203907" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9718727748291,128.92857207709),
+    content: '<div style="width:190px; height:45px; padding:5px;">교촌동 29-1<br><a href="https://map.kakao.com/link/to/교촌동 29-1,35.9718727748291,128.92857207709" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9463807583944,128.94052699472),
+    content: '<div style="width:190px; height:45px; padding:5px;">금노동 산 24<br><a href="https://map.kakao.com/link/to/금노동 산 24,35.9463807583944,128.94052699472" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9461877697136,128.940113258939),
+    content: '<div style="width:190px; height:45px; padding:5px;">금노동 산 25<br><a href="https://map.kakao.com/link/to/금노동 산 25,35.9461877697136,128.940113258939" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9560295451162,128.950050215535),
+    content: '<div style="width:190px; height:45px; padding:5px;">금노동 산 48-1<br><a href="https://map.kakao.com/link/to/금노동 산 48-1,35.9560295451162,128.950050215535" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9917980914254,128.915377511675),
+    content: '<div style="width:190px; height:45px; padding:5px;">대전동 산 3<br><a href="https://map.kakao.com/link/to/대전동 산 3,35.9917980914254,128.915377511675" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9894170469864,128.912669682197),
+    content: '<div style="width:190px; height:45px; padding:5px;">대전동 산 17<br><a href="https://map.kakao.com/link/to/대전동 산 17,35.9894170469864,128.912669682197" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.015886696365,128.940434151373),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 산 46<br><a href="https://map.kakao.com/link/to/도림동 산 46,36.015886696365,128.940434151373" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0342385589595,128.949139121324),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 산 95<br><a href="https://map.kakao.com/link/to/도림동 산 95,36.0342385589595,128.949139121324" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0238458313954,128.937103337754),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 산 107<br><a href="https://map.kakao.com/link/to/도림동 산 107,36.0238458313954,128.937103337754" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0149207239096,128.935691997437),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 산 118<br><a href="https://map.kakao.com/link/to/도림동 산 118,36.0149207239096,128.935691997437" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0154609637019,128.934047530916),
+    content: '<div style="width:190px; height:45px; padding:5px;">도림동 893<br><a href="https://map.kakao.com/link/to/도림동 893,36.0154609637019,128.934047530916" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9846155011116,128.951574806907),
+    content: '<div style="width:190px; height:45px; padding:5px;">망정동 391-1<br><a href="https://map.kakao.com/link/to/망정동 391-1,35.9846155011116,128.951574806907" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.03302298169,128.911483734984),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 산 16<br><a href="https://map.kakao.com/link/to/매산동 산 16,36.03302298169,128.911483734984" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0306808522612,128.924058744472),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 20<br><a href="https://map.kakao.com/link/to/매산동 20,36.0306808522612,128.924058744472" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.030271040643,128.923963578747),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 21<br><a href="https://map.kakao.com/link/to/매산동 21,36.030271040643,128.923963578747" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0297345951833,128.923977152888),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 32-1<br><a href="https://map.kakao.com/link/to/매산동 32-1,36.0297345951833,128.923977152888" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0275847409866,128.912483226573),
+    content: '<div style="width:190px; height:45px; padding:5px;">매산동 산 55<br><a href="https://map.kakao.com/link/to/매산동 산 55,36.0275847409866,128.912483226573" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9745793757614,128.93468026468),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 224-6<br><a href="https://map.kakao.com/link/to/문외동 224-6,35.9745793757614,128.93468026468" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9759774936095,128.934037287502),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 238<br><a href="https://map.kakao.com/link/to/문외동 238,35.9759774936095,128.934037287502" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9760192556135,128.932737742798),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 263<br><a href="https://map.kakao.com/link/to/문외동 263,35.9760192556135,128.932737742798" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9762554278318,128.932363043318),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 263-2<br><a href="https://map.kakao.com/link/to/문외동 263-2,35.9762554278318,128.932363043318" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9770888884169,128.931833845409),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 293<br><a href="https://map.kakao.com/link/to/문외동 293,35.9770888884169,128.931833845409" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9779439003829,128.932025300999),
+    content: '<div style="width:190px; height:45px; padding:5px;">문외동 301<br><a href="https://map.kakao.com/link/to/문외동 301,35.9779439003829,128.932025300999" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9502336253124,128.978423655178),
+    content: '<div style="width:190px; height:45px; padding:5px;">범어동 산 17<br><a href="https://map.kakao.com/link/to/범어동 산 17,35.9502336253124,128.978423655178" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9472532960777,128.966575449174),
+    content: '<div style="width:190px; height:45px; padding:5px;">범어동 449-2<br><a href="https://map.kakao.com/link/to/범어동 449-2,35.9472532960777,128.966575449174" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.967903241765,128.872713497075),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 산 103<br><a href="https://map.kakao.com/link/to/서산동 산 103,35.967903241765,128.872713497075" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9680595343446,128.871636771371),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 산 105<br><a href="https://map.kakao.com/link/to/서산동 산 105,35.9680595343446,128.871636771371" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9750495284914,128.869644242219),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 산 125<br><a href="https://map.kakao.com/link/to/서산동 산 125,35.9750495284914,128.869644242219" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9826396971414,128.875845385791),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 산 152<br><a href="https://map.kakao.com/link/to/서산동 산 152,35.9826396971414,128.875845385791" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9831462199777,128.876604290829),
+    content: '<div style="width:190px; height:45px; padding:5px;">서산동 산 153<br><a href="https://map.kakao.com/link/to/서산동 산 153,35.9831462199777,128.876604290829" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9921967075491,128.958310737203),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 산 2<br><a href="https://map.kakao.com/link/to/신기동 산 2,35.9921967075491,128.958310737203" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9916827823723,128.958054099432),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 산 3<br><a href="https://map.kakao.com/link/to/신기동 산 3,35.9916827823723,128.958054099432" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9915877928538,128.959461889875),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 279-6<br><a href="https://map.kakao.com/link/to/신기동 279-6,35.9915877928538,128.959461889875" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9920210659582,128.958924539221),
+    content: '<div style="width:190px; height:45px; padding:5px;">신기동 280<br><a href="https://map.kakao.com/link/to/신기동 280,35.9920210659582,128.958924539221" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9692286044176,128.903788761902),
+    content: '<div style="width:190px; height:45px; padding:5px;">쌍계동 산 20<br><a href="https://map.kakao.com/link/to/쌍계동 산 20,35.9692286044176,128.903788761902" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9764822325946,128.939430811172),
+    content: '<div style="width:190px; height:45px; padding:5px;">야사동 337<br><a href="https://map.kakao.com/link/to/야사동 337,35.9764822325946,128.939430811172" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9950622214073,128.96049889172),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 산 3<br><a href="https://map.kakao.com/link/to/언하동 산 3,35.9950622214073,128.96049889172" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9943364622173,128.961349790099),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 산 3-1<br><a href="https://map.kakao.com/link/to/언하동 산 3-1,35.9943364622173,128.961349790099" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.998067167372,128.960037817886),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 산 6<br><a href="https://map.kakao.com/link/to/언하동 산 6,35.998067167372,128.960037817886" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0039226105931,128.960096947376),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 산 13<br><a href="https://map.kakao.com/link/to/언하동 산 13,36.0039226105931,128.960096947376" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.995509728281,128.958467396843),
+    content: '<div style="width:190px; height:45px; padding:5px;">언하동 산 29<br><a href="https://map.kakao.com/link/to/언하동 산 29,35.995509728281,128.958467396843" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0014541622016,128.93980924),
+    content: '<div style="width:190px; height:45px; padding:5px;">오미동 산 45-1<br><a href="https://map.kakao.com/link/to/오미동 산 45-1,36.0014541622016,128.93980924" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9826297341913,128.930527798618),
+    content: '<div style="width:190px; height:45px; padding:5px;">오미동 산 133<br><a href="https://map.kakao.com/link/to/오미동 산 133,35.9826297341913,128.930527798618" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9548781750729,128.912278810343),
+    content: '<div style="width:190px; height:45px; padding:5px;">오수동 산 7<br><a href="https://map.kakao.com/link/to/오수동 산 7,35.9548781750729,128.912278810343" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9518962650927,128.917876054502),
+    content: '<div style="width:190px; height:45px; padding:5px;">오수동 428<br><a href="https://map.kakao.com/link/to/오수동 428,35.9518962650927,128.917876054502" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9633786918664,128.975774636231),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 산 13-5<br><a href="https://map.kakao.com/link/to/완산동 산 13-5,35.9633786918664,128.975774636231" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9628952330507,128.975864225864),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 산 13-6<br><a href="https://map.kakao.com/link/to/완산동 산 13-6,35.9628952330507,128.975864225864" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9571388122571,128.9510507951),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 산 76<br><a href="https://map.kakao.com/link/to/완산동 산 76,35.9571388122571,128.9510507951" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9568930188552,128.949425425578),
+    content: '<div style="width:190px; height:45px; padding:5px;">완산동 산 78<br><a href="https://map.kakao.com/link/to/완산동 산 78,35.9568930188552,128.949425425578" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9400797018709,128.943448970498),
+    content: '<div style="width:190px; height:45px; padding:5px;">작산동 산 39<br><a href="https://map.kakao.com/link/to/작산동 산 39,35.9400797018709,128.943448970498" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9402714514475,128.94450576849),
+    content: '<div style="width:190px; height:45px; padding:5px;">작산동 산 39-1<br><a href="https://map.kakao.com/link/to/작산동 산 39-1,35.9402714514475,128.94450576849" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9672293054397,128.932235998879),
+    content: '<div style="width:190px; height:45px; padding:5px;">창구동 26-16<br><a href="https://map.kakao.com/link/to/창구동 26-16,35.9672293054397,128.932235998879" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9672795229411,128.932334987205),
+    content: '<div style="width:190px; height:45px; padding:5px;">창구동 29-2<br><a href="https://map.kakao.com/link/to/창구동 29-2,35.9672795229411,128.932334987205" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9673384775171,128.932422993397),
+    content: '<div style="width:190px; height:45px; padding:5px;">창구동 30-2<br><a href="https://map.kakao.com/link/to/창구동 30-2,35.9673384775171,128.932422993397" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.967388194415,128.932732019235),
+    content: '<div style="width:190px; height:45px; padding:5px;">창구동 32<br><a href="https://map.kakao.com/link/to/창구동 32,35.967388194415,128.932732019235" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9096857585278,128.966975739851),
+    content: '<div style="width:190px; height:45px; padding:5px;">채신동 산 13<br><a href="https://map.kakao.com/link/to/채신동 산 13,35.9096857585278,128.966975739851" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9076814169964,128.967375799584),
+    content: '<div style="width:190px; height:45px; padding:5px;">채신동 산 14<br><a href="https://map.kakao.com/link/to/채신동 산 14,35.9076814169964,128.967375799584" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9746837124459,128.92133306572),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 산 32-1<br><a href="https://map.kakao.com/link/to/화룡동 산 32-1,35.9746837124459,128.92133306572" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9761431346293,128.92160091412),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 산 40<br><a href="https://map.kakao.com/link/to/화룡동 산 40,35.9761431346293,128.92160091412" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9772037721946,128.92355301224),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 산 43<br><a href="https://map.kakao.com/link/to/화룡동 산 43,35.9772037721946,128.92355301224" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9773394369164,128.923931781875),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 산 45<br><a href="https://map.kakao.com/link/to/화룡동 산 45,35.9773394369164,128.923931781875" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9776616340896,128.924545779158),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 산 46<br><a href="https://map.kakao.com/link/to/화룡동 산 46,35.9776616340896,128.924545779158" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9771354886623,128.922365951389),
+    content: '<div style="width:190px; height:45px; padding:5px;">화룡동 118<br><a href="https://map.kakao.com/link/to/화룡동 118,35.9771354886623,128.922365951389" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < newmarkerInfos1.length; i++) {
+    var newmarker = new kakao.maps.Marker({
+        position: newmarkerInfos1[i].position,
+        image: newMarkerImage,
+        clickable: true
+    });
+    markers.push(newmarker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos1[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker, 'click', makeClickListener(newmarker, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
