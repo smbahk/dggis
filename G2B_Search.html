@@ -70,27 +70,55 @@
         <q>나라장터_검색조건에 의한 입찰공고 용역 조회</q> <br><br>
         ★ 권장 - 휴대폰 화면 가로 보기 ★
     </p>
-    <form id="bidSearchForm">
-        <label for="inqryBgnDt">＊조회시작일: </label>
-        <input type="text" id="inqryBgnDt" required pattern="[0-9]{8}" placeholder="예, 20231201"><br>
-
-        <label for="inqryEndDt">＊조회종료일: </label>
-        <input type="text" id="inqryEndDt" required pattern="[0-9]{8}" placeholder="예, 20231231"><br>
-
-        <label for="bidNtceNm">＊공고명: </label>
-        <input type="text" id="bidNtceNm" placeholder="예, GIS"><br>
-
-        <label for="prtcptLmtRgnNm">＊참가제한지역: </label>
-        <input type="text" id="prtcptLmtRgnNm" placeholder="예, 경상북도"> (입력X → 모든 지역및기관 검색)<br>
-
-        <label for="bidClseExcpYn">＊입찰마감 제외: </label>
-        <select id="bidClseExcpYn">
-            <option value="Y">Yes</option>
-            <option value="N">No</option>
-        </select><br>
-        <br>
-        <button type="button" onclick="fetchAndDisplayBidInfo()">검색하기</button>
-    </form>
+    <table>
+        <form id="bidSearchForm">
+            <tr>
+                <td>
+                    <label for="inqryBgnDt">＊조회시작일:</label>
+                </td>
+                <td>
+                    <input type="text" id="inqryBgnDt" required pattern="[0-9]{8}" placeholder="예, 20231201"><br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="inqryEndDt">＊조회종료일:</label>
+                </td>
+                <td>
+                    <input type="text" id="inqryEndDt" required pattern="[0-9]{8}" placeholder="예, 20231231"><br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="bidNtceNm">＊공고명:</label>
+                </td>
+                <td>
+                    <input type="text" id="bidNtceNm" placeholder="예, GIS"><br>
+                </td>
+            </tr>
+            <td>
+                    <label for="prtcptLmtRgnNm">＊참가제한지역:</label>
+                </td>
+                <td>
+                    <input type="text" id="prtcptLmtRgnNm" size="27" placeholder="예, 입력X → 모든 지역및기관 검색"><br>
+                </td>
+            <tr>
+                <td>
+                    <label for="bidClseExcpYn">＊입찰마감제외:</label>
+                </td>
+                <td>
+                    <select id="bidClseExcpYn">
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                    ( *입찰마감 포함 → N )
+                    <br>
+                </td>
+            </tr>
+    </table>
+            <br>
+            <button type="button" onclick="fetchAndDisplayBidInfo()">검색하기</button>
+        </form>
 
     <div id="loadingModal" class="modal">
         <div class="modal-content">
@@ -101,7 +129,7 @@
 
     <br>
     <!-- 테이블 및 결과 개수 출력 -->
-    <table border="1">
+    <table>
         <thead>
             <tr>
                 <th>입찰공고번호</th>
@@ -184,7 +212,7 @@
             hideLoadingModal();
         }
 
-        // 현재 날짜를 얻어와서 inqryBgnDt, inqryEndDt 입력 필드에 설정
+        // 현재 날짜를 얻어와서 inqryBgnDt, inqryEndDt 입력 필드에 설정 , prtcptLmtRgnNm 설정
         window.addEventListener('DOMContentLoaded', function() {
             const today = new Date();
             const year = today.getFullYear();
@@ -193,8 +221,9 @@
             const formattedDate = `${year}${month}${day}`;
             document.getElementById('inqryBgnDt').value = formattedDate;
             document.getElementById('inqryEndDt').value = formattedDate;
+            document.getElementById('prtcptLmtRgnNm').value = '경상북도';
+            document.getElementById('prtcptLmtRgnNm').style = readOnlyInputStyle;
         });
-
     </script>
 </body>
 </html>
