@@ -65,20 +65,24 @@
     </style>
 </head>
 <body>
+    <p>
+        <strong>G2B Search Program</strong><br>
+        <q>나라장터_검색조건에 의한 입찰공고 용역 조회</q> <br>
+    </p>
     <form id="bidSearchForm">
-        <label for="inqryBgnDt">조회시작일: </label>
+        <label for="inqryBgnDt">＊조회시작일: </label>
         <input type="text" id="inqryBgnDt" required pattern="[0-9]{8}" placeholder="예, 20231201"><br>
 
-        <label for="inqryEndDt">조회종료일: </label>
+        <label for="inqryEndDt">＊조회종료일: </label>
         <input type="text" id="inqryEndDt" required pattern="[0-9]{8}" placeholder="예, 20231231"><br>
 
-        <label for="bidNtceNm">공고명: </label>
+        <label for="bidNtceNm">＊공고명: </label>
         <input type="text" id="bidNtceNm" placeholder="예, GIS"><br>
 
-        <label for="prtcptLmtRgnNm">참가제한지역 (입력X → 모든 지역및기관 검색): </label>
-        <input type="text" id="prtcptLmtRgnNm" placeholder="예, 경상북도"><br>
+        <label for="prtcptLmtRgnNm">＊참가제한지역: </label>
+        <input type="text" id="prtcptLmtRgnNm" placeholder="예, 경상북도"> (입력X → 모든 지역및기관 검색)<br>
 
-        <label for="bidClseExcpYn">입찰마감 제외: </label>
+        <label for="bidClseExcpYn">＊입찰마감 제외: </label>
         <select id="bidClseExcpYn">
             <option value="Y">Yes</option>
             <option value="N">No</option>
@@ -126,7 +130,7 @@
 
         function fetchAndDisplayBidInfo() {
 
-            // 검색 시작 시 로딩 모달 띄우기
+            // 검색 시작 시 모달 띄우기
             showLoadingModal();
 
             const inqryBgnDt = document.getElementById('inqryBgnDt').value;
@@ -178,6 +182,15 @@
             // 검색 결과 개수 출력
             // const resultCountElement = document.getElementById('resultCount');
             // resultCountElement.innerText = `검색 결과: ${bidInfoList.length}개`;
+
+            // 현재 날짜를 얻어와서 inqryBgnDt 입력 필드에 설정
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const formattedDate = `${year}${month}${day}`;
+            document.getElementById('inqryBgnDt').value = formattedDate;
+            document.getElementById('inqryEndDt').value = formattedDate;
 
             // 검색 완료 시 로딩 모달 숨기기
             hideLoadingModal();
