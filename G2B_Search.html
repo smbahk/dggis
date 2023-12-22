@@ -179,11 +179,12 @@
             const totalCountElement = document.getElementById('totalCount');
             totalCountElement.innerText = totalCount;
 
-            // 검색 결과 개수 출력
-            // const resultCountElement = document.getElementById('resultCount');
-            // resultCountElement.innerText = `검색 결과: ${bidInfoList.length}개`;
+            // 검색 완료 시 로딩 모달 숨기기
+            hideLoadingModal();
+        }
 
-            // 현재 날짜를 얻어와서 inqryBgnDt 입력 필드에 설정
+        // 현재 날짜를 얻어와서 inqryBgnDt 입력 필드에 설정
+        window.addEventListener('DOMContentLoaded', function() {
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -191,10 +192,8 @@
             const formattedDate = `${year}${month}${day}`;
             document.getElementById('inqryBgnDt').value = formattedDate;
             document.getElementById('inqryEndDt').value = formattedDate;
+        });
 
-            // 검색 완료 시 로딩 모달 숨기기
-            hideLoadingModal();
-        }
     </script>
 </body>
 </html>
