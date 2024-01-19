@@ -77,7 +77,7 @@
                     <label for="inqryBgnDt">＊조회시작일:</label>
                 </td>
                 <td>
-                    <input type="text" id="inqryBgnDt" required pattern="[0-9]{8}" placeholder="예, 20231201"><br>
+                    <input type="text" id="inqryBgnDt" required pattern="[0-9]{12}" placeholder="예, 202401010000"><br>
                 </td>
             </tr>
             <tr>
@@ -85,7 +85,7 @@
                     <label for="inqryEndDt">＊조회종료일:</label>
                 </td>
                 <td>
-                    <input type="text" id="inqryEndDt" required pattern="[0-9]{8}" placeholder="예, 20231231"><br>
+                    <input type="text" id="inqryEndDt" required pattern="[0-9]{12}" placeholder="예, 202401312359"><br>
                 </td>
             </tr>
             <tr>
@@ -218,9 +218,10 @@
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
-            const formattedDate = `${year}${month}${day}`;
+            const formattedDate = `${year}${month}${day}0000`;
+            const formattedDate2 = `${year}${month}${day}2359`;
             document.getElementById('inqryBgnDt').value = formattedDate;
-            document.getElementById('inqryEndDt').value = formattedDate;
+            document.getElementById('inqryEndDt').value = formattedDate2;
             document.getElementById('prtcptLmtRgnNm').value = '경상북도';
             document.getElementById('prtcptLmtRgnNm').style = readOnlyInputStyle;
         });
