@@ -154,7 +154,16 @@ function setOverlayMapTypeId(maptype) {
 var markers = [];
 var infowindows = [];
 
+// 새로운 마커 이미지를 생성합니다.
+var newImageUrl = 'https://smbahk.github.io/dggis/p_v.png';
+var newMarkerImage = new kakao.maps.MarkerImage(newImageUrl, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다.
+var newImageUrl2 = 'https://smbahk.github.io/dggis/p_g.png';
+var newMarkerImage2 = new kakao.maps.MarkerImage(newImageUrl2, new kakao.maps.Size(35, 35));
+
 // 마커와 인포윈도우 정보를 담은 객체 배열입니다
+// 파란색
 var markerInfos = [
 {
     position: new kakao.maps.LatLng(36.1057202181,128.3372895159),
@@ -1027,7 +1036,11 @@ var markerInfos = [
 {
     position: new kakao.maps.LatLng(36.1386044003,128.4122561342),
     content: '<div style="width:190px; height:45px; padding:5px;">거양길 18-15<br>무더위쉼터-<a href="https://map.kakao.com/link/to/거양길 18-15,36.1386044003,128.4122561342" style="color:red" target="_blank">길찾기</a></div>'
-},
+}
+];
+
+// 보라
+var newmarkerInfos1 = [
 {
     position: new kakao.maps.LatLng(36.1064571143,128.3356434849),
     content: '<div style="width:190px; height:45px; padding:5px;">형곡로 180<br>자전거거치대-<a href="https://map.kakao.com/link/to/형곡로 180,36.1064571143,128.3356434849" style="color:red" target="_blank">길찾기</a></div>'
@@ -1231,7 +1244,11 @@ var markerInfos = [
 {
     position: new kakao.maps.LatLng(36.1014475568,128.3787921655),
     content: '<div style="width:190px; height:45px; padding:5px;">1공단로 144<br>자전거거치대-<a href="https://map.kakao.com/link/to/1공단로 144,36.1014475568,128.3787921655" style="color:red" target="_blank">길찾기</a></div>'
-},
+}
+];
+
+// 초록
+var newmarkerInfos2 = [
 {
     position: new kakao.maps.LatLng(36.1061283179,128.3303701447),
     content: '<div style="width:190px; height:45px; padding:5px;">공원로 340<br>정문출입구/전동휠체어급속충전기-<a href="https://map.kakao.com/link/to/공원로 340,36.1061283179,128.3303701447" style="color:red" target="_blank">길찾기</a></div>'
@@ -1285,7 +1302,7 @@ for (var i = 0; i < markerInfos.length; i++) {
         clickable: true
     });
     markers.push(marker);
-
+    
     var infowindow = new kakao.maps.InfoWindow({
         content: markerInfos[i].content,
         removable: true
@@ -1293,6 +1310,41 @@ for (var i = 0; i < markerInfos.length; i++) {
     infowindows.push(infowindow);
 
     kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 1
+for (var i = 0; i < newmarkerInfos1.length; i++) {
+    var newmarker = new kakao.maps.Marker({
+        position: newmarkerInfos1[i].position,
+        image: newMarkerImage,
+        clickable: true
+    });
+    markers.push(newmarker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos1[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker, 'click', makeClickListener(newmarker, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 2
+for (var i = 0; i < newmarkerInfos2.length; i++) {
+    var newmarker2 = new kakao.maps.Marker({
+        position: newmarkerInfos2[i].position,
+        image: newMarkerImage2,
+        clickable: true
+    });
+    markers.push(newmarker2);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos2[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker2, 'click', makeClickListener(newmarker2, infowindow));
 }
 
 // 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
