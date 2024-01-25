@@ -154,6 +154,10 @@ function setOverlayMapTypeId(maptype) {
 var markers = [];
 var infowindows = [];
 
+// 새로운 마커 이미지를 생성합니다. -- 삭제시 기본 이미지 (파란색)
+var newImageUrl0 = 'https://smbahk.github.io/dggis/p_r.png';
+var newMarkerImage0 = new kakao.maps.MarkerImage(newImageUrl0, new kakao.maps.Size(35, 35));
+
 // 새로운 마커 이미지를 생성합니다.
 var newImageUrl = 'https://smbahk.github.io/dggis/p_v.png';
 var newMarkerImage = new kakao.maps.MarkerImage(newImageUrl, new kakao.maps.Size(35, 35));
@@ -1295,10 +1299,11 @@ var newmarkerInfos2 = [
 }
 ];
 
-// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다  --- newMarkerImage0 삭제시 기본 이미지 (파란색)
 for (var i = 0; i < markerInfos.length; i++) {
     var marker = new kakao.maps.Marker({
         position: markerInfos[i].position,
+        image: newMarkerImage0,
         clickable: true
     });
     markers.push(marker);
