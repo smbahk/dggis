@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>잔여46_구미시-사물주소</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(36.11957360149383, 128.34424196528514), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(36.11957360149383, 128.34424196528514),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize = new kakao.maps.Size(24, 35); 
+    
+    // 마커 이미지를 생성합니다    
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition,
+        image : markerImage // 마커 이미지
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 새로운 마커 이미지를 생성합니다. -- 삭제시 기본 이미지 (파란색)
+var newImageUrl0 = 'https://smbahk.github.io/dggis/p_r.png';
+var newMarkerImage0 = new kakao.maps.MarkerImage(newImageUrl0, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다.
+var newImageUrl = 'https://smbahk.github.io/dggis/p_v.png';
+var newMarkerImage = new kakao.maps.MarkerImage(newImageUrl, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다.
+var newImageUrl2 = 'https://smbahk.github.io/dggis/p_g.png';
+var newMarkerImage2 = new kakao.maps.MarkerImage(newImageUrl2, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다.
+var newImageUrl3 = 'https://smbahk.github.io/dggis/p_o.png';
+var newMarkerImage3 = new kakao.maps.MarkerImage(newImageUrl3, new kakao.maps.Size(35, 35));
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+// 파란색 -- 무더위
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(36.1398368998,128.3305636407),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로9길 4-19<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로9길 4-19,36.1398368998,128.3305636407" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1429410024,128.330229997),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로 111<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로 111,36.1429410024,128.330229997" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1479232496,128.3314082584),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로 162-5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로 162-5,36.1479232496,128.3314082584" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.148370225,128.3315044263),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로 174-6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로 174-6,36.148370225,128.3315044263" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1513731981,128.3328928721),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로22길 30<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로22길 30,36.1513731981,128.3328928721" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1523328008,128.3307343697),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로26길 11<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로26길 11,36.1523328008,128.3307343697" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1523821715,128.3305078926),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로26길 9<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로26길 9,36.1523821715,128.3305078926" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1519568168,128.3276076443),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로25길 18-59<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로25길 18-59,36.1519568168,128.3276076443" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1508768381,128.3293737157),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로23길 14-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로23길 14-4,36.1508768381,128.3293737157" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1354857734,128.4232901474),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계남로5길 8-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계남로5길 8-4,36.1354857734,128.4232901474" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1386044003,128.4122561342),
+    content: '<div style="width:190px; height:45px; padding:5px;">거양길 18-15<br>무더위쉼터-<a href="https://map.kakao.com/link/to/거양길 18-15,36.1386044003,128.4122561342" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1390632516,128.4145771282),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로23길 19<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로23길 19,36.1390632516,128.4145771282" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1408191773,128.4172859973),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로25길 34-19<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로25길 34-19,36.1408191773,128.4172859973" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1408591933,128.4170156525),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로25길 34-21<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로25길 34-21,36.1408591933,128.4170156525" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.137426288,128.4235591636),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로33길 13<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로33길 13,36.137426288,128.4235591636" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1530216145,128.4319989845),
+    content: '<div style="width:190px; height:45px; padding:5px;">신당1로 25<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신당1로 25,36.1530216145,128.4319989845" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1549795786,128.4271141567),
+    content: '<div style="width:190px; height:45px; padding:5px;">신당1로6길 11<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신당1로6길 11,36.1549795786,128.4271141567" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1563251706,128.4259132743),
+    content: '<div style="width:190px; height:45px; padding:5px;">신당2로3길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신당2로3길 3,36.1563251706,128.4259132743" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1586082412,128.4301313734),
+    content: '<div style="width:190px; height:45px; padding:5px;">신당3로1길 10<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신당3로1길 10,36.1586082412,128.4301313734" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1596107702,128.4310099822),
+    content: '<div style="width:190px; height:45px; padding:5px;">신당3로1길 34<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신당3로1길 34,36.1596107702,128.4310099822" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1563674954,128.4381593874),
+    content: '<div style="width:190px; height:45px; padding:5px;">신당인덕1로3길 15-5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신당인덕1로3길 15-5,36.1563674954,128.4381593874" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1404878887,128.423174802),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계북로 43-27<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계북로 43-27,36.1404878887,128.423174802" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.137568982,128.4265637113),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계북로10길 7<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계북로10길 7,36.137568982,128.4265637113" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1396375544,128.4197503898),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계북로1길 14-8<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계북로1길 14-8,36.1396375544,128.4197503898" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1476893313,128.4244155356),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계신당로 47<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계신당로 47,36.1476893313,128.4244155356" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1446102575,128.4208573665),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계신당로1길 11-15<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계신당로1길 11-15,36.1446102575,128.4208573665" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1426210338,128.4228601444),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계신당로7길 34-14<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계신당로7길 34-14,36.1426210338,128.4228601444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1772669996,128.4614189982),
+    content: '<div style="width:190px; height:45px; padding:5px;">인덕1길 240<br>무더위쉼터-<a href="https://map.kakao.com/link/to/인덕1길 240,36.1772669996,128.4614189982" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1433543741,128.4388242305),
+    content: '<div style="width:190px; height:45px; padding:5px;">첨단기업3로 1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/첨단기업3로 1,36.1433543741,128.4388242305" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1590583775,128.4352826862),
+    content: '<div style="width:190px; height:45px; padding:5px;">해마루공원로 302<br>무더위쉼터-<a href="https://map.kakao.com/link/to/해마루공원로 302,36.1590583775,128.4352826862" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1483801425,128.4167552312),
+    content: '<div style="width:190px; height:45px; padding:5px;">흥안로2길 17<br>무더위쉼터-<a href="https://map.kakao.com/link/to/흥안로2길 17,36.1483801425,128.4167552312" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1461205079,128.416281125),
+    content: '<div style="width:190px; height:45px; padding:5px;">흥안로3길 12<br>무더위쉼터-<a href="https://map.kakao.com/link/to/흥안로3길 12,36.1461205079,128.416281125" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 보라 --자전거
+var newmarkerInfos1 = [
+{
+    position: new kakao.maps.LatLng(36.1520984234,128.2879594252),
+    content: '<div style="width:190px; height:45px; padding:5px;">야은로 37<br>자전거거치대-<a href="https://map.kakao.com/link/to/야은로 37,36.1520984234,128.2879594252" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1356165368,128.3327109454),
+    content: '<div style="width:190px; height:45px; padding:5px;">야은로 458<br>자전거거치대-<a href="https://map.kakao.com/link/to/야은로 458,36.1356165368,128.3327109454" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1473790701,128.3308820427),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로 157<br>자전거거치대-<a href="https://map.kakao.com/link/to/문장로 157,36.1473790701,128.3308820427" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1370611247,128.4255672428),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로35길 6<br>자전거거치대-<a href="https://map.kakao.com/link/to/산호대로35길 6,36.1370611247,128.4255672428" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1470456478,128.3912933766),
+    content: '<div style="width:190px; height:45px; padding:5px;">대학로 62<br>자전거거치대-<a href="https://map.kakao.com/link/to/대학로 62,36.1470456478,128.3912933766" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2955880918,128.2787060971),
+    content: '<div style="width:190px; height:45px; padding:5px;">주아령로 411<br>자전거거치대-<a href="https://map.kakao.com/link/to/주아령로 411,36.2955880918,128.2787060971" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2994618636,128.3310386968),
+    content: '<div style="width:190px; height:45px; padding:5px;">도안로 103<br>자전거거치대-<a href="https://map.kakao.com/link/to/도안로 103,36.2994618636,128.3310386968" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 초록 -- 전동휠급속
+var newmarkerInfos2 = [
+{
+    position: new kakao.maps.LatLng(36.1369485254,128.4256158896),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로35길 6<br>전동휠체어급속충전기-<a href="https://map.kakao.com/link/to/산호대로35길 6,36.1369485254,128.4256158896" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 비상소화장치 및 기타
+var newmarkerInfos3 = [
+{
+    position: new kakao.maps.LatLng(36.1402208021,128.2916331897),
+    content: '<div style="width:190px; height:45px; padding:5px;">송선로4길 50-2<br>비상소화장치-<a href="https://map.kakao.com/link/to/송선로4길 50-2,36.1402208021,128.2916331897" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1442789323,128.3857196002),
+    content: '<div style="width:190px; height:45px; padding:5px;">거양12길 122-1<br>비상소화장치-<a href="https://map.kakao.com/link/to/거양12길 122-1,36.1442789323,128.3857196002" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2768061387,128.1490854874),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 안곡2길 45<br>비상소화장치-<a href="https://map.kakao.com/link/to/무을면 안곡2길 45,36.2768061387,128.1490854874" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1899725832,128.3773601899),
+    content: '<div style="width:190px; height:45px; padding:5px;">낙동대로 2062<br>해평졸음쉼터 졸음쉼터-<a href="https://map.kakao.com/link/to/낙동대로 2062,36.1899725832,128.3773601899" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1655245818,128.4435436464),
+    content: '<div style="width:190px; height:45px; padding:5px;">낙동대로 1355<br>인덕졸음쉼터 졸음쉼터-<a href="https://map.kakao.com/link/to/낙동대로 1355,36.1655245818,128.4435436464" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1508194461,128.4366724696),
+    content: '<div style="width:190px; height:45px; padding:5px;">첨단기업7로 50<br>구미 도레이BSF코리아 전기차충전소-<a href="https://map.kakao.com/link/to/첨단기업7로 50,36.1508194461,128.4366724696" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다  --- newMarkerImage0 삭제시 기본 이미지 (파란색)
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        image: newMarkerImage0,
+        clickable: true
+    });
+    markers.push(marker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 1
+for (var i = 0; i < newmarkerInfos1.length; i++) {
+    var newmarker = new kakao.maps.Marker({
+        position: newmarkerInfos1[i].position,
+        image: newMarkerImage,
+        clickable: true
+    });
+    markers.push(newmarker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos1[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker, 'click', makeClickListener(newmarker, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 2
+for (var i = 0; i < newmarkerInfos2.length; i++) {
+    var newmarker2 = new kakao.maps.Marker({
+        position: newmarkerInfos2[i].position,
+        image: newMarkerImage2,
+        clickable: true
+    });
+    markers.push(newmarker2);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos2[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker2, 'click', makeClickListener(newmarker2, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 3
+for (var i = 0; i < newmarkerInfos3.length; i++) {
+    var newmarker3 = new kakao.maps.Marker({
+        position: newmarkerInfos3[i].position,
+        image: newMarkerImage3,
+        clickable: true
+    });
+    markers.push(newmarker3);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos3[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker3, 'click', makeClickListener(newmarker3, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
