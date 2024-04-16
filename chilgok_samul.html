@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>칠곡군-사물주소-182</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.995592002935716, 128.4016566683242), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.995592002935716, 128.4016566683242),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize = new kakao.maps.Size(24, 35); 
+    
+    // 마커 이미지를 생성합니다    
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition,
+        image : markerImage // 마커 이미지
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 새로운 마커 이미지를 생성합니다. -- 삭제시 기본 이미지 (파란색)
+var newImageUrl0 = 'https://smbahk.github.io/dggis/p_r.png';
+var newMarkerImage0 = new kakao.maps.MarkerImage(newImageUrl0, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다.
+var newImageUrl1 = 'https://smbahk.github.io/dggis/p_v.png';
+var newMarkerImage1 = new kakao.maps.MarkerImage(newImageUrl1, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다.
+var newImageUrl2 = 'https://smbahk.github.io/dggis/p_g.png';
+var newMarkerImage2 = new kakao.maps.MarkerImage(newImageUrl2, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다.
+//var newImageUrl3 = 'https://smbahk.github.io/dggis/p_o.png';
+//var newMarkerImage3 = new kakao.maps.MarkerImage(newImageUrl3, new kakao.maps.Size(35, 35));
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+// 레드 -- 삭제시 디폴트파란색 -- 노상주차장
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(35.989027478,128.3980626804),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로11길 13<br>왜관읍사무소 노상-<a href="https://map.kakao.com/link/to/중앙로11길 13,35.989027478,128.3980626804" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9926585017,128.3994700447),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로8길 13<br>왜관역앞 노상-4-<a href="https://map.kakao.com/link/to/중앙로8길 13,35.9926585017,128.3994700447" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9923054616,128.3995647498),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로8길 10<br>왜관역앞 노상-3-<a href="https://map.kakao.com/link/to/중앙로8길 10,35.9923054616,128.3995647498" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.992091463,128.3994763205),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로8길 7<br>왜관역앞 노상-2-<a href="https://map.kakao.com/link/to/중앙로8길 7,35.992091463,128.3994763205" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9917152466,128.399573047),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로8길 4<br>왜관역앞 노상-1-<a href="https://map.kakao.com/link/to/중앙로8길 4,35.9917152466,128.399573047" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9875734461,128.3984519015),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로 33<br>왜관성당 주변 노상-7-<a href="https://map.kakao.com/link/to/관문로 33,35.9875734461,128.3984519015" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9874021385,128.3983727062),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로 32<br>왜관성당 주변 노상-6-<a href="https://map.kakao.com/link/to/관문로 32,35.9874021385,128.3983727062" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9875231551,128.3978705244),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로 28<br>왜관성당 주변 노상-5-<a href="https://map.kakao.com/link/to/관문로 28,35.9875231551,128.3978705244" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9878064297,128.397418168),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로 23<br>왜관성당 주변 노상-4-<a href="https://map.kakao.com/link/to/관문로 23,35.9878064297,128.397418168" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9877421231,128.3970237407),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로 20<br>왜관성당 주변 노상-3-<a href="https://map.kakao.com/link/to/관문로 20,35.9877421231,128.3970237407" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9882197683,128.3960673808),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로 9<br>왜관성당 주변 노상-2-<a href="https://map.kakao.com/link/to/관문로 9,35.9882197683,128.3960673808" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9881262933,128.3954879749),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로 6<br>왜관성당 주변 노상-1-<a href="https://map.kakao.com/link/to/관문로 6,35.9881262933,128.3954879749" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9820232839,128.3970460957),
+    content: '<div style="width:190px; height:45px; padding:5px;">자조1길 16<br>왜관2주공아파트 앞 노상-<a href="https://map.kakao.com/link/to/자조1길 16,35.9820232839,128.3970460957" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.075994372,128.4078671028),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 4<br>석적읍 중리 노상-9-<a href="https://map.kakao.com/link/to/북중리3길 4,36.075994372,128.4078671028" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0763086139,128.4175285445),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 77<br>석적읍 중리 노상-8-<a href="https://map.kakao.com/link/to/유학로 77,36.0763086139,128.4175285445" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0766082969,128.4163384531),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 68<br>석적읍 중리 노상-7-<a href="https://map.kakao.com/link/to/유학로 68,36.0766082969,128.4163384531" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0769165509,128.4159390359),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 61<br>석적읍 중리 노상-6-<a href="https://map.kakao.com/link/to/유학로 61,36.0769165509,128.4159390359" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0772827266,128.4147440466),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 52<br>석적읍 중리 노상-5-<a href="https://map.kakao.com/link/to/유학로 52,36.0772827266,128.4147440466" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0779836885,128.413774992),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 40<br>석적읍 중리 노상-4-<a href="https://map.kakao.com/link/to/유학로 40,36.0779836885,128.413774992" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0783067025,128.4135895066),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 35<br>석적읍 중리 노상-3-<a href="https://map.kakao.com/link/to/유학로 35,36.0783067025,128.4135895066" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0807441628,128.4131338605),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 75<br>석적읍 중리 노상-24-<a href="https://map.kakao.com/link/to/북중리3길 75,36.0807441628,128.4131338605" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0803900099,128.4129608619),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 72<br>석적읍 중리 노상-23-<a href="https://map.kakao.com/link/to/북중리3길 72,36.0803900099,128.4129608619" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0802266898,128.4125400922),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 67<br>석적읍 중리 노상-22-<a href="https://map.kakao.com/link/to/북중리3길 67,36.0802266898,128.4125400922" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0797181891,128.4121814299),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 62<br>석적읍 중리 노상-21-<a href="https://map.kakao.com/link/to/북중리3길 62,36.0797181891,128.4121814299" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0793334802,128.4115013924),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 55<br>석적읍 중리 노상-20-<a href="https://map.kakao.com/link/to/북중리3길 55,36.0793334802,128.4115013924" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0788980813,128.4127944381),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 25<br>석적읍 중리 노상-2-<a href="https://map.kakao.com/link/to/유학로 25,36.0788980813,128.4127944381" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0790816192,128.4112103724),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 51<br>석적읍 중리 노상-19-<a href="https://map.kakao.com/link/to/북중리3길 51,36.0790816192,128.4112103724" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0786524405,128.4109538477),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 46<br>석적읍 중리 노상-18-<a href="https://map.kakao.com/link/to/북중리3길 46,36.0786524405,128.4109538477" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0784869471,128.4105250923),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 41<br>석적읍 중리 노상-17-<a href="https://map.kakao.com/link/to/북중리3길 41,36.0784869471,128.4105250923" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0778713643,128.4098100845),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 31<br>석적읍 중리 노상-16-<a href="https://map.kakao.com/link/to/북중리3길 31,36.0778713643,128.4098100845" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0776776998,128.4098188038),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 30<br>석적읍 중리 노상-15-<a href="https://map.kakao.com/link/to/북중리3길 30,36.0776776998,128.4098188038" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0773792567,128.4092384081),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 23<br>석적읍 중리 노상-14-<a href="https://map.kakao.com/link/to/북중리3길 23,36.0773792567,128.4092384081" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0766827459,128.4084302566),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 13<br>석적읍 중리 노상-13-<a href="https://map.kakao.com/link/to/북중리3길 13,36.0766827459,128.4084302566" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0765112152,128.4084745499),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 12<br>석적읍 중리 노상-12-<a href="https://map.kakao.com/link/to/북중리3길 12,36.0765112152,128.4084745499" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.076463442,128.4081772011),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 9<br>석적읍 중리 노상-11-<a href="https://map.kakao.com/link/to/북중리3길 9,36.076463442,128.4081772011" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0762498173,128.4081633059),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리3길 8<br>석적읍 중리 노상-10-<a href="https://map.kakao.com/link/to/북중리3길 8,36.0762498173,128.4081633059" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0790440099,128.4123356908),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 22<br>석적읍 중리 노상-1-<a href="https://map.kakao.com/link/to/유학로 22,36.0790440099,128.4123356908" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0678116676,128.3463202302),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로 250<br>북삼읍 노상-4-<a href="https://map.kakao.com/link/to/금오대로 250,36.0678116676,128.3463202302" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.066734533,128.3460678162),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로 236<br>북삼읍 노상-3-<a href="https://map.kakao.com/link/to/금오대로 236,36.066734533,128.3460678162" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0667764663,128.345815885),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로 237<br>북삼읍 노상-2-<a href="https://map.kakao.com/link/to/금오대로 237,36.0667764663,128.345815885" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0661978156,128.3459368679),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로 232<br>북삼읍 노상-1-<a href="https://map.kakao.com/link/to/금오대로 232,36.0661978156,128.3459368679" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 보라 --노외주차장
+var newmarkerInfos1 = [
+{
+    position: new kakao.maps.LatLng(36.0917979063,128.403073887),
+    content: '<div style="width:190px; height:45px; padding:5px;">3공단1로 103<br>동락공원-<a href="https://map.kakao.com/link/to/3공단1로 103,36.0917979063,128.403073887" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0632237986,128.333307634),
+    content: '<div style="width:190px; height:45px; padding:5px;">강진1길 96-62<br>화진금봉아파트 옆 건너 산쪽-<a href="https://map.kakao.com/link/to/강진1길 96-62,36.0632237986,128.333307634" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0196969177,128.6311418324),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 1233<br>한티재-<a href="https://map.kakao.com/link/to/한티로 1233,36.0196969177,128.6311418324" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0618146927,128.4824751968),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 783<br>팥재 주차장-<a href="https://map.kakao.com/link/to/유학로 783,36.0618146927,128.4824751968" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.975967837,128.3992993691),
+    content: '<div style="width:190px; height:45px; padding:5px;">달오1길 6-3<br>칠곡도서관 앞 공영주차장-<a href="https://map.kakao.com/link/to/달오1길 6-3,35.975967837,128.3992993691" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0429354443,128.3693320055),
+    content: '<div style="width:190px; height:45px; padding:5px;">시덕로 104<br>친환경체육공원-<a href="https://map.kakao.com/link/to/시덕로 104,36.0429354443,128.3693320055" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8976756204,128.5005836959),
+    content: '<div style="width:190px; height:45px; padding:5px;">용산로 166<br>지천역 앞-<a href="https://map.kakao.com/link/to/용산로 166,35.8976756204,128.5005836959" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9910848412,128.3964944975),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로9길 28<br>중앙로9길 공영주차장(우용골든빌 앞)-<a href="https://map.kakao.com/link/to/중앙로9길 28,35.9910848412,128.3964944975" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9881312977,128.4123398399),
+    content: '<div style="width:190px; height:45px; padding:5px;">평장7길 3<br>주공3단지 앞 주차(미군부대 정문 앞)-<a href="https://map.kakao.com/link/to/평장7길 3,35.9881312977,128.4123398399" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0713528298,128.3413973781),
+    content: '<div style="width:190px; height:45px; padding:5px;">인강8길 33<br>인평체육공원-<a href="https://map.kakao.com/link/to/인강8길 33,36.0713528298,128.3413973781" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9892101661,128.3984750309),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로11길 10-5<br>읍사무소 뒤 공영주차장-<a href="https://map.kakao.com/link/to/중앙로11길 10-5,35.9892101661,128.3984750309" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9856786108,128.3951721084),
+    content: '<div style="width:190px; height:45px; padding:5px;">구상길 211<br>왜관초등학교 앞 공영주차장-<a href="https://map.kakao.com/link/to/구상길 211,35.9856786108,128.3951721084" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9949863136,128.3964832214),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로1길 26<br>왜관시장 후문 공영주차장(이원리버빌 옆)-<a href="https://map.kakao.com/link/to/중앙로1길 26,35.9949863136,128.3964832214" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9867675046,128.4058716651),
+    content: '<div style="width:190px; height:45px; padding:5px;">평장2길 28<br>왜관11리 마을 주차장(여성인력개발센터 앞)-<a href="https://map.kakao.com/link/to/평장2길 28,35.9867675046,128.4058716651" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9947585153,128.4000446832),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로5길 18-36<br>왜관 북부 공영주차장-<a href="https://map.kakao.com/link/to/중앙로5길 18-36,35.9947585153,128.4000446832" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.990176877,128.3997966215),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로 172<br>왜관 남부 공영주차장-<a href="https://map.kakao.com/link/to/중앙로 172,35.990176877,128.3997966215" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0343652296,128.3645865935),
+    content: '<div style="width:190px; height:45px; padding:5px;">약목로5길 6<br>영남 정형외과 뒤-<a href="https://map.kakao.com/link/to/약목로5길 6,36.0343652296,128.3645865935" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9897054983,128.397674671),
+    content: '<div style="width:190px; height:45px; padding:5px;">2번도로길 23<br>어르신전당 앞-<a href="https://map.kakao.com/link/to/2번도로길 23,35.9897054983,128.397674671" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0347000674,128.3652665782),
+    content: '<div style="width:190px; height:45px; padding:5px;">약목로 94<br>약목버스터미널-<a href="https://map.kakao.com/link/to/약목로 94,36.0347000674,128.3652665782" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0326939434,128.3667565403),
+    content: '<div style="width:190px; height:45px; padding:5px;">약목로 68-3<br>약목두만천 공영주차장-<a href="https://map.kakao.com/link/to/약목로 68-3,36.0326939434,128.3667565403" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0201301888,128.3839652021),
+    content: '<div style="width:190px; height:45px; padding:5px;">관호1길 9<br>약목고가도로밑 공영주차장-<a href="https://map.kakao.com/link/to/관호1길 9,36.0201301888,128.3839652021" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0272548639,128.3512575102),
+    content: '<div style="width:190px; height:45px; padding:5px;">신유로 158<br>신유장군유적지 앞-<a href="https://map.kakao.com/link/to/신유로 158,36.0272548639,128.3512575102" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9303063313,128.5112194762),
+    content: '<div style="width:190px; height:45px; padding:5px;">신동재로 112<br>신동재-<a href="https://map.kakao.com/link/to/신동재로 112,35.9303063313,128.5112194762" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9559010594,128.4870167345),
+    content: '<div style="width:190px; height:45px; padding:5px;">신동로7길 29<br>신동역 앞-<a href="https://map.kakao.com/link/to/신동로7길 29,35.9559010594,128.4870167345" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9814722475,128.5772966496),
+    content: '<div style="width:190px; height:45px; padding:5px;">송림길 78<br>송림사 외-<a href="https://map.kakao.com/link/to/송림길 78,35.9814722475,128.5772966496" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9815341184,128.5770719866),
+    content: '<div style="width:190px; height:45px; padding:5px;">송림길 75<br>송림사 내-<a href="https://map.kakao.com/link/to/송림길 75,35.9815341184,128.5770719866" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.075566368,128.4067194995),
+    content: '<div style="width:190px; height:45px; padding:5px;">서중리1길 59<br>섬내공원 주차장-<a href="https://map.kakao.com/link/to/서중리1길 59,36.075566368,128.4067194995" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0758844343,128.3946741716),
+    content: '<div style="width:190px; height:45px; padding:5px;">강변대로 2292<br>석적농협 앞 공영주차장-<a href="https://map.kakao.com/link/to/강변대로 2292,36.0758844343,128.3946741716" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9739878332,128.4266292305),
+    content: '<div style="width:190px; height:45px; padding:5px;">공단로1길 7<br>상공회의소 옆-<a href="https://map.kakao.com/link/to/공단로1길 7,35.9739878332,128.4266292305" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9706674159,128.4259602541),
+    content: '<div style="width:190px; height:45px; padding:5px;">공단로2길 27<br>삼성제침 뒷편 산쪽도로옆-<a href="https://map.kakao.com/link/to/공단로2길 27,35.9706674159,128.4259602541" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9847089948,128.3996381033),
+    content: '<div style="width:190px; height:45px; padding:5px;">전원2길 7-6<br>로얄3차앞 공영주차장(대창순대 앞)-<a href="https://map.kakao.com/link/to/전원2길 7-6,35.9847089948,128.3996381033" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9919275103,128.5516919542),
+    content: '<div style="width:190px; height:45px; padding:5px;">동명팔거천1길 72-9<br>동명팔거천 공영주차장-<a href="https://map.kakao.com/link/to/동명팔거천1길 72-9,35.9919275103,128.5516919542" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0890209673,128.4028712086),
+    content: '<div style="width:190px; height:45px; padding:5px;">3공단1로 77<br>동락공원-<a href="https://map.kakao.com/link/to/3공단1로 77,36.0890209673,128.4028712086" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9623307861,128.4142286543),
+    content: '<div style="width:190px; height:45px; padding:5px;">공단로6길 44<br>대원바이오텍(롯데하이마트 동부물류센터 뒤)-<a href="https://map.kakao.com/link/to/공단로6길 44,35.9623307861,128.4142286543" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9684958217,128.4155236134),
+    content: '<div style="width:190px; height:45px; padding:5px;">공단로7길 16-13<br>대덕정공앞-<a href="https://map.kakao.com/link/to/공단로7길 16-13,35.9684958217,128.4155236134" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0475778308,128.5180071724),
+    content: '<div style="width:190px; height:45px; padding:5px;">호국로 1482-10<br>다부동전적비-<a href="https://map.kakao.com/link/to/호국로 1482-10,36.0475778308,128.5180071724" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9915075414,128.4020491789),
+    content: '<div style="width:190px; height:45px; padding:5px;">회동3길 50<br>늘푸른테니스장앞공영주차장(왜관10리 미군부대 담벽)-<a href="https://map.kakao.com/link/to/회동3길 50,35.9915075414,128.4020491789" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0072967833,128.5764996276),
+    content: '<div style="width:190px; height:45px; padding:5px;">구남로 339<br>누릿재-<a href="https://map.kakao.com/link/to/구남로 339,36.0072967833,128.5764996276" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9909042102,128.3972871715),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로9길 19<br>남부지구대 뒤편 주차장-<a href="https://map.kakao.com/link/to/중앙로9길 19,35.9909042102,128.3972871715" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9702805437,128.4899034466),
+    content: '<div style="width:190px; height:45px; padding:5px;">지천로 395-22<br>낙화담-<a href="https://map.kakao.com/link/to/지천로 395-22,35.9702805437,128.4899034466" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.051762438,128.5535183335),
+    content: '<div style="width:190px; height:45px; padding:5px;">가산로 314<br>금화계곡-<a href="https://map.kakao.com/link/to/가산로 314,36.051762438,128.5535183335" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9946697653,128.4008122258),
+    content: '<div style="width:190px; height:45px; padding:5px;">군청1길 79<br>군청 앞 공영주차장-<a href="https://map.kakao.com/link/to/군청1길 79,35.9946697653,128.4008122258" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0785423391,128.4019803301),
+    content: '<div style="width:190px; height:45px; padding:5px;">서중리1길 5<br>광암교 옆 공영주차장-<a href="https://map.kakao.com/link/to/서중리1길 5,36.0785423391,128.4019803301" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.966317761,128.4172484925),
+    content: '<div style="width:190px; height:45px; padding:5px;">공단로4길 18-22<br>공단운동장 입구(IBK기업은행 앞)-<a href="https://map.kakao.com/link/to/공단로4길 18-22,35.966317761,128.4172484925" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0102893148,128.423614898),
+    content: '<div style="width:190px; height:45px; padding:5px;">석전로 294<br>왜관읍 아곡리 안찔-<a href="https://map.kakao.com/link/to/석전로 294,36.0102893148,128.423614898" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9991547544,128.3994464994),
+    content: '<div style="width:190px; height:45px; padding:5px;">애국동산로 20<br>왜관읍 석전리 공영주차장(애국동산-<a href="https://map.kakao.com/link/to/애국동산로 20,35.9991547544,128.3994464994" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0740107102,128.4145861476),
+    content: '<div style="width:190px; height:45px; padding:5px;">남중리8길 5<br>석적읍 중리 주차장-<a href="https://map.kakao.com/link/to/남중리8길 5,36.0740107102,128.4145861476" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0740310732,128.4145026604),
+    content: '<div style="width:190px; height:45px; padding:5px;">남중리8길 6<br>석적읍 중리 주차장-<a href="https://map.kakao.com/link/to/남중리8길 6,36.0740310732,128.4145026604" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0751662511,128.4071794712),
+    content: '<div style="width:190px; height:45px; padding:5px;">남중리1길 3<br>석적읍 중리 원마트 앞 공영주차장-<a href="https://map.kakao.com/link/to/남중리1길 3,36.0751662511,128.4071794712" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0784744038,128.4084369719),
+    content: '<div style="width:190px; height:45px; padding:5px;">북중리1길 25<br>석적읍 중리 공영주차장-<a href="https://map.kakao.com/link/to/북중리1길 25,36.0784744038,128.4084369719" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9616467428,128.4168177132),
+    content: '<div style="width:190px; height:45px; padding:5px;">공단로5길 60-55<br>경남산업 앞-<a href="https://map.kakao.com/link/to/공단로5길 60-55,35.9616467428,128.4168177132" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0195165262,128.5890636616),
+    content: '<div style="width:190px; height:45px; padding:5px;">남원로5길 62<br>가산산성 진남문-<a href="https://map.kakao.com/link/to/남원로5길 62,36.0195165262,128.5890636616" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0204212535,128.5908178601),
+    content: '<div style="width:190px; height:45px; padding:5px;">가산산성길 106<br>가산산성 남문-<a href="https://map.kakao.com/link/to/가산산성길 106,36.0204212535,128.5908178601" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 초록 -- 전기차충전소
+var newmarkerInfos2 = [
+{
+    position: new kakao.maps.LatLng(35.9800178783,128.5667146192),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 121<br>호반레스토랑 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 121,35.9800178783,128.5667146192" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0543405389,128.3449114146),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로 96<br>현대자동차 북삼대리점 전기차충전소-<a href="https://map.kakao.com/link/to/금오대로 96,36.0543405389,128.3449114146" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9889282017,128.4053470923),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로 99<br>한국농어촌공사 칠곡지사 전기차충전소-<a href="https://map.kakao.com/link/to/관문로 99,35.9889282017,128.4053470923" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0991187047,128.496302956),
+    content: '<div style="width:190px; height:45px; padding:5px;">인동가산로 796-3<br>학하원동기정비공장 전기차충전소-<a href="https://map.kakao.com/link/to/인동가산로 796-3,36.0991187047,128.496302956" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0143309142,128.5947530403),
+    content: '<div style="width:190px; height:45px; padding:5px;">가산산성길 7<br>품안 전기차충전소-<a href="https://map.kakao.com/link/to/가산산성길 7,36.0143309142,128.5947530403" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9840468988,128.5848734084),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 304-17<br>포춘황토오리가마구이 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 304-17,35.9840468988,128.5848734084" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0670848225,128.3405436648),
+    content: '<div style="width:190px; height:45px; padding:5px;">평원3길 8<br>포르쉐 데스티네이션 북삼 관광온천 전기차충전소-<a href="https://map.kakao.com/link/to/평원3길 8,36.0670848225,128.3405436648" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0118003427,128.6154162064),
+    content: '<div style="width:190px; height:45px; padding:5px;">득명1길 108<br>평산아카데미 전기차충전소-<a href="https://map.kakao.com/link/to/득명1길 108,36.0118003427,128.6154162064" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0001412807,128.6058558476),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔공산로 153-11<br>팔공유황오리 전기차충전소-<a href="https://map.kakao.com/link/to/팔공산로 153-11,36.0001412807,128.6058558476" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0036491012,128.5939121281),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 535<br>파스쿠찌 가산산성점 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 535,36.0036491012,128.5939121281" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0130317598,128.4306809368),
+    content: '<div style="width:190px; height:45px; padding:5px;">경부고속도로 158<br>칠곡휴게소(서울방향) 전기차충전소-<a href="https://map.kakao.com/link/to/경부고속도로 158,36.0130317598,128.4306809368" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.012990082,128.4307109581),
+    content: '<div style="width:190px; height:45px; padding:5px;">경부고속도로 158-1<br>칠곡휴게소(서울방향) 전기차충전소-<a href="https://map.kakao.com/link/to/경부고속도로 158-1,36.012990082,128.4307109581" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0206255371,128.4281504968),
+    content: '<div style="width:190px; height:45px; padding:5px;">호국로 444-1<br>칠곡휴게소 (부산방향) 전기차충전소-<a href="https://map.kakao.com/link/to/호국로 444-1,36.0206255371,128.4281504968" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0205794015,128.4285972013),
+    content: '<div style="width:190px; height:45px; padding:5px;">호국로 444-3<br>칠곡휴게소 (부산방향) 전기차충전소-<a href="https://map.kakao.com/link/to/호국로 444-3,36.0205794015,128.4285972013" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0206370269,128.4282533995),
+    content: '<div style="width:190px; height:45px; padding:5px;">호국로 444-2<br>칠곡휴게소 (부산방향) 전기차충전소-<a href="https://map.kakao.com/link/to/호국로 444-2,36.0206370269,128.4282533995" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0186850564,128.4293106474),
+    content: '<div style="width:190px; height:45px; padding:5px;">호국로 444-4<br>칠곡휴게소 (부산방향) 전기차충전소-<a href="https://map.kakao.com/link/to/호국로 444-4,36.0186850564,128.4293106474" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9827132062,128.3948077585),
+    content: '<div style="width:190px; height:45px; padding:5px;">구상길 178<br>칠곡지사 전기차충전소-<a href="https://map.kakao.com/link/to/구상길 178,35.9827132062,128.3948077585" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0506864088,128.338992903),
+    content: '<div style="width:190px; height:45px; padding:5px;">경호천서길 72<br>칠곡우리자동차학원 전기차충전소-<a href="https://map.kakao.com/link/to/경호천서길 72,36.0506864088,128.338992903" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9948909059,128.4015503183),
+    content: '<div style="width:190px; height:45px; padding:5px;">군청1길 80<br>칠곡군청 전기차충전소-<a href="https://map.kakao.com/link/to/군청1길 80,35.9948909059,128.4015503183" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0014950545,128.4226903645),
+    content: '<div style="width:190px; height:45px; padding:5px;">호국로 203<br>칠곡군종합운동장 주차장 전기차충전소-<a href="https://map.kakao.com/link/to/호국로 203,36.0014950545,128.4226903645" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9905535289,128.4167191558),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로1길 28<br>칠곡군보건소 전기차충전소-<a href="https://map.kakao.com/link/to/관문로1길 28,35.9905535289,128.4167191558" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0400653339,128.3823760711),
+    content: '<div style="width:190px; height:45px; padding:5px;">동덕로 146<br>칠곡군농업기술센터 전기차충전소-<a href="https://map.kakao.com/link/to/동덕로 146,36.0400653339,128.3823760711" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0224224397,128.3903748687),
+    content: '<div style="width:190px; height:45px; padding:5px;">관호10길 248-42<br>칠곡군 칠곡농협연합장례식장 전기차충전소-<a href="https://map.kakao.com/link/to/관호10길 248-42,36.0224224397,128.3903748687" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0092076749,128.5900370086),
+    content: '<div style="width:190px; height:45px; padding:5px;">남원로 488<br>칠곡군 잔치국수전문점 전기차충전소-<a href="https://map.kakao.com/link/to/남원로 488,36.0092076749,128.5900370086" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9889785001,128.397501361),
+    content: '<div style="width:190px; height:45px; padding:5px;">2번도로길 16<br>칠곡군 왜관읍사무소 전기차충전소-<a href="https://map.kakao.com/link/to/2번도로길 16,35.9889785001,128.397501361" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.987718535,128.3982482409),
+    content: '<div style="width:190px; height:45px; padding:5px;">관문로 33<br>칠곡군 왜관농협남부지점 전기차충전소-<a href="https://map.kakao.com/link/to/관문로 33,35.987718535,128.3982482409" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0060737034,128.4078332001),
+    content: '<div style="width:190px; height:45px; padding:5px;">석전로7길 58<br>칠곡국민체육센터 전기차충전소-<a href="https://map.kakao.com/link/to/석전로7길 58,36.0060737034,128.4078332001" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0087344522,128.3868487941),
+    content: '<div style="width:190px; height:45px; padding:5px;">칠곡대로 1050<br>칠곡경찰서 전기차충전소-<a href="https://map.kakao.com/link/to/칠곡대로 1050,36.0087344522,128.3868487941" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9558325052,128.4908636326),
+    content: '<div style="width:190px; height:45px; padding:5px;">신동로 169<br>지천면사무소 전기차충전소-<a href="https://map.kakao.com/link/to/신동로 169,35.9558325052,128.4908636326" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0491884384,128.4795678774),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개7길 61-35<br>정순연 전기차충전소-<a href="https://map.kakao.com/link/to/도개7길 61-35,36.0491884384,128.4795678774" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0493243903,128.4790202117),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개7길 61-11<br>장만동 전기차충전소-<a href="https://map.kakao.com/link/to/도개7길 61-11,36.0493243903,128.4790202117" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9987148559,128.4546781924),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉계1길 6<br>이준상 전기차충전소-<a href="https://map.kakao.com/link/to/봉계1길 6,35.9987148559,128.4546781924" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9987885346,128.4077115766),
+    content: '<div style="width:190px; height:45px; padding:5px;">석전로6길 17<br>우성카센카 전기차충전소-<a href="https://map.kakao.com/link/to/석전로6길 17,35.9987885346,128.4077115766" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9950446758,128.3965741948),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로1길 26<br>왜관전통시장 공영주차장 전기차충전소-<a href="https://map.kakao.com/link/to/중앙로1길 26,35.9950446758,128.3965741948" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0225396629,128.3833925826),
+    content: '<div style="width:190px; height:45px; padding:5px;">무림4길 15-18<br>왜관자동차운전전문학원 전기차충전소-<a href="https://map.kakao.com/link/to/무림4길 15-18,36.0225396629,128.3833925826" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0078240922,128.5918941457),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 586<br>오궁 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 586,36.0078240922,128.5918941457" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9457519389,128.4644470804),
+    content: '<div style="width:190px; height:45px; padding:5px;">금송로 60<br>영진전문대학 글로벌캠퍼스 전기차충전소-<a href="https://map.kakao.com/link/to/금송로 60,35.9457519389,128.4644470804" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9594103257,128.4610555263),
+    content: '<div style="width:190px; height:45px; padding:5px;">송정중리1길 194<br>영진전문대 영어마을 전기차충전소-<a href="https://map.kakao.com/link/to/송정중리1길 194,35.9594103257,128.4610555263" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.032725874,128.3633060965),
+    content: '<div style="width:190px; height:45px; padding:5px;">복성1길 15<br>약목면사무소 전기차충전소-<a href="https://map.kakao.com/link/to/복성1길 15,36.032725874,128.3633060965" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.96283816,128.413849932),
+    content: '<div style="width:190px; height:45px; padding:5px;">공단로6길 37<br>아이에스하이텍 전기차충전소-<a href="https://map.kakao.com/link/to/공단로6길 37,35.96283816,128.413849932" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0197643052,128.4028927255),
+    content: '<div style="width:190px; height:45px; padding:5px;">석적로 239<br>시설관리사업소 전기차충전소-<a href="https://map.kakao.com/link/to/석적로 239,36.0197643052,128.4028927255" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0154083607,128.6066136597),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 817<br>시골식당 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 817,36.0154083607,128.6066136597" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0235718403,128.4419427833),
+    content: '<div style="width:190px; height:45px; padding:5px;">반계3길 89<br>송정자연휴양림 전기차충전소-<a href="https://map.kakao.com/link/to/반계3길 89,36.0235718403,128.4419427833" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9976317984,128.5316069148),
+    content: '<div style="width:190px; height:45px; padding:5px;">백송로 553<br>송산3리 전기차충전소-<a href="https://map.kakao.com/link/to/백송로 553,35.9976317984,128.5316069148" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9976687513,128.6077207481),
+    content: '<div style="width:190px; height:45px; padding:5px;">기성10길 13<br>성주한우명가 전기차충전소-<a href="https://map.kakao.com/link/to/기성10길 13,35.9976687513,128.6077207481" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0752685679,128.4071608394),
+    content: '<div style="width:190px; height:45px; padding:5px;">남중리1길 3<br>섬내공원 공영주차장 전기차충전소-<a href="https://map.kakao.com/link/to/남중리1길 3,36.0752685679,128.4071608394" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0753092957,128.4071633334),
+    content: '<div style="width:190px; height:45px; padding:5px;">남중리1길 3-1<br>섬내공원 공영주차장 전기차충전소-<a href="https://map.kakao.com/link/to/남중리1길 3-1,36.0753092957,128.4071633334" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0746385891,128.4092471136),
+    content: '<div style="width:190px; height:45px; padding:5px;">남중리1길 24<br>석적도서관 전기차충전소-<a href="https://map.kakao.com/link/to/남중리1길 24,36.0746385891,128.4092471136" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0080584994,128.5917950719),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 588<br>산성골오리궁뎅이 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 588,36.0080584994,128.5917950719" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.000917503,128.6111852713),
+    content: '<div style="width:190px; height:45px; padding:5px;">기성9길 56<br>블루데이레스토랑 전기차충전소-<a href="https://map.kakao.com/link/to/기성9길 56,36.000917503,128.6111852713" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0626158953,128.342195137),
+    content: '<div style="width:190px; height:45px; padding:5px;">인평1길 10<br>북삼읍 사무소 전기차충전소-<a href="https://map.kakao.com/link/to/인평1길 10,36.0626158953,128.342195137" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9995692832,128.400384601),
+    content: '<div style="width:190px; height:45px; padding:5px;">군청4길 32<br>무성그린맨션 전기차충전소-<a href="https://map.kakao.com/link/to/군청4길 32,35.9995692832,128.400384601" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0779503991,128.3988929778),
+    content: '<div style="width:190px; height:45px; padding:5px;">석적로 1017-1<br>멘토모터스 전기차충전소-<a href="https://map.kakao.com/link/to/석적로 1017-1,36.0779503991,128.3988929778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0067908075,128.5487930566),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙고속도로 122<br>동명휴게소(춘천방향) 전기차충전소-<a href="https://map.kakao.com/link/to/중앙고속도로 122,36.0067908075,128.5487930566" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0059962723,128.5471883425),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙고속도로 123<br>동명휴게소(부산방향) 전기차충전소-<a href="https://map.kakao.com/link/to/중앙고속도로 123,36.0059962723,128.5471883425" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9844554385,128.5675778403),
+    content: '<div style="width:190px; height:45px; padding:5px;">양지길 21-14<br>동명지 수변생태공원 생태체험학습관 전기차충전소-<a href="https://map.kakao.com/link/to/양지길 21-14,35.9844554385,128.5675778403" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9854262486,128.5524370951),
+    content: '<div style="width:190px; height:45px; padding:5px;">동명팔거천2길 13<br>동명면평생학습복지센터 전기차충전소-<a href="https://map.kakao.com/link/to/동명팔거천2길 13,35.9854262486,128.5524370951" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1059230188,128.5511824016),
+    content: '<div style="width:190px; height:45px; padding:5px;">경북대로 1876<br>대성피앤비(주) 전기차충전소-<a href="https://map.kakao.com/link/to/경북대로 1876,36.1059230188,128.5511824016" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9838138655,128.404609453),
+    content: '<div style="width:190px; height:45px; padding:5px;">평장길 51<br>대동다숲 앞 공용주차장 전기차충전소-<a href="https://map.kakao.com/link/to/평장길 51,35.9838138655,128.404609453" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0328144139,128.5095160951),
+    content: '<div style="width:190px; height:45px; padding:5px;">다부거문1길 201<br>대구예술대학교 전기차충전소-<a href="https://map.kakao.com/link/to/다부거문1길 201,36.0328144139,128.5095160951" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0025912118,128.5968338971),
+    content: '<div style="width:190px; height:45px; padding:5px;">기성3길 27<br>대경식당 전기차충전소-<a href="https://map.kakao.com/link/to/기성3길 27,36.0025912118,128.5968338971" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9835792549,128.4269993102),
+    content: '<div style="width:190px; height:45px; padding:5px;">현대로 24<br>대경모터스주식회사 전기차충전소-<a href="https://map.kakao.com/link/to/현대로 24,35.9835792549,128.4269993102" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0136768718,128.5968316833),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 708-5<br>꿩먹고알먹고 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 708-5,36.0136768718,128.5968316833" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0747626689,128.6032440082),
+    content: '<div style="width:190px; height:45px; padding:5px;">용매로 637<br>김정대 전기차충전소-<a href="https://map.kakao.com/link/to/용매로 637,36.0747626689,128.6032440082" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9836369504,128.4241307577),
+    content: '<div style="width:190px; height:45px; padding:5px;">칠곡대로 1751<br>김경미 전기차충전소-<a href="https://map.kakao.com/link/to/칠곡대로 1751,35.9836369504,128.4241307577" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0723642264,128.3942762272),
+    content: '<div style="width:190px; height:45px; padding:5px;">석적로 919<br>기아오토큐 석적점 전기차충전소-<a href="https://map.kakao.com/link/to/석적로 919,36.0723642264,128.3942762272" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0588498576,128.3445893438),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로 150<br>기아 아름다운대리점 전기차충전소-<a href="https://map.kakao.com/link/to/금오대로 150,36.0588498576,128.3445893438" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9902213259,128.3891354854),
+    content: '<div style="width:190px; height:45px; padding:5px;">주산로 1264-48<br>국립환경과학원(민수) 전기차충전소-<a href="https://map.kakao.com/link/to/주산로 1264-48,35.9902213259,128.3891354854" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0645831958,128.4639094046),
+    content: '<div style="width:190px; height:45px; padding:5px;">유학로 532<br>국립칠곡숲체원 전기차충전소-<a href="https://map.kakao.com/link/to/유학로 532,36.0645831958,128.4639094046" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9898207911,128.5504866243),
+    content: '<div style="width:190px; height:45px; padding:5px;">동명팔거천2길 59-8<br>광일상운동명지점 전기차충전소-<a href="https://map.kakao.com/link/to/동명팔거천2길 59-8,35.9898207911,128.5504866243" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9993714154,128.6060068758),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔공산로 157<br>고향매생이굴국밥3호점엄마밥상 전기차충전소-<a href="https://map.kakao.com/link/to/팔공산로 157,35.9993714154,128.6060068758" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0043398869,128.5936827035),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 544<br>고르디아스 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 544,36.0043398869,128.5936827035" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.98684402,128.4294331503),
+    content: '<div style="width:190px; height:45px; padding:5px;">현대로 75<br>경안종합정비공장 전기차충전소-<a href="https://map.kakao.com/link/to/현대로 75,35.98684402,128.4294331503" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9831016799,128.3453139515),
+    content: '<div style="width:190px; height:45px; padding:5px;">지산로 634<br>경북과학대학교 전기차충전소-<a href="https://map.kakao.com/link/to/지산로 634,35.9831016799,128.3453139515" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0188115359,128.6203684499),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 1034<br>경북 팔공산도립공원 사무소 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 1034,36.0188115359,128.6203684499" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9927400216,128.398113704),
+    content: '<div style="width:190px; height:45px; padding:5px;">중앙로4길 10<br>경북 칠곡군 왜관읍 중앙로4길 10 (저압수용가) 전기차충전소-<a href="https://map.kakao.com/link/to/중앙로4길 10,35.9927400216,128.398113704" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0122645704,128.586388587),
+    content: '<div style="width:190px; height:45px; padding:5px;">남원로3길 9-2<br>경북 칠곡군 동명면 남원로3길 9-2 (저압수용가) 전기차충전소-<a href="https://map.kakao.com/link/to/남원로3길 9-2,36.0122645704,128.586388587" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9616784701,128.4043480793),
+    content: '<div style="width:190px; height:45px; padding:5px;">공단로 60<br>건국물류 전기차충전소-<a href="https://map.kakao.com/link/to/공단로 60,35.9616784701,128.4043480793" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9844121322,128.5851343298),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 304-9<br>강원오리 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 304-9,35.9844121322,128.5851343298" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0043781119,128.5967582035),
+    content: '<div style="width:190px; height:45px; padding:5px;">기성2길 29<br>가산한증막 전기차충전소-<a href="https://map.kakao.com/link/to/기성2길 29,36.0043781119,128.5967582035" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0840544711,128.5395694949),
+    content: '<div style="width:190px; height:45px; padding:5px;">경북대로 1552<br>가산평생학습복지센터 전기차충전소-<a href="https://map.kakao.com/link/to/경북대로 1552,36.0840544711,128.5395694949" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.084251657,128.4686164698),
+    content: '<div style="width:190px; height:45px; padding:5px;">학하2길 54-163<br>가산컨트리클럽 전기차충전소-<a href="https://map.kakao.com/link/to/학하2길 54-163,36.084251657,128.4686164698" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0192421631,128.5893316193),
+    content: '<div style="width:190px; height:45px; padding:5px;">남원로5길 71<br>가산산성 공영주차장 전기차충전소-<a href="https://map.kakao.com/link/to/남원로5길 71,36.0192421631,128.5893316193" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0467480641,128.5189077339),
+    content: '<div style="width:190px; height:45px; padding:5px;">호국로 1486<br>가산면 다부동 전적기념관 전기차충전소-<a href="https://map.kakao.com/link/to/호국로 1486,36.0467480641,128.5189077339" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.001014379,128.4473021906),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉계로 263<br>㈜한길(파미힐스컨트리클럽)동측 전기차충전소-<a href="https://map.kakao.com/link/to/봉계로 263,36.001014379,128.4473021906" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0447336378,128.52922013),
+    content: '<div style="width:190px; height:45px; padding:5px;">경북대로 1000<br>FC25편의점 전기차충전소-<a href="https://map.kakao.com/link/to/경북대로 1000,36.0447336378,128.52922013" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0108326294,128.5929718324),
+    content: '<div style="width:190px; height:45px; padding:5px;">한티로 631<br>CU 팔공산정상점 전기차충전소-<a href="https://map.kakao.com/link/to/한티로 631,36.0108326294,128.5929718324" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.952981299,128.3993029386),
+    content: '<div style="width:190px; height:45px; padding:5px;">강변대로 851<br>(주)광덕산업 전기차충전소-<a href="https://map.kakao.com/link/to/강변대로 851,35.952981299,128.3993029386" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 오렌지 -- 
+//var newmarkerInfos3 = [
+//];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다  --- newMarkerImage0  레드  // 삭제시 기본 이미지 (파란색)
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        image: newMarkerImage0,
+        clickable: true
+    });
+    markers.push(marker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 1 보라
+for (var i = 0; i < newmarkerInfos1.length; i++) {
+    var newmarker = new kakao.maps.Marker({
+        position: newmarkerInfos1[i].position,
+        image: newMarkerImage1,
+        clickable: true
+    });
+    markers.push(newmarker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos1[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker, 'click', makeClickListener(newmarker, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 2 그린
+for (var i = 0; i < newmarkerInfos2.length; i++) {
+    var newmarker2 = new kakao.maps.Marker({
+        position: newmarkerInfos2[i].position,
+        image: newMarkerImage2,
+        clickable: true
+    });
+    markers.push(newmarker2);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos2[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker2, 'click', makeClickListener(newmarker2, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 3 오렌지
+//for (var i = 0; i < newmarkerInfos3.length; i++) {
+//    var newmarker3 = new kakao.maps.Marker({
+//        position: newmarkerInfos3[i].position,
+//        image: newMarkerImage3,
+//        clickable: true
+//    });
+//    markers.push(newmarker3);
+//    
+//    var infowindow = new kakao.maps.InfoWindow({
+//        content: newmarkerInfos3[i].content,
+//        removable: true
+//    });
+//    infowindows.push(infowindow);
+//
+//    kakao.maps.event.addListener(newmarker3, 'click', makeClickListener(newmarker3, infowindow));
+//}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
