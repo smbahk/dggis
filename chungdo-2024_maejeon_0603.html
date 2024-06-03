@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>청도군-매전건판</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.64738530515821, 128.73401251299836), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.64738530515821, 128.73401251299836),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize = new kakao.maps.Size(24, 35); 
+    
+    // 마커 이미지를 생성합니다    
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition,
+        image : markerImage // 마커 이미지
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(35.6990819505927,128.802155436043),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2907<br>망실//-<a href="https://map.kakao.com/link/to/청려로 2907,35.6990819505927,128.802155436043" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6990057553261,128.802760330822),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2910<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 2910,35.6990057553261,128.802760330822" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.699222378116,128.802761010298),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2912<br>망실//부분파손-<a href="https://map.kakao.com/link/to/청려로 2912,35.699222378116,128.802761010298" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6992770703943,128.802857691148),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2914<br>망실//-<a href="https://map.kakao.com/link/to/청려로 2914,35.6992770703943,128.802857691148" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6998441704985,128.802628079586),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2917<br>망실//-<a href="https://map.kakao.com/link/to/청려로 2917,35.6998441704985,128.802628079586" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7001867249359,128.802986771603),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2919<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 2919,35.7001867249359,128.802986771603" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7008597179312,128.804403867933),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2938<br>망실//-<a href="https://map.kakao.com/link/to/청려로 2938,35.7008597179312,128.804403867933" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7026432139126,128.806099695919),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2959<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 2959,35.7026432139126,128.806099695919" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7023806844227,128.80640178594),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2960<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 2960,35.7023806844227,128.80640178594" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7027203152394,128.806264170246),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2961<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 2961,35.7027203152394,128.806264170246" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7031790971916,128.805746873273),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2965-12<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 2965-12,35.7031790971916,128.805746873273" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7033015357413,128.805454323815),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2965-14<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 2965-14,35.7033015357413,128.805454323815" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7029842990437,128.80654952759),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2965-4<br>망실//창고-<a href="https://map.kakao.com/link/to/청려로 2965-4,35.7029842990437,128.80654952759" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.702808277712,128.807793521988),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 2975<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 2975,35.702808277712,128.807793521988" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7042848170762,128.81045254897),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3005-12<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3005-12,35.7042848170762,128.81045254897" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.703884458699,128.810661140078),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3005-6<br>망실//창고-<a href="https://map.kakao.com/link/to/청려로 3005-6,35.703884458699,128.810661140078" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7035805876963,128.811906884825),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3016<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3016,35.7035805876963,128.811906884825" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7045671383113,128.811907560703),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3017<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3017,35.7045671383113,128.811907560703" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7029470442217,128.813812002485),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3028-13<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3028-13,35.7029470442217,128.813812002485" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7028023326236,128.813099783213),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3028-25<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3028-25,35.7028023326236,128.813099783213" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7025680546179,128.812877387624),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3028-28<br>비정상//ㅌ-<a href="https://map.kakao.com/link/to/청려로 3028-28,35.7025680546179,128.812877387624" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.703961510221,128.813123385828),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3028-4<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3028-4,35.703961510221,128.813123385828" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7051586356105,128.812919041676),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3033-12<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3033-12,35.7051586356105,128.812919041676" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7044372830709,128.822695048431),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3123<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3123,35.7044372830709,128.822695048431" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7045302598043,128.82309489599),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3123-5<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3123-5,35.7045302598043,128.82309489599" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7044312185726,128.82335702033),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3123-7<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3123-7,35.7044312185726,128.82335702033" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.70424049578,128.82340150838),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3125<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3125,35.70424049578,128.82340150838" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7010248688131,128.822421923903),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3146-19<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3146-19,35.7010248688131,128.822421923903" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7024027249303,128.823948716391),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3149<br>망실//창고+-<a href="https://map.kakao.com/link/to/청려로 3149,35.7024027249303,128.823948716391" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7003231765864,128.823812407061),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3170<br>망실//창고-<a href="https://map.kakao.com/link/to/청려로 3170,35.7003231765864,128.823812407061" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6971779637629,128.827363865013),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3219<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3219,35.6971779637629,128.827363865013" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6937529115125,128.830099487897),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3268<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3268,35.6937529115125,128.830099487897" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6842266050227,128.835955945487),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3399<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3399,35.6842266050227,128.835955945487" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6839112374063,128.836509261575),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3405<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3405,35.6839112374063,128.836509261575" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6838310507007,128.837470673766),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3415-1<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3415-1,35.6838310507007,128.837470673766" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6841452158352,128.8387844194),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3423-15<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3423-15,35.6841452158352,128.8387844194" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6835161790178,128.838604635325),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3423-7<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3423-7,35.6835161790178,128.838604635325" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6683649972834,128.85087546884),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3623-16<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3623-16,35.6683649972834,128.85087546884" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.668119798188,128.849796870121),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3625<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3625,35.668119798188,128.849796870121" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6669829984901,128.850402176092),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3639<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3639,35.6669829984901,128.850402176092" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6669115235094,128.850549714698),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3641-1<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3641-1,35.6669115235094,128.850549714698" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6670451945238,128.850729265198),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3641-3<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3641-3,35.6670451945238,128.850729265198" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6670473357877,128.851521748821),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3645-10<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3645-10,35.6670473357877,128.851521748821" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6673544508255,128.85101137318),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3645-11<br>비정상//부분파손-<a href="https://map.kakao.com/link/to/청려로 3645-11,35.6673544508255,128.85101137318" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6672044423394,128.851214521149),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3645-12<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3645-12,35.6672044423394,128.851214521149" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6682511064946,128.851841420986),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3645-21<br>비정상//시트지벗겨짐+-<a href="https://map.kakao.com/link/to/청려로 3645-21,35.6682511064946,128.851841420986" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6668879255597,128.850847878167),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3645-3<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3645-3,35.6668879255597,128.850847878167" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6670631810795,128.850930881066),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3645-5<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3645-5,35.6670631810795,128.850930881066" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.666963007843,128.851215902398),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3645-6<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3645-6,35.666963007843,128.851215902398" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6666741993258,128.850963641048),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3647<br>망실//체육시설+-<a href="https://map.kakao.com/link/to/청려로 3647,35.6666741993258,128.850963641048" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6667578520837,128.851207962115),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3649<br>비정상//시트지벗겨짐+-<a href="https://map.kakao.com/link/to/청려로 3649,35.6667578520837,128.851207962115" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6666346311593,128.851725894087),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3649-17<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3649-17,35.6666346311593,128.851725894087" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6667752356696,128.851706504351),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3649-19<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3649-19,35.6667752356696,128.851706504351" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6666034440665,128.851480355278),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3649-3<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3649-3,35.6666034440665,128.851480355278" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6661920535884,128.851282685464),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3654<br>망실//축사-<a href="https://map.kakao.com/link/to/청려로 3654,35.6661920535884,128.851282685464" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.665883813041,128.852697753369),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3666-2<br>망실//망실/창고-<a href="https://map.kakao.com/link/to/청려로 3666-2,35.665883813041,128.852697753369" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.665776621837,128.853122295704),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3666-3<br>망실//창고/망실-<a href="https://map.kakao.com/link/to/청려로 3666-3,35.665776621837,128.853122295704" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6658531707055,128.853652125789),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3670<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3670,35.6658531707055,128.853652125789" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6663445528855,128.853658298365),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3671<br>비정상//시트지벗겨짐-<a href="https://map.kakao.com/link/to/청려로 3671,35.6663445528855,128.853658298365" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6658219812753,128.853980476008),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3672-5<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3672-5,35.6658219812753,128.853980476008" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6656667213508,128.853740241362),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3672-6<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3672-6,35.6656667213508,128.853740241362" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6663299917184,128.853805106113),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3673<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3673,35.6663299917184,128.853805106113" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6660371560294,128.854291556015),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3678<br>망실//망실/창고-<a href="https://map.kakao.com/link/to/청려로 3678,35.6660371560294,128.854291556015" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6661902453852,128.854766179464),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3682<br>망실//망실-<a href="https://map.kakao.com/link/to/청려로 3682,35.6661902453852,128.854766179464" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6666820803585,128.855099677523),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3687<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3687,35.6666820803585,128.855099677523" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6675443213644,128.855582440188),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3695-4<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3695-4,35.6675443213644,128.855582440188" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6676001704096,128.85648384033),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3703<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3703,35.6676001704096,128.85648384033" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6678477569658,128.856802200186),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3705-3<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3705-3,35.6678477569658,128.856802200186" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6678365184502,128.857518957717),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3712-1<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3712-1,35.6678365184502,128.857518957717" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6683203722773,128.857610011378),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3717<br>망실//망실/빈집-<a href="https://map.kakao.com/link/to/청려로 3717,35.6683203722773,128.857610011378" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6687524256425,128.85802707162),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3723<br>망실//망실-<a href="https://map.kakao.com/link/to/청려로 3723,35.6687524256425,128.85802707162" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6687008195622,128.858521377165),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3726<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3726,35.6687008195622,128.858521377165" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6689783478294,128.858843644608),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3730<br>비정상//시트지벗겨짐+-<a href="https://map.kakao.com/link/to/청려로 3730,35.6689783478294,128.858843644608" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6692083291421,128.85866190766),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3731<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3731,35.6692083291421,128.85866190766" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6695653295422,128.858856263663),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3735<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3735,35.6695653295422,128.858856263663" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6699852370078,128.858898358813),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3739-2<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3739-2,35.6699852370078,128.858898358813" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6705157202623,128.859949174345),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3749<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3749,35.6705157202623,128.859949174345" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6706064673083,128.860100585833),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3751<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3751,35.6706064673083,128.860100585833" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6711824311496,128.860464580777),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3757<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3757,35.6711824311496,128.860464580777" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6713789216192,128.860706575465),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3763<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3763,35.6713789216192,128.860706575465" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6748262142935,128.866048697338),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3822<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3822,35.6748262142935,128.866048697338" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6753422489826,128.867056657579),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3836-13<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3836-13,35.6753422489826,128.867056657579" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6749435283779,128.86714775686),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3836-15<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3836-15,35.6749435283779,128.86714775686" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6794979764581,128.865452966461),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3873-7<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3873-7,35.6794979764581,128.865452966461" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6800390673657,128.865344847147),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3877-10<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3877-10,35.6800390673657,128.865344847147" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6797314732233,128.866573792986),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3878<br>비정상//탈색-<a href="https://map.kakao.com/link/to/청려로 3878,35.6797314732233,128.866573792986" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6806530993799,128.867146173351),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3882-18<br>망실//창고-<a href="https://map.kakao.com/link/to/청려로 3882-18,35.6806530993799,128.867146173351" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.680593558727,128.86601160187),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3887<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3887,35.680593558727,128.86601160187" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6806247272761,128.864890187913),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3891-11<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3891-11,35.6806247272761,128.864890187913" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6810850026663,128.863797862522),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3891-24<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3891-24,35.6810850026663,128.863797862522" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6810540515982,128.863486343321),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3891-26<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3891-26,35.6810540515982,128.863486343321" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6808643179557,128.863431124529),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3891-28<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3891-28,35.6808643179557,128.863431124529" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6815893092748,128.862747855838),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3891-40<br>비정상//탈색+-<a href="https://map.kakao.com/link/to/청려로 3891-40,35.6815893092748,128.862747855838" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6836067944954,128.865915668859),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3911-7<br>망실//축사+-<a href="https://map.kakao.com/link/to/청려로 3911-7,35.6836067944954,128.865915668859" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.6833095629901,128.86849129962),
+    content: '<div style="width:190px; height:45px; padding:5px;">청려로 3926-15<br>망실//-<a href="https://map.kakao.com/link/to/청려로 3926-15,35.6833095629901,128.86849129962" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
