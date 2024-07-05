@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>금호읍-영천 누락공유</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.97322102635671, 128.9385464407533), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.97322102635671, 128.9385464407533),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize = new kakao.maps.Size(24, 35); 
+    
+    // 마커 이미지를 생성합니다    
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition,
+        image : markerImage // 마커 이미지
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(35.9329450763212,128.875448734981),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 교대리 185-9<br> 대-<a href="https://map.kakao.com/link/to/금호읍 교대리 185-9,35.9329450763212,128.875448734981" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9318890342605,128.869706066173),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 교대리 212-38<br> 철도용지-<a href="https://map.kakao.com/link/to/금호읍 교대리 212-38,35.9318890342605,128.869706066173" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9317420441965,128.869458743166),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 교대리 222-23<br> 답-<a href="https://map.kakao.com/link/to/금호읍 교대리 222-23,35.9317420441965,128.869458743166" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9265083654386,128.871715784446),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 덕성리 88-6<br> 과수원-<a href="https://map.kakao.com/link/to/금호읍 덕성리 88-6,35.9265083654386,128.871715784446" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9311877511982,128.865865025481),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 덕성리 159-3<br> 대-<a href="https://map.kakao.com/link/to/금호읍 덕성리 159-3,35.9311877511982,128.865865025481" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9312416026294,128.865861416291),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 덕성리 175-2<br> 대-<a href="https://map.kakao.com/link/to/금호읍 덕성리 175-2,35.9312416026294,128.865861416291" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.944509673883,128.871230351342),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 성천리 402-1<br> 전-<a href="https://map.kakao.com/link/to/금호읍 성천리 402-1,35.944509673883,128.871230351342" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9442835939461,128.871276325838),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 성천리 402-8<br> 답-<a href="https://map.kakao.com/link/to/금호읍 성천리 402-8,35.9442835939461,128.871276325838" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9630220762858,128.880430643768),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 442<br> 전-<a href="https://map.kakao.com/link/to/금호읍 대미리 442,35.9630220762858,128.880430643768" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.946114499948,128.885013408348),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 776-6<br> 전-<a href="https://map.kakao.com/link/to/금호읍 대미리 776-6,35.946114499948,128.885013408348" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9462027171946,128.885030575242),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 776-7<br> 전-<a href="https://map.kakao.com/link/to/금호읍 대미리 776-7,35.9462027171946,128.885030575242" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.950318059688,128.886253088353),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1118<br> 대-<a href="https://map.kakao.com/link/to/금호읍 대미리 1118,35.950318059688,128.886253088353" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9500233782002,128.886191668266),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1120<br> 대-<a href="https://map.kakao.com/link/to/금호읍 대미리 1120,35.9500233782002,128.886191668266" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9498270838232,128.886205507847),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1121<br> 대-<a href="https://map.kakao.com/link/to/금호읍 대미리 1121,35.9498270838232,128.886205507847" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9496421774628,128.885942013684),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1125<br> 대-<a href="https://map.kakao.com/link/to/금호읍 대미리 1125,35.9496421774628,128.885942013684" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9498247341945,128.885942253512),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1126<br> 대-<a href="https://map.kakao.com/link/to/금호읍 대미리 1126,35.9498247341945,128.885942253512" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9492814867141,128.88527594556),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1138<br> 대-<a href="https://map.kakao.com/link/to/금호읍 대미리 1138,35.9492814867141,128.88527594556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9491102240955,128.88534257821),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1139<br> 주차장-<a href="https://map.kakao.com/link/to/금호읍 대미리 1139,35.9491102240955,128.88534257821" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9490962785779,128.88522078871),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1140<br> 잡종지-<a href="https://map.kakao.com/link/to/금호읍 대미리 1140,35.9490962785779,128.88522078871" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9489786494731,128.885280495344),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1141<br> 공원-<a href="https://map.kakao.com/link/to/금호읍 대미리 1141,35.9489786494731,128.885280495344" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9491872757757,128.885817941278),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1143<br> 대-<a href="https://map.kakao.com/link/to/금호읍 대미리 1143,35.9491872757757,128.885817941278" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9491706835622,128.886231457649),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1145<br> 대-<a href="https://map.kakao.com/link/to/금호읍 대미리 1145,35.9491706835622,128.886231457649" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9502725860065,128.884857767493),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1158<br> 공원-<a href="https://map.kakao.com/link/to/금호읍 대미리 1158,35.9502725860065,128.884857767493" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9500491318559,128.886427774653),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1160<br> 공원-<a href="https://map.kakao.com/link/to/금호읍 대미리 1160,35.9500491318559,128.886427774653" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9501398262362,128.885599440003),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1161<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 대미리 1161,35.9501398262362,128.885599440003" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9495744837684,128.88498580024),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1162<br> 공원-<a href="https://map.kakao.com/link/to/금호읍 대미리 1162,35.9495744837684,128.88498580024" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9489726137965,128.885469631147),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1163<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 대미리 1163,35.9489726137965,128.885469631147" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9498247046542,128.885772143478),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1164<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 대미리 1164,35.9498247046542,128.885772143478" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.949503537922,128.886375237442),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1165<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 대미리 1165,35.949503537922,128.886375237442" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9495194136262,128.886477347696),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1166<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 대미리 1166,35.9495194136262,128.886477347696" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9493342876382,128.885901115492),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1167<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 대미리 1167,35.9493342876382,128.885901115492" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9488019623564,128.885267984898),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1168<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 대미리 1168,35.9488019623564,128.885267984898" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9484262040779,128.885107677026),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1169<br> 공원-<a href="https://map.kakao.com/link/to/금호읍 대미리 1169,35.9484262040779,128.885107677026" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9487971402466,128.8859475231),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1170<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 대미리 1170,35.9487971402466,128.8859475231" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9484179889354,128.885859828278),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1171<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 대미리 1171,35.9484179889354,128.885859828278" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9487359499156,128.886217353013),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대미리 1172<br> 공원-<a href="https://map.kakao.com/link/to/금호읍 대미리 1172,35.9487359499156,128.886217353013" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9514084143063,128.891350700381),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 석섬리 91-1<br> 대-<a href="https://map.kakao.com/link/to/금호읍 석섬리 91-1,35.9514084143063,128.891350700381" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.946825279317,128.888663516259),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 석섬리 192-28<br> 답-<a href="https://map.kakao.com/link/to/금호읍 석섬리 192-28,35.946825279317,128.888663516259" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9406190137235,128.883361467975),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 석섬리 440-1<br> 답-<a href="https://map.kakao.com/link/to/금호읍 석섬리 440-1,35.9406190137235,128.883361467975" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9540264998964,128.900362004429),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 원제리 111-39<br> 유지-<a href="https://map.kakao.com/link/to/금호읍 원제리 111-39,35.9540264998964,128.900362004429" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9580315924619,128.901496911682),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 원제리 178-7<br> 대-<a href="https://map.kakao.com/link/to/금호읍 원제리 178-7,35.9580315924619,128.901496911682" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9420320005771,128.89967091133),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 원제리 515<br> 답-<a href="https://map.kakao.com/link/to/금호읍 원제리 515,35.9420320005771,128.89967091133" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9329044636505,128.880416463102),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 냉천리 718-2<br> 전-<a href="https://map.kakao.com/link/to/금호읍 냉천리 718-2,35.9329044636505,128.880416463102" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9429837274249,128.903230658377),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 신월리 49-3<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 신월리 49-3,35.9429837274249,128.903230658377" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9429332862959,128.902922614389),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 신월리 49-4<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 신월리 49-4,35.9429332862959,128.902922614389" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9430398190117,128.903381265665),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 신월리 49-6<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 신월리 49-6,35.9430398190117,128.903381265665" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9390540092631,128.901877329762),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 신월리 151-2<br> 유지-<a href="https://map.kakao.com/link/to/금호읍 신월리 151-2,35.9390540092631,128.901877329762" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9432766808605,128.904008153549),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 신월리 산 27<br> 임야-<a href="https://map.kakao.com/link/to/금호읍 신월리 산 27,35.9432766808605,128.904008153549" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9341713823316,128.910527892952),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 봉죽리 338-1<br> 답-<a href="https://map.kakao.com/link/to/금호읍 봉죽리 338-1,35.9341713823316,128.910527892952" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9347927371254,128.911016736542),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 봉죽리 344-1<br> 답-<a href="https://map.kakao.com/link/to/금호읍 봉죽리 344-1,35.9347927371254,128.911016736542" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9357980944008,128.911830395659),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 봉죽리 365-1<br> 대-<a href="https://map.kakao.com/link/to/금호읍 봉죽리 365-1,35.9357980944008,128.911830395659" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9250963720973,128.930908890042),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 구암리 710-5<br> 답-<a href="https://map.kakao.com/link/to/금호읍 구암리 710-5,35.9250963720973,128.930908890042" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.92370464873,128.931328812174),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 구암리 719<br> 답-<a href="https://map.kakao.com/link/to/금호읍 구암리 719,35.92370464873,128.931328812174" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9237568350204,128.931154379602),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 구암리 720<br> 답-<a href="https://map.kakao.com/link/to/금호읍 구암리 720,35.9237568350204,128.931154379602" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9238187662035,128.93094550866),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 구암리 721<br> 답-<a href="https://map.kakao.com/link/to/금호읍 구암리 721,35.9238187662035,128.93094550866" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9173450853312,128.927425883929),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 구암리 910-160<br> 답-<a href="https://map.kakao.com/link/to/금호읍 구암리 910-160,35.9173450853312,128.927425883929" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8944864896369,128.929680314158),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 약남리 161-2<br> 과수원-<a href="https://map.kakao.com/link/to/금호읍 약남리 161-2,35.8944864896369,128.929680314158" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.900574626048,128.931292593051),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 약남리 228<br> 대-<a href="https://map.kakao.com/link/to/금호읍 약남리 228,35.900574626048,128.931292593051" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9005794518204,128.93126147863),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 약남리 228-1<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 약남리 228-1,35.9005794518204,128.93126147863" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8982820855658,128.929560607392),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 약남리 274-1<br> 전-<a href="https://map.kakao.com/link/to/금호읍 약남리 274-1,35.8982820855658,128.929560607392" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9031485554169,128.930655625751),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 약남리 461-2<br> 답-<a href="https://map.kakao.com/link/to/금호읍 약남리 461-2,35.9031485554169,128.930655625751" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8947265549949,128.929853141988),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 약남리 산 74-8<br> 임야-<a href="https://map.kakao.com/link/to/금호읍 약남리 산 74-8,35.8947265549949,128.929853141988" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8942682658276,128.929280996616),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대곡리 31-1<br> 전-<a href="https://map.kakao.com/link/to/금호읍 대곡리 31-1,35.8942682658276,128.929280996616" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8948011656372,128.928204333683),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 대곡리 산 3-6<br> 임야-<a href="https://map.kakao.com/link/to/금호읍 대곡리 산 3-6,35.8948011656372,128.928204333683" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8985239799417,128.917376226839),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 호남리 113-4<br> 답-<a href="https://map.kakao.com/link/to/금호읍 호남리 113-4,35.8985239799417,128.917376226839" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8978515449184,128.916255744073),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 호남리 221-1<br> 대-<a href="https://map.kakao.com/link/to/금호읍 호남리 221-1,35.8978515449184,128.916255744073" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9005504800472,128.901084235723),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 호남리 1027-7<br> 전-<a href="https://map.kakao.com/link/to/금호읍 호남리 1027-7,35.9005504800472,128.901084235723" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9132673582091,128.90871845846),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 어은리 153-1<br> 전-<a href="https://map.kakao.com/link/to/금호읍 어은리 153-1,35.9132673582091,128.90871845846" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9147037909415,128.90759010357),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 어은리 177-1<br> 전-<a href="https://map.kakao.com/link/to/금호읍 어은리 177-1,35.9147037909415,128.90759010357" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9110974727665,128.889448634204),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 오계리 81-4<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 오계리 81-4,35.9110974727665,128.889448634204" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9112473300779,128.889459730655),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 오계리 82-5<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 오계리 82-5,35.9112473300779,128.889459730655" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9100246960148,128.888448167872),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 오계리 107-11<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 오계리 107-11,35.9100246960148,128.888448167872" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9100397786611,128.888486075664),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 오계리 108-3<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 오계리 108-3,35.9100397786611,128.888486075664" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.901312146229,128.893657125536),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 오계리 721-3<br> 전-<a href="https://map.kakao.com/link/to/금호읍 오계리 721-3,35.901312146229,128.893657125536" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8974431441284,128.891517778776),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 오계리 763<br> 답-<a href="https://map.kakao.com/link/to/금호읍 오계리 763,35.8974431441284,128.891517778776" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9097879518462,128.883236166823),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 원기리 177-1<br> 답-<a href="https://map.kakao.com/link/to/금호읍 원기리 177-1,35.9097879518462,128.883236166823" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9090123491683,128.882594736827),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 원기리 193-1<br> 답-<a href="https://map.kakao.com/link/to/금호읍 원기리 193-1,35.9090123491683,128.882594736827" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8894452842651,128.873726295785),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 남성리 144-10<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 남성리 144-10,35.8894452842651,128.873726295785" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9127432288041,128.878615395019),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 132<br> 공장용지-<a href="https://map.kakao.com/link/to/금호읍 삼호리 132,35.9127432288041,128.878615395019" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9124796599742,128.878471365868),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 132-1<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 삼호리 132-1,35.9124796599742,128.878471365868" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9125244368245,128.879513758762),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 135-2<br> 과수원-<a href="https://map.kakao.com/link/to/금호읍 삼호리 135-2,35.9125244368245,128.879513758762" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9123381775508,128.879007461169),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 135-3<br> 도로-<a href="https://map.kakao.com/link/to/금호읍 삼호리 135-3,35.9123381775508,128.879007461169" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9129306272389,128.87931379474),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 136-2<br> 공장용지-<a href="https://map.kakao.com/link/to/금호읍 삼호리 136-2,35.9129306272389,128.87931379474" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9127502182969,128.879596417551),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 136-3<br> 과수원-<a href="https://map.kakao.com/link/to/금호읍 삼호리 136-3,35.9127502182969,128.879596417551" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9151214570257,128.876508928579),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 499-1<br> 유지-<a href="https://map.kakao.com/link/to/금호읍 삼호리 499-1,35.9151214570257,128.876508928579" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9062456142208,128.878448350998),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 835-1<br> 대-<a href="https://map.kakao.com/link/to/금호읍 삼호리 835-1,35.9062456142208,128.878448350998" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9162825831238,128.876147323925),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 산 22<br> 임야-<a href="https://map.kakao.com/link/to/금호읍 삼호리 산 22,35.9162825831238,128.876147323925" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9147264097078,128.878888383649),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 삼호리 산 24<br> 임야-<a href="https://map.kakao.com/link/to/금호읍 삼호리 산 24,35.9147264097078,128.878888383649" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.9261011636355,128.917127447703),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호읍 황정리 159-8<br> 전-<a href="https://map.kakao.com/link/to/금호읍 황정리 159-8,35.9261011636355,128.917127447703" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
