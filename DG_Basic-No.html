@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>대구시 기초번호 - 중구 수성구</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.87138113602777,128.60180772294848), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.87138113602777,128.60180772294848),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize = new kakao.maps.Size(24, 35); 
+    
+    // 마커 이미지를 생성합니다    
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition,
+        image : markerImage // 마커 이미지
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(35.8631406663,128.5754448392),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 1929<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 1929,35.8631406663,128.5754448392" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8630359525,128.5767978482),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 1942<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 1942,35.8630359525,128.5767978482" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8637425285,128.577825569),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 1953<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 1953,35.8637425285,128.577825569" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8647637967,128.5812429855),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 1985<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 1985,35.8647637967,128.5812429855" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8659965353,128.5867024987),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2038<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2038,35.8659965353,128.5867024987" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8660468247,128.5854038716),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2027<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2027,35.8660468247,128.5854038716" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8658830657,128.5901050297),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2070<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2070,35.8658830657,128.5901050297" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8646018858,128.5972299093),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2136<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2136,35.8646018858,128.5972299093" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8653153235,128.5956260687),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2119<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2119,35.8653153235,128.5956260687" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8650567166,128.5969895586),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2133<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2133,35.8650567166,128.5969895586" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8634284809,128.6004864949),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2170<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2170,35.8634284809,128.6004864949" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8636649614,128.6014402079),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2177<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2177,35.8636649614,128.6014402079" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8627778398,128.6057410901),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2217<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2217,35.8627778398,128.6057410901" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.862207955,128.6064045417),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2224<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2224,35.862207955,128.6064045417" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8648455159,128.5958546825),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2124<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2124,35.8648455159,128.5958546825" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8664860367,128.5893303674),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2061<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2061,35.8664860367,128.5893303674" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.864168846,128.5807847772),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 1980<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 1980,35.864168846,128.5807847772" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8651675016,128.5840313966),
+    content: '<div style="width:190px; height:45px; padding:5px;">달구벌대로 2012<br>대구 중구-<a href="https://map.kakao.com/link/to/달구벌대로 2012,35.8651675016,128.5840313966" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.870290605,128.5982683477),
+    content: '<div style="width:190px; height:45px; padding:5px;">국채보상로 618<br>대구 중구-<a href="https://map.kakao.com/link/to/국채보상로 618,35.870290605,128.5982683477" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8680517017,128.6036249295),
+    content: '<div style="width:190px; height:45px; padding:5px;">동덕로 149<br>대구 중구-<a href="https://map.kakao.com/link/to/동덕로 149,35.8680517017,128.6036249295" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.857136544,128.626202263),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 300<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 300,35.857136544,128.626202263" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.850164069,128.6254115686),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 222<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 222,35.850164069,128.6254115686" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8596523532,128.6217302365),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2369<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2369,35.8596523532,128.6217302365" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8603519346,128.6102714492),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2266<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2266,35.8603519346,128.6102714492" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8591024159,128.6424525655),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2557<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2557,35.8591024159,128.6424525655" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.860058661,128.6127150647),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2287<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2287,35.860058661,128.6127150647" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8545034697,128.615557286),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)명덕로 415<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)명덕로 415,35.8545034697,128.615557286" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8206082442,128.6344971476),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)용학로 237<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)용학로 237,35.8206082442,128.6344971476" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8564481293,128.6513830556),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2645<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2645,35.8564481293,128.6513830556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8578287358,128.6488524473),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2617<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2617,35.8578287358,128.6488524473" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8585622446,128.6328978873),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2472<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2472,35.8585622446,128.6328978873" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8542068589,128.6203042738),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)명덕로 457<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)명덕로 457,35.8542068589,128.6203042738" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8255100012,128.6296001514),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)지범로 82<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)지범로 82,35.8255100012,128.6296001514" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8591916054,128.6218193549),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2372<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2372,35.8591916054,128.6218193549" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8426831798,128.6949463958),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3090<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3090,35.8426831798,128.6949463958" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8596100771,128.6126323735),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2288<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2288,35.8596100771,128.6126323735" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8416898459,128.7023954966),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3157<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3157,35.8416898459,128.7023954966" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8550865044,128.6539889367),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2673<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2673,35.8550865044,128.6539889367" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8457940102,128.6738901694),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2883<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2883,35.8457940102,128.6738901694" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8580870987,128.6483817583),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2613<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2613,35.8580870987,128.6483817583" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8590717543,128.6373690075),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2511<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2511,35.8590717543,128.6373690075" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8580357875,128.6474404784),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2608<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2608,35.8580357875,128.6474404784" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.857523327,128.6483734642),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2616<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2616,35.857523327,128.6483734642" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8350078831,128.6240683754),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 54<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 54,35.8350078831,128.6240683754" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8445719708,128.624920959),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 160<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 160,35.8445719708,128.624920959" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8620911287,128.6271654769),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 356<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 356,35.8620911287,128.6271654769" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.854784665,128.6110017381),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)명덕로 373<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)명덕로 373,35.854784665,128.6110017381" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8204875301,128.6403720978),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)지범로 196<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)지범로 196,35.8204875301,128.6403720978" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.819455552,128.6427096805),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)지범로 219<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)지범로 219,35.819455552,128.6427096805" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8278381708,128.6258384198),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)지범로 58<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)지범로 58,35.8278381708,128.6258384198" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8225414019,128.6416315612),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)용학로 310<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)용학로 310,35.8225414019,128.6416315612" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8367842701,128.7173281078),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3303<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3303,35.8367842701,128.7173281078" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8422271427,128.7001274052),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3137<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3137,35.8422271427,128.7001274052" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8381570746,128.7122210475),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3255<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3255,35.8381570746,128.7122210475" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8431485461,128.6945576078),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3085<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3085,35.8431485461,128.6945576078" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8478819637,128.6690792936),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2836<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2836,35.8478819637,128.6690792936" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8452711096,128.6738371854),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2886<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2886,35.8452711096,128.6738371854" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8443133748,128.6241173168),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 155<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 155,35.8443133748,128.6241173168" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8541938988,128.6160065036),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)명덕로 420<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)명덕로 420,35.8541938988,128.6160065036" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8213027847,128.6322625744),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)용학로 215<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)용학로 215,35.8213027847,128.6322625744" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8566730943,128.6499775265),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2634<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2634,35.8566730943,128.6499775265" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8405336472,128.7070664481),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3201<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3201,35.8405336472,128.7070664481" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8586063362,128.63776106),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2516<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2516,35.8586063362,128.63776106" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8532078028,128.6573858375),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2710<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2710,35.8532078028,128.6573858375" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8382404484,128.7109098798),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3244<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3244,35.8382404484,128.7109098798" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8539260694,128.6199430483),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)명덕로 456<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)명덕로 456,35.8539260694,128.6199430483" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8209627525,128.6401745338),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)지범로 191<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)지범로 191,35.8209627525,128.6401745338" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8257588306,128.6313202576),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)지범로 95<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)지범로 95,35.8257588306,128.6313202576" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8535161166,128.6581294454),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2715<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2715,35.8535161166,128.6581294454" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8653801505,128.6264831717),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 391<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 391,35.8653801505,128.6264831717" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8324976602,128.6238542113),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 26<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 26,35.8324976602,128.6238542113" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8530074246,128.6256509908),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 254<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 254,35.8530074246,128.6256509908" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8593399707,128.6188486041),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2344<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2344,35.8593399707,128.6188486041" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8420853716,128.6814756329),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2964<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2964,35.8420853716,128.6814756329" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8400569736,128.7069919005),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3204<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3204,35.8400569736,128.7069919005" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8359740929,128.6233709678),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 63<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 63,35.8359740929,128.6233709678" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8324909552,128.6230638284),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 25<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 25,35.8324909552,128.6230638284" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8386147852,128.6244123373),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 94<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 94,35.8386147852,128.6244123373" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.865215975,128.6272889087),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 390<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 390,35.865215975,128.6272889087" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8545297029,128.6106522159),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)명덕로 372<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)명덕로 372,35.8545297029,128.6106522159" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8369407418,128.7148201672),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3282<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3282,35.8369407418,128.7148201672" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8586091356,128.6291508909),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2438<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2438,35.8586091356,128.6291508909" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8537794768,128.6224282078),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)명덕로 478<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)명덕로 478,35.8537794768,128.6224282078" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8207997669,128.6383566487),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)용학로 273<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)용학로 273,35.8207997669,128.6383566487" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8545714578,128.653901958),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2676<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2676,35.8545714578,128.653901958" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8420521178,128.6988718168),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3126<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3126,35.8420521178,128.6988718168" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8388250119,128.623636028),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 95<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 95,35.8388250119,128.623636028" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8572265539,128.6254416645),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 299<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 299,35.8572265539,128.6254416645" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8547818797,128.6250432762),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 273<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 273,35.8547818797,128.6250432762" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8492355567,128.6245499283),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 211<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 211,35.8492355567,128.6245499283" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8635693288,128.6264920133),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)동대구로 371<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)동대구로 371,35.8635693288,128.6264920133" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8228299758,128.6373795211),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)지범로 157<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)지범로 157,35.8228299758,128.6373795211" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8244125094,128.6340206317),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)지범로 123<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)지범로 123,35.8244125094,128.6340206317" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8360594363,128.7186246192),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3318<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3318,35.8360594363,128.7186246192" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8624213957,128.6747819507),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 15<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 15,35.8624213957,128.6747819507" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8629779292,128.6739853433),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 23<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 23,35.8629779292,128.6739853433" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8639257814,128.6732414325),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 35<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 35,35.8639257814,128.6732414325" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8656787225,128.6731667209),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 57<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 57,35.8656787225,128.6731667209" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.866963731,128.6702856369),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 85<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 85,35.866963731,128.6702856369" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8690673013,128.6668262501),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 126<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 126,35.8690673013,128.6668262501" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8724388035,128.6586298507),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 211<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 211,35.8724388035,128.6586298507" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8723199405,128.6588769582),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 212<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 212,35.8723199405,128.6588769582" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8736175158,128.6588651384),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 224<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 224,35.8736175158,128.6588651384" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8741958306,128.6576037887),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 237<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 237,35.8741958306,128.6576037887" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8744488612,128.6575163655),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 240<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 240,35.8744488612,128.6575163655" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8744464181,128.6569409444),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 243<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 243,35.8744464181,128.6569409444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8748828729,128.6562659477),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 250<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 250,35.8748828729,128.6562659477" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8747993146,128.6559165145),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 253<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 253,35.8747993146,128.6559165145" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8753553399,128.6552354993),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 263<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 263,35.8753553399,128.6552354993" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.814763522,128.650789224),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 14<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 14,35.814763522,128.650789224" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8154735037,128.652366518),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 30<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 30,35.8154735037,128.652366518" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8163981501,128.6541241309),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 50<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 50,35.8163981501,128.6541241309" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8171619179,128.6560801637),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 70<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 70,35.8171619179,128.6560801637" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8173578212,128.6568867541),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 78<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 78,35.8173578212,128.6568867541" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8173717054,128.6577605473),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 86<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 86,35.8173717054,128.6577605473" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8173297568,128.6589102104),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 96<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 96,35.8173297568,128.6589102104" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8171676262,128.65995969),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 106<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 106,35.8171676262,128.65995969" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8156848767,128.6621378431),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 133<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 133,35.8156848767,128.6621378431" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8150023975,128.662413378),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 144<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 144,35.8150023975,128.662413378" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8144046276,128.6631086401),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 152<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 152,35.8144046276,128.6631086401" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8122773226,128.6630639233),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 178<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 178,35.8122773226,128.6630639233" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8110945777,128.662815697),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 192<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 192,35.8110945777,128.662815697" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8092678091,128.6619423298),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 214<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 214,35.8092678091,128.6619423298" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8082109763,128.6617231451),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 227<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 227,35.8082109763,128.6617231451" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8072108274,128.6614163525),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 239<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 239,35.8072108274,128.6614163525" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8063554372,128.6612060859),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 250<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 250,35.8063554372,128.6612060859" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8056633951,128.6616236884),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 257<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 257,35.8056633951,128.6616236884" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8047567319,128.6621587693),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 269<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 269,35.8047567319,128.6621587693" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8037085703,128.6629949889),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 279<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 279,35.8037085703,128.6629949889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8027079329,128.663522573),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 298<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 298,35.8027079329,128.663522573" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8020870404,128.6638108886),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 303<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 303,35.8020870404,128.6638108886" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8014096343,128.6643772784),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 313<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 313,35.8014096343,128.6643772784" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.800791647,128.6648123549),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 321<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 321,35.800791647,128.6648123549" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7998879361,128.6653901567),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 336<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 336,35.7998879361,128.6653901567" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7994113022,128.6659818812),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 343<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 343,35.7994113022,128.6659818812" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7987897596,128.6666764268),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 351<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 351,35.7987897596,128.6666764268" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7983527168,128.667558886),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 361<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 361,35.7983527168,128.667558886" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7980107154,128.6684549222),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 371<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 371,35.7980107154,128.6684549222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7978010648,128.6698536176),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 385<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 385,35.7978010648,128.6698536176" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7978838297,128.6709610439),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 395<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 395,35.7978838297,128.6709610439" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7984049557,128.6720491952),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 405<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 405,35.7984049557,128.6720491952" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7982047469,128.6727524258),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 414<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 414,35.7982047469,128.6727524258" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7979237724,128.6751648235),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 439<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 439,35.7979237724,128.6751648235" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7976468764,128.6759382486),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 447<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 447,35.7976468764,128.6759382486" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8429943294,128.7214663724),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 102<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 102,35.8429943294,128.7214663724" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8440311591,128.7211867843),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 113<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 113,35.8440311591,128.7211867843" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8465230655,128.7208931014),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 141<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 141,35.8465230655,128.7208931014" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8473832097,128.7209673374),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 152<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 152,35.8473832097,128.7209673374" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8496429519,128.7213607067),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 178<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 178,35.8496429519,128.7213607067" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8515375475,128.7226941384),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 201<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 201,35.8515375475,128.7226941384" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8521463949,128.7236451005),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 214<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 214,35.8521463949,128.7236451005" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8234027485,128.7051836643),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 70<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 70,35.8234027485,128.7051836643" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8220586348,128.7052318352),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 84<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 84,35.8220586348,128.7052318352" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8202620566,128.7054830001),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 104<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 104,35.8202620566,128.7054830001" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8182528271,128.7057700937),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 128<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 128,35.8182528271,128.7057700937" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8164956099,128.7069403225),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 149<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 149,35.8164956099,128.7069403225" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8158631238,128.7076349802),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 160<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 160,35.8158631238,128.7076349802" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8128722564,128.7081527971),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 195<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 195,35.8128722564,128.7081527971" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8115506101,128.7078780444),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 205<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 205,35.8115506101,128.7078780444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8096101802,128.7064219218),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 235<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 235,35.8096101802,128.7064219218" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8084128998,128.7057867658),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 249<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 249,35.8084128998,128.7057867658" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8068033544,128.7042165118),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 274<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 274,35.8068033544,128.7042165118" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.806084555,128.7025171672),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 290<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 290,35.806084555,128.7025171672" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8054028545,128.702002482),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 303<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 303,35.8054028545,128.702002482" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8046360999,128.700488595),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 316<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 316,35.8046360999,128.700488595" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8043289991,128.6995007154),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 326<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 326,35.8043289991,128.6995007154" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8039561945,128.6984257243),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 333<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 333,35.8039561945,128.6984257243" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8040412816,128.6969843666),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 348<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 348,35.8040412816,128.6969843666" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.80391746,128.6960575516),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 357<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 357,35.80391746,128.6960575516" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8039010931,128.6941051831),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 375<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 375,35.8039010931,128.6941051831" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8039899115,128.6951250469),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 375<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 375,35.8039899115,128.6951250469" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8041006475,128.6931962173),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 383<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 383,35.8041006475,128.6931962173" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8043701522,128.6923720827),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 393<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 393,35.8043701522,128.6923720827" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8050977783,128.6913396244),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 405<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 405,35.8050977783,128.6913396244" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8058162959,128.6908237936),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 415<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 415,35.8058162959,128.6908237936" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8161507206,128.6532269036),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 42<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 42,35.8161507206,128.6532269036" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8100512895,128.6623141317),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 206<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 206,35.8100512895,128.6623141317" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8275115458,128.6654385585),
+    content: '<div style="width:190px; height:45px; padding:5px;">범안로65길 47<br>대구 수성구-<a href="https://map.kakao.com/link/to/범안로65길 47,35.8275115458,128.6654385585" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8581023405,128.7159787393),
+    content: '<div style="width:190px; height:45px; padding:5px;">경안로 647-24<br>대구 수성구-<a href="https://map.kakao.com/link/to/경안로 647-24,35.8581023405,128.7159787393" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8475268642,128.7253731519),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)성동로16길 81 81<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)성동로16길 81 81,35.8475268642,128.7253731519" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8287739007,128.6603347453),
+    content: '<div style="width:190px; height:45px; padding:5px;">범안로65길 106<br>대구 수성구-<a href="https://map.kakao.com/link/to/범안로65길 106,35.8287739007,128.6603347453" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.833072658,128.6806827769),
+    content: '<div style="width:190px; height:45px; padding:5px;">월드컵로5길 46<br>대구 수성구-<a href="https://map.kakao.com/link/to/월드컵로5길 46,35.833072658,128.6806827769" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8559288283,128.7139000012),
+    content: '<div style="width:190px; height:45px; padding:5px;">경안로45길 68-42<br>대구 수성구-<a href="https://map.kakao.com/link/to/경안로45길 68-42,35.8559288283,128.7139000012" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8547554854,128.7180818779),
+    content: '<div style="width:190px; height:45px; padding:5px;">경안로45길 68<br>대구 수성구-<a href="https://map.kakao.com/link/to/경안로45길 68,35.8547554854,128.7180818779" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.843894398,128.7246621327),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)성동로16길 39 39<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)성동로16길 39 39,35.843894398,128.7246621327" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8427481507,128.680938915),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2957<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2957,35.8427481507,128.680938915" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8590260421,128.6334093058),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2475<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2475,35.8590260421,128.6334093058" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8590078867,128.6305619564),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2449<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2449,35.8590078867,128.6305619564" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.85982549,128.6180362604),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2335<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2335,35.85982549,128.6180362604" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8607452957,128.6105587631),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2265<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2265,35.8607452957,128.6105587631" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8586386961,128.6419682642),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2554<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2554,35.8586386961,128.6419682642" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8412106172,128.7023278123),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 3160<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 3160,35.8412106172,128.7023278123" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8151393541,128.6489883798),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)지범로 297<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)지범로 297,35.8151393541,128.6489883798" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8240667104,128.6431967386),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)용학로 332<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)용학로 332,35.8240667104,128.6431967386" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8205475752,128.6377604341),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)용학로 268<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)용학로 268,35.8205475752,128.6377604341" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8167919679,128.655145013),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 60<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 60,35.8167919679,128.655145013" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8167516916,128.6609789639),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 116<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 116,35.8167516916,128.6609789639" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8133374276,128.6633806035),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 166<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 166,35.8133374276,128.6633806035" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.7981546576,128.6742203532),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 430<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 430,35.7981546576,128.6742203532" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8418176849,128.7214581625),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 89<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 89,35.8418176849,128.7214581625" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.845635989,128.7211604615),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 132<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 132,35.845635989,128.7211604615" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8479640034,128.7207136576),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 157<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 157,35.8479640034,128.7207136576" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8530352114,128.7245258951),
+    content: '<div style="width:190px; height:45px; padding:5px;">성동로 225<br>대구 수성구-<a href="https://map.kakao.com/link/to/성동로 225,35.8530352114,128.7245258951" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8208697374,128.705381705),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 98<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 98,35.8208697374,128.705381705" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8172005982,128.7063281777),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 140<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 140,35.8172005982,128.7063281777" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.814248046,128.7084448424),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 177<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 177,35.814248046,128.7084448424" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8104089756,128.7070970163),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 224<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 224,35.8104089756,128.7070970163" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8076733078,128.7048808074),
+    content: '<div style="width:190px; height:45px; padding:5px;">욱수길 262<br>대구 수성구-<a href="https://map.kakao.com/link/to/욱수길 262,35.8076733078,128.7048808074" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.847577448,128.6703210808),
+    content: '<div style="width:190px; height:45px; padding:5px;">(보)달구벌대로 2845<br>대구 수성구-<a href="https://map.kakao.com/link/to/(보)달구벌대로 2845,35.847577448,128.6703210808" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8662819678,128.6718097873),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 69<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 69,35.8662819678,128.6718097873" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8731885039,128.6588390034),
+    content: '<div style="width:190px; height:45px; padding:5px;">팔현길 219<br>대구 수성구-<a href="https://map.kakao.com/link/to/팔현길 219,35.8731885039,128.6588390034" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8150927933,128.6516551424),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 22<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 22,35.8150927933,128.6516551424" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.81631811,128.6616833785),
+    content: '<div style="width:190px; height:45px; padding:5px;">진밭길 126<br>대구 수성구-<a href="https://map.kakao.com/link/to/진밭길 126,35.81631811,128.6616833785" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8622626025,128.6758371404),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 260 260<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 260 260,35.8622626025,128.6758371404" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8637498352,128.6745283984),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 280 280<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 280 280,35.8637498352,128.6745283984" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8702277688,128.6610597488),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 422 422<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 422 422,35.8702277688,128.6610597488" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8646563669,128.673461693),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 294 294<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 294 294,35.8646563669,128.673461693" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8718196387,128.6570838299),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 462 462<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 462 462,35.8718196387,128.6570838299" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8594142074,128.6777609849),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 224 224<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 224 224,35.8594142074,128.6777609849" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.860520027,128.6770243121),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 238 238<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 238 238,35.860520027,128.6770243121" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8727193761,128.6544163843),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 488 488<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 488 488,35.8727193761,128.6544163843" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8674068945,128.6675171299),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 356 356<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 356 356,35.8674068945,128.6675171299" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8737957017,128.6497268161),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 532 532<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 532 532,35.8737957017,128.6497268161" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8662718358,128.6705138977),
+    content: '<div style="width:190px; height:45px; padding:5px;">(기)고모로 326 326<br>대구 수성구-<a href="https://map.kakao.com/link/to/(기)고모로 326 326,35.8662718358,128.6705138977" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8605382966,128.7168569904),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호강자전거길 4259<br>대구 수성구-<a href="https://map.kakao.com/link/to/금호강자전거길 4259,35.8605382966,128.7168569904" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8551960516,128.7091534543),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호강자전거길 4135<br>대구 수성구-<a href="https://map.kakao.com/link/to/금호강자전거길 4135,35.8551960516,128.7091534543" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8556478562,128.7026293285),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호강자전거길 4051<br>대구 수성구-<a href="https://map.kakao.com/link/to/금호강자전거길 4051,35.8556478562,128.7026293285" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8557376232,128.6960216676),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호강자전거길 3991<br>대구 수성구-<a href="https://map.kakao.com/link/to/금호강자전거길 3991,35.8557376232,128.6960216676" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.855937615,128.6889356744),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호강자전거길 3927<br>대구 수성구-<a href="https://map.kakao.com/link/to/금호강자전거길 3927,35.855937615,128.6889356744" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8577036339,128.7101582326),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호강자전거길 4186<br>대구 수성구-<a href="https://map.kakao.com/link/to/금호강자전거길 4186,35.8577036339,128.7101582326" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8590125607,128.7226432244),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호강자전거길 4313<br>대구 수성구-<a href="https://map.kakao.com/link/to/금호강자전거길 4313,35.8590125607,128.7226432244" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(35.8584441082,128.6826548777),
+    content: '<div style="width:190px; height:45px; padding:5px;">금호강자전거길 3861<br>대구 수성구-<a href="https://map.kakao.com/link/to/금호강자전거길 3861,35.8584441082,128.6826548777" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
