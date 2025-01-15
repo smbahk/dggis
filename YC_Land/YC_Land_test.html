@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>지상경계점등록부</title>
+    <style>
+        .link-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .link-container img {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+    </style>
+    <script>
+        async function fetchMetadata(url) {
+            try { 
+                    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`); 
+                    const data = await response.json(); 
+                    const parser = new DOMParser(); 
+                    const doc = parser.parseFromString(data.contents, "text/html"); 
+                    const title = doc.querySelector("title").innerText; 
+                    const logo = doc.querySelector("link[rel*='icon']") ? doc.querySelector("link[rel*='icon']").href : ''; 
+                    
+                    return { title, logo }; 
+                } 
+                catch (error) {
+                    console.error('Error fetching metadata:', error); 
+                    return { title: 'Link', logo: '' }; 
+                }
+        } 
+        
+        async function insertLinks() {
+            const urls = [
+                "https://www.eum.go.kr/web/am/amMain.jsp", 
+                "https://kras.gyeongnam.go.kr/land_info/info/baseInfo/baseInfo.do", 
+                // 다른 URL 있으면 여기 추가
+            ]; 
+            
+            const linkContainer = document.getElementById('link-container'); 
+            linkContainer.innerHTML = ''; 
+            
+            for (const url of urls) { 
+                const metadata = await fetchMetadata(url); 
+                const linkHTML = ` 
+                    <a href="${url}"> 
+                        <div class="link-container"> 
+                            ${metadata.logo ? `<img src="${metadata.logo}" alt="Site Logo">` : ''} 
+                            <span>${metadata.title}</span> 
+                        </div> 
+                    </a>
+                `; 
+                linkContainer.innerHTML += linkHTML; 
+            } 
+        } 
+        
+        window.onload = insertLinks;
+    </script>
+</head>
+<body>
+    <table cellpadding="0" cellspacing="1" data-workseditor="Table1"
+        style="margin-left: auto; margin-right: auto; background-color: rgb(29, 32, 136);">
+        <tbody>
+            <tr style="height: 24px;">
+                <td rowspan="1" colspan="1" 
+                    style="word-break: break-all; background-color: rgb(29, 32, 136); height: 24px; width: 1566px; padding: 3px 4px 2px; text-align: center;">
+                    <br><br>
+                    <div style="text-align: center;"><span style="font-weight: bold; font-size: 24px; color: white;">부동산종합정보서비스</span>
+                    </div><br><br>
+                    <table cellpadding="0" cellspacing="1" data-workseditor="Table2"
+                        style="background-color: rgb(204, 204, 204);">
+                        <tbody>
+                            <tr style="height: 24px;">
+                                <td rowspan="1" colspan="1" 
+                                    style="word-break: break-all; background-color: rgb(255, 255, 255); height: 24px; width: 1566px; padding: 3px 4px 2px; text-align: left;">
+                                    <div style="text-align: left;"><span
+                                        style="color: rgb(0, 123, 217); font-weight: bold;">⊙ </span><span
+                                        style="color: rgb(0, 123, 217); font-weight: bold;">지상경계점등록부</span></div>
+                                <div style="text-align: left;"><br></div>
+                                <hr style="text-align: left;"><br>
+                                <div style="text-align: center;"><img src="https://smbahk.github.io/dggis/YC_Land/land_01.jpg" style="max-width: 100%; height: auto;" alt="지상경계점등록부_01"></div>
+                                <br>
+                                <hr style="text-align: left;"><br>
+                                <div style="text-align: center;"><img src="https://smbahk.github.io/dggis/YC_Land/land_02.jpg" style="max-width: 100%; height: auto;" alt="지상경계점등록부_02"></div>
+                                <br>
+                                <hr style="text-align: left;"><br>
+                                <div style="text-align: center;"><img src="https://smbahk.github.io/dggis/YC_Land/land_03.png" style="max-width: 100%; height: auto;" alt="지상경계점등록부_03"></div>
+                                <br>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="text-align: left;"><br></div>
+                    <table cellpadding="0" cellspacing="1" data-workseditor="Table3"
+                        style="background-color: rgb(204, 204, 204);">
+                        <tbody>
+                            <tr style="height: 24px;">
+                                <td rowspan="1" colspan="1" 
+                                    style="word-break: break-all; background-color: rgb(255, 255, 255); height: 24px; width: 1566px; padding: 3px 4px 2px; text-align: left;">
+                                    <br>
+                                    <div style="text-align: left;"><span style="color: rgb(255, 0, 0); font-weight: bold;">⊙
+                                            토지정보</span></div><br>
+                                    <table cellpadding="0" cellspacing="1" data-workseditor="Table4"
+                                        style="background-color: rgb(204, 204, 204);">
+                                        <tbody>
+                                            <tr style="height: 24px;">
+                                                <td rowspan="1" colspan="1" 
+                                                    style="word-break: break-all; background-color: rgb(255, 255, 255); height: 24px; width: 1566px; padding: 3px 4px 2px; text-align: left;">
+                                                    <div style="text-align: left;"><span style="font-weight: bold;">부동산정보 통합
+                                                            열람</span></div>
+                                                </td>
+                                            </tr>
+                                            <tr style="height: 24px;">
+                                                <td rowspan="1" colspan="1" 
+                                                    style="word-break: break-all; background-color: rgb(255, 255, 255); height: 24px; width: 1566px; padding: 3px 4px 2px; text-align: left;">
+                                                    <div id="link-container" style="text-align: left;"><a
+                                                            href="https://kras.gyeongnam.go.kr/land_info/info/baseInfo/baseInfo.do">https://kras.gyeongnam.go.kr/land_info/info/baseInfo/baseInfo.do</a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table><br>
+                                    <table cellpadding="0" cellspacing="1" data-workseditor="Table5"
+                                        style="background-color: rgb(204, 204, 204);">
+                                        <tbody>
+                                            <tr style="height: 24px;">
+                                                <td rowspan="1" colspan="1" 
+                                                    style="word-break: break-all; background-color: rgb(255, 255, 255); height: 24px; width: 1566px; padding: 3px 4px 2px; text-align: left;">
+                                                    <div style="text-align: left;"><span
+                                                            style="font-weight: bold;">토지이음</span></div>
+                                                </td>
+                                            </tr>
+                                            <tr style="height: 24px;">
+                                                <td rowspan="1" colspan="1" 
+                                                    style="word-break: break-all; background-color: rgb(255, 255, 255); height: 24px; width: 1566px; padding: 3px 4px 2px; text-align: left;">
+                                                    <div id="link-container" style="text-align: left;"><a
+                                                            href="https://www.eum.go.kr/web/am/amMain.jsp">https://www.eum.go.kr/web/am/amMain.jsp</a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table><br>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="text-align: left;"><br></div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
