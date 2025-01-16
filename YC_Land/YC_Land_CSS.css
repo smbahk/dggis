@@ -31,6 +31,7 @@ body {
     font-weight: bold;
     font-size: 6vw; /* 화면 가로 사이즈에 따라 폰트 사이즈 자동 조정 */
     color: white;
+    text-align: center;
 }
 
 .table2 {
@@ -70,7 +71,6 @@ body {
 
 .bold {
     font-weight: bold;
-    font-size: 4vw; /* 화면 가로 사이즈에 따라 폰트 사이즈 자동 조정 */
 }
 
 .blue {
