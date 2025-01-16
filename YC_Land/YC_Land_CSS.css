@@ -2,25 +2,27 @@ body {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
 }
 
 .table1 {
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0 auto;
     background-color: rgb(29, 32, 136);
+    width: 100%;
+    max-width: 1566px;
 }
 
 .tr1 {
-    height: 24px;
+    height: auto;
 }
 
 .td1 {
-    word-break: break-all;
+    word-break: break-word;
     background-color: rgb(29, 32, 136);
-    height: 24px;
-    width: 1566px;
-    padding: 3px 4px 2px;
+    padding: 10px;
     text-align: center;
+    width: 100%;
 }
 
 .div-center {
@@ -29,43 +31,25 @@ body {
 
 .title {
     font-weight: bold;
-    font-size: 6vw; /* 화면 가로 사이즈에 따라 폰트 사이즈 자동 조정 */
+    font-size: 18px;
     color: white;
     text-align: center;
 }
 
-.table2 {
+.table2, .table3 {
     background-color: rgb(204, 204, 204);
     border-collapse: separate;
     border-spacing: 0;
-    width: 100%;
-    max-width: 1566px;
-    margin: 10px auto 20px auto; 
-    border-radius: 10px; 
+    width: 95%;
+    margin: 10px auto;
+    border-radius: 10px;
     overflow: hidden;
-}
-
-.table3 {
-    background-color: rgb(204, 204, 204);
-    border-collapse: separate;
-    border-spacing: 0;
-    width: 100%;
-    max-width: 1566px;
-    margin: 20px auto 10px auto; 
-    border-radius: 10px; 
-    overflow: hidden;
-}
-
-.tr2, .tr3 {
-    height: 24px;
 }
 
 .td2, .td3 {
-    word-break: break-all;
+    word-break: break-word;
     background-color: rgb(255, 255, 255);
-    height: 24px;
-    width: 1566px;
-    padding: 3px 4px 2px;
+    padding: 10px;
     text-align: left;
 }
 
@@ -90,23 +74,17 @@ body {
     background-color: rgb(255, 255, 255);
     border-collapse: separate;
     border-spacing: 0;
-    width: 100%;
-    max-width: 1566px; 
-    border-radius: 10px; 
+    width: 95%;
+    margin: 10px auto;
+    border-radius: 10px;
     overflow: hidden;
     border: 1px solid rgb(204, 204, 204);
 }
 
-.tr4, .tr5 {
-    height: 24px;
-}
-
 .td4, .td5 {
-    word-break: break-all;
+    word-break: break-word;
     background-color: rgb(255, 255, 255);
-    height: 24px;
-    width: 1566px;
-    padding: 3px 4px 2px;
+    padding: 10px;
     text-align: left;
 }
 
@@ -114,9 +92,23 @@ body {
     text-align: left;
 }
 
+/* 모바일 최적화 */
 @media (max-width: 768px) {
-    #Table1 {
-        padding: 60px 100px !important;
-        background-color: rgb(255, 255, 255) !important;
+    body {
+        font-size: 14px;
+    }
+    .title {
+        font-size: 16px;
+    }
+    .td1, .td2, .td3, .td4, .td5 {
+        padding: 8px;
+    }
+    .table2, .table3, .table4, .table5 {
+        width: 100%;
+        margin: 5px auto;
+    }
+    .img-responsive {
+        width: 100%;
+        height: auto;
     }
 }
