@@ -6,11 +6,13 @@
     <title>지상경계점등록부</title>
     <link rel="stylesheet" href="CSS/DG_YC_Land_CSS.css">
     <script>
-        function loadImages() {
+        function loadImages()
+        {
             const urlParams = new URLSearchParams(window.location.search);
             let code = decodeURIComponent(urlParams.get('code') || '');
         
-            if (!code) {
+            if (!code)
+            {
                 document.getElementById("Table2").innerHTML = "<h3>잘못된 접근입니다.</h3>";
                 return;
             }
@@ -28,7 +30,8 @@
             let totalImages = 10;   // 최대 이미지 개수
             let imageLoadCount = 0;  // 정상적으로 로드된 이미지 개수
 
-            for (let i = 1; i <= totalImages; i++) {
+            for (let i = 1; i <= totalImages; i++)
+            {
                 let img = document.createElement("img");
                 let encodedCode = encodeURIComponent(code); // URL 인코딩
                 // let imgUrl = `http://www.dggis.kr/Youngcheon/QR/BuganYusang06310001/IMG_Land/${encodedCode}_${i.toString().padStart(2, '0')}.jpg`;
@@ -48,21 +51,30 @@
                 divContainer.className = "div-center";
 
                 // divContainer.appendChild(imgLink);
-                img.onload = function () {
+                img.onload = function ()
+                {
                     img.style.display = "block"; // 이미지가 정상적으로 로딩되면 표시
                     divContainer.appendChild(imgLink);
                     imageContainer.appendChild(divContainer);
                     imageContainer.appendChild(document.createElement("br"));
-                    imageContainer.appendChild(document.createElement("hr"));
-                    foundImages = true;
+
+                    // 마지막 이미지가 아닐 경우에만 <hr> 추가
                     imageLoadCount++;
+                    if (imageLoadCount < totalImages)
+                    {
+                        imageContainer.appendChild(document.createElement("hr"));
+                    }
+                    
+                    foundImages = true;
+                    
                 };
         
                 // img.onerror = function () { divContainer.style.display = "none"; }; // 이미지가 없으면 숨김 처리
                 // imageContainer.appendChild(divContainer);
                 // imageContainer.appendChild(document.createElement("br"));
                 // imageContainer.appendChild(document.createElement("hr"));
-                img.onerror = function () {
+                img.onerror = function ()
+                {
                     // 이미지가 없으면 div 추가 X
                     imgLink.remove();
                     divContainer.remove();
@@ -71,55 +83,60 @@
                 foundImages = true;
             }
         
-            if (!foundImages) {
+            if (!foundImages)
+            {
                 imageContainer.innerHTML += "<p style='text-align:center; color:red;'>이미지를 찾을 수 없습니다.</p>";
             }
         }
-        
-        window.onload = loadImages;        
+
+        window.onload = loadImages;
     </script>
     <!-- 
     동시접속자가 많을것을 가정하여 모든 이미지를 한 번에 로딩하지 않고, 비동기 방식으로 로드
-    Lazy Load 적용 중... 어렵다. --;; 
+    Lazy Load 적용 중... 어렵다. --;;
     -->
     <!-- script>
-        function loadImagesAsync() {
+        function loadImagesAsync()
+        {
             const urlParams = new URLSearchParams(window.location.search);
             let code = decodeURIComponent(urlParams.get('code') || '');
-        
-            if (!code) {
+
+            if (!code)
+            {
                 document.getElementById("Table2").innerHTML = "<h3>잘못된 접근입니다.</h3>";
                 return;
             }
-        
+
             const imageContainer = document.getElementById("Table2").querySelector(".td2");
             imageContainer.innerHTML = '<div class="div-left"><span class="bold blue">⊙ 지상경계점등록부</span></div><hr class="hr-left"><br>';
-        
+
             let foundImages = false; // 이미지가 하나라도 있으면 true
             let imagesLoaded = 0;  // 로드된 이미지 개수
             let totalImages = 10;   // 최대 이미지 개수
-        
-            for (let i = 1; i <= totalImages; i++) {
+
+            for (let i = 1; i <= totalImages; i++)
+            {
                 let encodedCode = encodeURIComponent(code);
                 // let imgUrl = `http://www.dggis.kr/Youngcheon/QR/BuganYusang06310001/IMG_Land/${encodedCode}_${i.toString().padStart(2, '0')}.jpg`;
                 let imgUrl = `https://smbahk.github.io/dggis/YC_Land/IMG_Land/${encodedCode}_${i.toString().padStart(2, '0')}.jpg`;
-        
+
                 let img = document.createElement("img");
                 img.className = "img-responsive";
                 img.alt = `지상경계점등록부 이미지 ${i}`;
                 img.loading = "lazy"; // Lazy Load 적용 -- 사용자가 스크롤할 때만 이미지가 로딩되므로 초기 부하가 줄어듦
                 img.style.display = "none"; // 초기에는 숨김
-        
+
                 let imgLink = document.createElement("a");
                 imgLink.href = imgUrl;
                 imgLink.target = "_blank";
                 imgLink.rel = "noopener";
                 imgLink.appendChild(img);
-        
+
                 let divContainer = document.createElement("div");
                 divContainer.className = "div-center";
-        
-                img.onload = function () {
+
+                img.onload = function ()
+                {
                     img.style.display = "block"; // 이미지가 정상적으로 로딩되면 표시
                     divContainer.appendChild(imgLink);
                     imageContainer.appendChild(divContainer);
@@ -127,28 +144,30 @@
                     imageContainer.appendChild(document.createElement("hr"));
                     foundImages = true; // 이미지가 로드 되었을 때 즉시 반영
                 };
-                
+
                 // onerror 이벤트는 이미지가 로드 실패 시 실행됨 -> 존재하지 않는 이미지는 자동으로 제외됨
-                img.onerror = function () {
+                img.onerror = function ()
+                {
                     // 이미지가 로드 실패하면 div 자체를 추가하지 않음
                     divContainer.remove();
                 };
-        
+
                 img.src = imgUrl; // 비동기 로드 시작
-        
+
                 imagesLoaded++;
             }
-        
+
             // foundImages 값이 비동기적으로 업데이트되므로, setTimeout(1초) 후에도 false로 남아 메시지가 출력될 수 있음
             // 모든 이미지 요청이 끝난 후 2초 후 검사로 변경 함.
             setTimeout(() => {
-                if (!foundImages) {
+                if (!foundImages)
+                {
                     imageContainer.innerHTML += "<p style='text-align:center; color:red;'>이미지를 찾을 수 없습니다.</p>";
                 }
             }, 2000); // 2초 후 검사하여 아무 이미지도 없으면 메시지 출력
         }
-        
-        window.onload = loadImagesAsync;                       
+
+        window.onload = loadImagesAsync;
     </script -->
 </head>
 <body>
