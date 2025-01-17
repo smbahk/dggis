@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>지상경계점등록부</title>
+    <link rel="stylesheet" href="/CSS/DG_YC_Land_CSS.css">
+    <script>
+        function loadImages() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let code = urlParams.get('code');
+        
+            if (!code) {
+                document.getElementById("Table2").innerHTML = "<h3>잘못된 접근입니다.</h3>";
+                return;
+            }
+        
+            // URL 디코딩 적용
+            code = decodeURIComponent(code);
+        
+            const imageContainer = document.getElementById("Table2").querySelector(".td2");
+            imageContainer.innerHTML = `
+                <div class="div-left"><span class="bold blue">⊙ 지상경계점등록부</span></div>
+                <hr class="hr-left"><br>
+            `;
+        
+            let foundImages = false;
+            for (let i = 1; i <= 10; i++) { // 최대 10장 가정
+                let img = document.createElement("img");
+                let encodedCode = encodeURIComponent(code); // URL 인코딩
+                // let imgUrl = `http://www.dggis.kr/Youngcheon/QR/ABC/images/${encodedCode}_${i.toString().padStart(2, '0')}.jpg`;
+                let imgUrl = `https://smbahk.github.io/dggis/YC_Land/IMG_Land/${encodedCode}_${i.toString().padStart(2, '0')}.jpg`;
+                
+                img.src = imgUrl;
+                img.className = "img-responsive";
+                img.alt = `지상경계점등록부 이미지 ${i}`;
+                
+                let imgLink = document.createElement("a");
+                imgLink.href = imgUrl;
+                imgLink.target = "_blank";
+                imgLink.rel = "noopener";
+                imgLink.appendChild(img);
+        
+                let divContainer = document.createElement("div");
+                divContainer.className = "div-center";
+                divContainer.appendChild(imgLink);
+        
+                img.onerror = function () { divContainer.style.display = "none"; }; // 이미지가 없으면 숨김 처리
+                imageContainer.appendChild(divContainer);
+                imageContainer.appendChild(document.createElement("br"));
+                imageContainer.appendChild(document.createElement("hr"));
+        
+                foundImages = true;
+            }
+        
+            if (!foundImages) {
+                imageContainer.innerHTML += "<p>이미지를 찾을 수 없습니다.</p>";
+            }
+        }
+        
+        window.onload = loadImages;        
+    </script>
+</head>
+<body>
+    <table id="Table1" class="table1">
+        <tbody>
+            <tr class="tr1">
+                <td class="td1">
+                    <br><br>
+                    <div class="div-center"><span class="title">부동산종합정보서비스</span></div>
+                    <br><br>
+                    <table id="Table2" class="table2">
+                        <tbody>
+                            <tr class="tr2">
+                                <td class="td2">
+                                    <!-- JavaScript 이미지 삽입. -->
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table id="Table3" class="table3">
+                        <tbody>
+                            <tr class="tr3">
+                                <td class="td3">
+                                    <br>
+                                    <div class="div-left"><span class="bold blue">⊙ 토지정보</span></div><br>
+                                    <table id="Table4" class="table4">
+                                        <tbody>
+                                            <tr class="tr4">
+                                                <td class="td4">
+                                                    <div class="div-left"><span class="bold">경북 부동산정보조회 시스템</span></div>
+                                                </td>
+                                            </tr>
+                                            <tr class="tr4">
+                                                <td class="td4">
+                                                    <div class="div-left">
+                                                        <img alt="링크 아이콘" width="14" height="14" src="https://smbahk.github.io/dggis/YC_Land/IMAGE/link_logo.png"> 
+                                                        <a href="http://kras.gb.go.kr/land_info/info/baseInfo/baseInfo.do">부동산정보 통합 열람</a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table><br>
+                                    <table id="Table5" class="table5">
+                                        <tbody>
+                                            <tr class="tr5">
+                                                <td class="td5">
+                                                    <div class="div-left"><span class="bold">토지이음 - 이음지도, 용어사전, 질의회신사례, 규제법령집, 주민의견청취 공람, 도시계획통계 제공</span></div>
+                                                </td>
+                                            </tr>
+                                            <tr class="tr5">
+                                                <td class="td5">
+                                                    <div class="div-left">
+                                                        <img alt="토지이음 누리집 아이콘" width="14" height="14" src="http://www.eum.go.kr/web/favicon.ico"> 
+                                                        <a href="https://www.eum.go.kr/web/am/amMain.jsp">토지이음 누리집</a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table><br>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="div-left"><br></div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
