@@ -1,5 +1,3 @@
-// JIJUK Script.js 파일
-
 function loadImages()
 {
     const urlParams = new URLSearchParams(window.location.search);
