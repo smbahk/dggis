@@ -29,8 +29,7 @@ function loadImages()
         let img = document.createElement("img");
         let encodedCode = encodeURIComponent(code); // URL 인코딩
         // let imgUrl = `http://www.dggis.kr/Youngcheon/QR/BuganYusang06310001/IMG_Land/${encodedCode}_${i.toString().padStart(2, '0')}.jpg`;
-        let imgUrl = `https://smbahk.github.io/dggis/YC_Land/IMG_Land/${encodedCode}_${i.toString().padStart(2, '0')}.jpg`;
-        // IMG_Land 를 IMG_JIJUK 으로 변경. -- 20250122
+        let imgUrl = `https://smbahk.github.io/dggis/YC-JIJUK/jijuk-img/${encodedCode}_${i.toString().padStart(2, '0')}.jpg`;
         img.src = imgUrl;
         img.className = "img-responsive";
         img.alt = `지상경계점등록부 이미지 ${i}`;
