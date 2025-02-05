@@ -779,15 +779,14 @@ var newmarkerInfos3 = [
 }
 ];
 
-// 마커와 인포윈도우를 생성하고 지도에 표시합니다 -- 파란색
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
 for (var i = 0; i < markerInfos.length; i++) {
     var marker = new kakao.maps.Marker({
         position: markerInfos[i].position,
-        image: MarkerImage,
         clickable: true
     });
     markers.push(marker);
-    
+
     var infowindow = new kakao.maps.InfoWindow({
         content: markerInfos[i].content,
         removable: true
