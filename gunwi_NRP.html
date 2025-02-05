@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>군위-국가기준점</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(36.24290636521546, 128.57281187098224), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(36.24290636521546, 128.57281187098224),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize = new kakao.maps.Size(24, 35); 
+    
+    // 마커 이미지를 생성합니다    
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition,
+        image : markerImage // 마커 이미지
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 새로운 마커 이미지를 생성합니다. -- 삭제시 기본 이미지 (파란색) -- 빨간색 마커
+var newImageUrl0 = 'https://smbahk.github.io/dggis/p_r.png';
+var newMarkerImage0 = new kakao.maps.MarkerImage(newImageUrl0, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 보라색 마커
+var newImageUrl = 'https://smbahk.github.io/dggis/p_v.png';
+var newMarkerImage1 = new kakao.maps.MarkerImage(newImageUrl1, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 녹색 마커
+var newImageUrl2 = 'https://smbahk.github.io/dggis/p_g.png';
+var newMarkerImage2 = new kakao.maps.MarkerImage(newImageUrl2, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 오렌지 마커커
+var newImageUrl3 = 'https://smbahk.github.io/dggis/p_o.png';
+var newMarkerImage3 = new kakao.maps.MarkerImage(newImageUrl3, new kakao.maps.Size(35, 35));
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+// 파란색 -- 수준점
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(36.1289444444,128.7668888889),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-00-30-01<br>수준점-<a href="https://map.kakao.com/link/to/04-00-30-01,36.1289444444,128.7668888889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1277222222,128.7755555556),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-00-30-02<br>수준점-<a href="https://map.kakao.com/link/to/04-00-30-02,36.1277222222,128.7755555556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1210277778,128.7920555556),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-00-30-03<br>수준점-<a href="https://map.kakao.com/link/to/04-00-30-03,36.1210277778,128.7920555556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1336111111,128.7984166667),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-00-30-04<br>수준점-<a href="https://map.kakao.com/link/to/04-00-30-04,36.1336111111,128.7984166667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1625555556,128.825),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-00-30-05<br>수준점-<a href="https://map.kakao.com/link/to/04-00-30-05,36.1625555556,128.825" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1701388889,128.8389444444),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-00-30-06<br>수준점-<a href="https://map.kakao.com/link/to/04-00-30-06,36.1701388889,128.8389444444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1746666667,128.8546111111),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-00-30-07<br>수준점-<a href="https://map.kakao.com/link/to/04-00-30-07,36.1746666667,128.8546111111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1629444444,128.8903333333),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-00-30-09<br>수준점-<a href="https://map.kakao.com/link/to/04-00-30-09,36.1629444444,128.8903333333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0914444444,128.7228611111),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-01<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-01,36.0914444444,128.7228611111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0980833333,128.7101388889),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-02<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-02,36.0980833333,128.7101388889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0813333333,128.70125),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-03<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-03,36.0813333333,128.70125" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0958888889,128.67375),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-04<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-04,36.0958888889,128.67375" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.101,128.6637222222),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-05<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-05,36.101,128.6637222222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0785555556,128.6558611111),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-06<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-06,36.0785555556,128.6558611111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0622777778,128.6553055556),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-07<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-07,36.0622777778,128.6553055556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0506944444,128.6458611111),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-08<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-08,36.0506944444,128.6458611111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.034,128.6406944444),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-09<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-09,36.034,128.6406944444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0327777778,128.6236111111),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-01-10<br>수준점-<a href="https://map.kakao.com/link/to/04-01-01-10,36.0327777778,128.6236111111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.14975,128.7509166667),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-03-05<br>수준점-<a href="https://map.kakao.com/link/to/04-01-03-05,36.14975,128.7509166667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1723888889,128.7393888889),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-03-07<br>수준점-<a href="https://map.kakao.com/link/to/04-01-03-07,36.1723888889,128.7393888889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.17825,128.6879444444),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-03-09<br>수준점-<a href="https://map.kakao.com/link/to/04-01-03-09,36.17825,128.6879444444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1945277778,128.6604166667),
+    content: '<div style="width:190px; height:45px; padding:5px;">04-01-03-10<br>수준점-<a href="https://map.kakao.com/link/to/04-01-03-10,36.1945277778,128.6604166667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1214166667,128.5762777778),
+    content: '<div style="width:190px; height:45px; padding:5px;">14-09-00<br>수준점-<a href="https://map.kakao.com/link/to/14-09-00,36.1214166667,128.5762777778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1983888889,128.5640555556),
+    content: '<div style="width:190px; height:45px; padding:5px;">14-12-00<br>수준점-<a href="https://map.kakao.com/link/to/14-12-00,36.1983888889,128.5640555556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2656944444,128.572),
+    content: '<div style="width:190px; height:45px; padding:5px;">14-13-00<br>수준점-<a href="https://map.kakao.com/link/to/14-13-00,36.2656944444,128.572" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 빨간
+// var newmarkerInfos0 = [
+// ];
+
+// 보라
+// var newmarkerInfos1 = [
+// ];
+
+// 초록 -- 삼각점
+var newmarkerInfos2 = [
+{
+    position: new kakao.maps.LatLng(36.2420888889,128.4300055556),
+    content: '<div style="width:190px; height:45px; padding:5px;">구미420<br>삼각점-<a href="https://map.kakao.com/link/to/구미420,36.2420888889,128.4300055556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2417361111,128.4615166667),
+    content: '<div style="width:190px; height:45px; padding:5px;">구미423<br>삼각점-<a href="https://map.kakao.com/link/to/구미423,36.2417361111,128.4615166667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2270055556,128.5348777778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위21<br>삼각점-<a href="https://map.kakao.com/link/to/군위21,36.2270055556,128.5348777778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1662277778,128.7197166667),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위23<br>삼각점-<a href="https://map.kakao.com/link/to/군위23,36.1662277778,128.7197166667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1625861111,128.6042944444),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위24<br>삼각점-<a href="https://map.kakao.com/link/to/군위24,36.1625861111,128.6042944444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0733805556,128.6649944444),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위27<br>삼각점-<a href="https://map.kakao.com/link/to/군위27,36.0733805556,128.6649944444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1791305556,128.5588222222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위301<br>삼각점-<a href="https://map.kakao.com/link/to/군위301,36.1791305556,128.5588222222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2150777778,128.5876583333),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위302<br>삼각점-<a href="https://map.kakao.com/link/to/군위302,36.2150777778,128.5876583333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1997,128.6377138889),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위303<br>삼각점-<a href="https://map.kakao.com/link/to/군위303,36.1997,128.6377138889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1774444444,128.6767694444),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위304<br>삼각점-<a href="https://map.kakao.com/link/to/군위304,36.1774444444,128.6767694444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1207972222,128.7377916667),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위306<br>삼각점-<a href="https://map.kakao.com/link/to/군위306,36.1207972222,128.7377916667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.127525,128.6692694444),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위307<br>삼각점-<a href="https://map.kakao.com/link/to/군위307,36.127525,128.6692694444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0992083333,128.6039583333),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위308<br>삼각점-<a href="https://map.kakao.com/link/to/군위308,36.0992083333,128.6039583333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1249972222,128.602775),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위309<br>삼각점-<a href="https://map.kakao.com/link/to/군위309,36.1249972222,128.602775" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1374027778,128.5585777778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위310<br>삼각점-<a href="https://map.kakao.com/link/to/군위310,36.1374027778,128.5585777778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0097638889,128.6541527778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위314<br>삼각점-<a href="https://map.kakao.com/link/to/군위314,36.0097638889,128.6541527778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0750666667,128.718975),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위316<br>삼각점-<a href="https://map.kakao.com/link/to/군위316,36.0750666667,128.718975" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2279694444,128.4959972222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위401<br>삼각점-<a href="https://map.kakao.com/link/to/군위401,36.2279694444,128.4959972222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2073138889,128.5122166667),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위403<br>삼각점-<a href="https://map.kakao.com/link/to/군위403,36.2073138889,128.5122166667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2440361111,128.5181472222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위404<br>삼각점-<a href="https://map.kakao.com/link/to/군위404,36.2440361111,128.5181472222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2051777778,128.5461277778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위406<br>삼각점-<a href="https://map.kakao.com/link/to/군위406,36.2051777778,128.5461277778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2227388889,128.5645083333),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위407<br>삼각점-<a href="https://map.kakao.com/link/to/군위407,36.2227388889,128.5645083333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2465722222,128.5616138889),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위408<br>삼각점-<a href="https://map.kakao.com/link/to/군위408,36.2465722222,128.5616138889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1965888889,128.5741055556),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위409<br>삼각점-<a href="https://map.kakao.com/link/to/군위409,36.1965888889,128.5741055556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1700777778,128.5856277778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위410<br>삼각점-<a href="https://map.kakao.com/link/to/군위410,36.1700777778,128.5856277778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1836666667,128.5916277778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위411<br>삼각점-<a href="https://map.kakao.com/link/to/군위411,36.1836666667,128.5916277778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1962083333,128.5984888889),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위412<br>삼각점-<a href="https://map.kakao.com/link/to/군위412,36.1962083333,128.5984888889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2383694444,128.6030833333),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위413<br>삼각점-<a href="https://map.kakao.com/link/to/군위413,36.2383694444,128.6030833333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.177675,128.6158861111),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위414<br>삼각점-<a href="https://map.kakao.com/link/to/군위414,36.177675,128.6158861111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2250083333,128.627325),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위415<br>삼각점-<a href="https://map.kakao.com/link/to/군위415,36.2250083333,128.627325" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2408,128.6267694444),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위416<br>삼각점-<a href="https://map.kakao.com/link/to/군위416,36.2408,128.6267694444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1744555556,128.6467194444),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위417<br>삼각점-<a href="https://map.kakao.com/link/to/군위417,36.1744555556,128.6467194444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.195575,128.6563722222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위418<br>삼각점-<a href="https://map.kakao.com/link/to/군위418,36.195575,128.6563722222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2200388889,128.6557277778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위419<br>삼각점-<a href="https://map.kakao.com/link/to/군위419,36.2200388889,128.6557277778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1948972222,128.6898555556),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위421<br>삼각점-<a href="https://map.kakao.com/link/to/군위421,36.1948972222,128.6898555556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1948944444,128.7154027778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위423<br>삼각점-<a href="https://map.kakao.com/link/to/군위423,36.1948944444,128.7154027778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.199175,128.7404444444),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위427<br>삼각점-<a href="https://map.kakao.com/link/to/군위427,36.199175,128.7404444444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0943777778,128.7173861111),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위429<br>삼각점-<a href="https://map.kakao.com/link/to/군위429,36.0943777778,128.7173861111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1077527778,128.7124694444),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위430<br>삼각점-<a href="https://map.kakao.com/link/to/군위430,36.1077527778,128.7124694444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1397111111,128.7138777778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위431<br>삼각점-<a href="https://map.kakao.com/link/to/군위431,36.1397111111,128.7138777778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0885777778,128.7000361111),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위432<br>삼각점-<a href="https://map.kakao.com/link/to/군위432,36.0885777778,128.7000361111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1572638889,128.6944916667),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위433<br>삼각점-<a href="https://map.kakao.com/link/to/군위433,36.1572638889,128.6944916667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.13135,128.6911583333),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위434<br>삼각점-<a href="https://map.kakao.com/link/to/군위434,36.13135,128.6911583333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1056666667,128.6843472222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위435<br>삼각점-<a href="https://map.kakao.com/link/to/군위435,36.1056666667,128.6843472222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0932138889,128.6674222222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위436<br>삼각점-<a href="https://map.kakao.com/link/to/군위436,36.0932138889,128.6674222222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1548916667,128.6591472222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위437<br>삼각점-<a href="https://map.kakao.com/link/to/군위437,36.1548916667,128.6591472222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1152555556,128.6556305556),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위438<br>삼각점-<a href="https://map.kakao.com/link/to/군위438,36.1152555556,128.6556305556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1326194444,128.6416222222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위439<br>삼각점-<a href="https://map.kakao.com/link/to/군위439,36.1326194444,128.6416222222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.102325,128.641),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위440<br>삼각점-<a href="https://map.kakao.com/link/to/군위440,36.102325,128.641" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1487027778,128.6385555556),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위441<br>삼각점-<a href="https://map.kakao.com/link/to/군위441,36.1487027778,128.6385555556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0922333333,128.6254555556),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위442<br>삼각점-<a href="https://map.kakao.com/link/to/군위442,36.0922333333,128.6254555556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1090111111,128.61625),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위443<br>삼각점-<a href="https://map.kakao.com/link/to/군위443,36.1090111111,128.61625" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1435361111,128.6051027778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위444<br>삼각점-<a href="https://map.kakao.com/link/to/군위444,36.1435361111,128.6051027778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1322916667,128.5861638889),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위445<br>삼각점-<a href="https://map.kakao.com/link/to/군위445,36.1322916667,128.5861638889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1468194444,128.5837138889),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위446<br>삼각점-<a href="https://map.kakao.com/link/to/군위446,36.1468194444,128.5837138889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1133444444,128.5725222222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위447<br>삼각점-<a href="https://map.kakao.com/link/to/군위447,36.1133444444,128.5725222222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1549,128.5560638889),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위449<br>삼각점-<a href="https://map.kakao.com/link/to/군위449,36.1549,128.5560638889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1648944444,128.5524805556),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위450<br>삼각점-<a href="https://map.kakao.com/link/to/군위450,36.1648944444,128.5524805556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0690138889,128.6276305556),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위463<br>삼각점-<a href="https://map.kakao.com/link/to/군위463,36.0690138889,128.6276305556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0484527778,128.6281472222),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위464<br>삼각점-<a href="https://map.kakao.com/link/to/군위464,36.0484527778,128.6281472222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0424611111,128.6545027778),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위466<br>삼각점-<a href="https://map.kakao.com/link/to/군위466,36.0424611111,128.6545027778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.071875,128.6889694444),
+    content: '<div style="width:190px; height:45px; padding:5px;">군위467<br>삼각점-<a href="https://map.kakao.com/link/to/군위467,36.071875,128.6889694444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2915555556,128.4627388889),
+    content: '<div style="width:190px; height:45px; padding:5px;">안계319<br>삼각점-<a href="https://map.kakao.com/link/to/안계319,36.2915555556,128.4627388889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2532388889,128.4896305556),
+    content: '<div style="width:190px; height:45px; padding:5px;">안계320<br>삼각점-<a href="https://map.kakao.com/link/to/안계320,36.2532388889,128.4896305556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2908638889,128.4448527778),
+    content: '<div style="width:190px; height:45px; padding:5px;">안계468<br>삼각점-<a href="https://map.kakao.com/link/to/안계468,36.2908638889,128.4448527778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3132888889,128.4566111111),
+    content: '<div style="width:190px; height:45px; padding:5px;">안계470<br>삼각점-<a href="https://map.kakao.com/link/to/안계470,36.3132888889,128.4566111111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2633555556,128.45595),
+    content: '<div style="width:190px; height:45px; padding:5px;">안계471<br>삼각점-<a href="https://map.kakao.com/link/to/안계471,36.2633555556,128.45595" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.28945,128.4850111111),
+    content: '<div style="width:190px; height:45px; padding:5px;">안계473<br>삼각점-<a href="https://map.kakao.com/link/to/안계473,36.28945,128.4850111111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3004055556,128.521775),
+    content: '<div style="width:190px; height:45px; padding:5px;">의성24<br>삼각점-<a href="https://map.kakao.com/link/to/의성24,36.3004055556,128.521775" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2619194444,128.5944611111),
+    content: '<div style="width:190px; height:45px; padding:5px;">의성314<br>삼각점-<a href="https://map.kakao.com/link/to/의성314,36.2619194444,128.5944611111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2669027778,128.5106805556),
+    content: '<div style="width:190px; height:45px; padding:5px;">의성452<br>삼각점-<a href="https://map.kakao.com/link/to/의성452,36.2669027778,128.5106805556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2767388889,128.5384),
+    content: '<div style="width:190px; height:45px; padding:5px;">의성454<br>삼각점-<a href="https://map.kakao.com/link/to/의성454,36.2767388889,128.5384" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2540583333,128.5392472222),
+    content: '<div style="width:190px; height:45px; padding:5px;">의성455<br>삼각점-<a href="https://map.kakao.com/link/to/의성455,36.2540583333,128.5392472222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2708888889,128.5676833333),
+    content: '<div style="width:190px; height:45px; padding:5px;">의성457<br>삼각점-<a href="https://map.kakao.com/link/to/의성457,36.2708888889,128.5676833333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1421416667,128.8565916667),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북23<br>삼각점-<a href="https://map.kakao.com/link/to/화북23,36.1421416667,128.8565916667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1999916667,128.8549472222),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북302<br>삼각점-<a href="https://map.kakao.com/link/to/화북302,36.1999916667,128.8549472222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1594222222,128.7988055556),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북314<br>삼각점-<a href="https://map.kakao.com/link/to/화북314,36.1594222222,128.7988055556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0859805556,128.7889722222),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북315<br>삼각점-<a href="https://map.kakao.com/link/to/화북315,36.0859805556,128.7889722222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1714777778,128.7511861111),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북401<br>삼각점-<a href="https://map.kakao.com/link/to/화북401,36.1714777778,128.7511861111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1852555556,128.7631888889),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북404<br>삼각점-<a href="https://map.kakao.com/link/to/화북404,36.1852555556,128.7631888889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1772861111,128.7928444444),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북406<br>삼각점-<a href="https://map.kakao.com/link/to/화북406,36.1772861111,128.7928444444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1767638889,128.8145),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북408<br>삼각점-<a href="https://map.kakao.com/link/to/화북408,36.1767638889,128.8145" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1990666667,128.8342083333),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북411<br>삼각점-<a href="https://map.kakao.com/link/to/화북411,36.1990666667,128.8342083333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1862027778,128.8481805556),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북412<br>삼각점-<a href="https://map.kakao.com/link/to/화북412,36.1862027778,128.8481805556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1806611111,128.8731777778),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북413<br>삼각점-<a href="https://map.kakao.com/link/to/화북413,36.1806611111,128.8731777778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1596944444,128.8774277778),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북442<br>삼각점-<a href="https://map.kakao.com/link/to/화북442,36.1596944444,128.8774277778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1610027778,128.8393222222),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북445<br>삼각점-<a href="https://map.kakao.com/link/to/화북445,36.1610027778,128.8393222222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1528888889,128.8250305556),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북446<br>삼각점-<a href="https://map.kakao.com/link/to/화북446,36.1528888889,128.8250305556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1311555556,128.8215972222),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북447<br>삼각점-<a href="https://map.kakao.com/link/to/화북447,36.1311555556,128.8215972222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1075555556,128.7975388889),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북449<br>삼각점-<a href="https://map.kakao.com/link/to/화북449,36.1075555556,128.7975388889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1299333333,128.7954694444),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북450<br>삼각점-<a href="https://map.kakao.com/link/to/화북450,36.1299333333,128.7954694444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1665722222,128.7711944444),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북451<br>삼각점-<a href="https://map.kakao.com/link/to/화북451,36.1665722222,128.7711944444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.135275,128.7720833333),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북452<br>삼각점-<a href="https://map.kakao.com/link/to/화북452,36.135275,128.7720833333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1001222222,128.7668333333),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북453<br>삼각점-<a href="https://map.kakao.com/link/to/화북453,36.1001222222,128.7668333333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1456333333,128.7524194444),
+    content: '<div style="width:190px; height:45px; padding:5px;">화북455<br>삼각점-<a href="https://map.kakao.com/link/to/화북455,36.1456333333,128.7524194444" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 오렌지 -- 통합기준점
+var newmarkerInfos3 = [
+{
+    position: new kakao.maps.LatLng(36.2572722222,128.4754666667),
+    content: '<div style="width:190px; height:45px; padding:5px;">U0645<br>통합기준점-<a href="https://map.kakao.com/link/to/U0645,36.2572722222,128.4754666667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2369694444,128.5754),
+    content: '<div style="width:190px; height:45px; padding:5px;">U0651<br>통합기준점-<a href="https://map.kakao.com/link/to/U0651,36.2369694444,128.5754" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.173975,128.7211138889),
+    content: '<div style="width:190px; height:45px; padding:5px;">U0652<br>통합기준점-<a href="https://map.kakao.com/link/to/U0652,36.173975,128.7211138889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1215611111,128.5763722222),
+    content: '<div style="width:190px; height:45px; padding:5px;">U0653<br>통합기준점-<a href="https://map.kakao.com/link/to/U0653,36.1215611111,128.5763722222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(323.7427277778,231.5245333333),
+    content: '<div style="width:190px; height:45px; padding:5px;">U0654<br>통합기준점-<a href="https://map.kakao.com/link/to/U0654,323.7427277778,231.5245333333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1226222222,128.7946694444),
+    content: '<div style="width:190px; height:45px; padding:5px;">U0658<br>통합기준점-<a href="https://map.kakao.com/link/to/U0658,36.1226222222,128.7946694444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2386666667,128.4639777778),
+    content: '<div style="width:190px; height:45px; padding:5px;">U구미05<br>통합기준점-<a href="https://map.kakao.com/link/to/U구미05,36.2386666667,128.4639777778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2044583333,128.6717638889),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위17<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위17,36.2044583333,128.6717638889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1782055556,128.58325),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위24<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위24,36.1782055556,128.58325" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1844527778,128.6298),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위26<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위26,36.1844527778,128.6298" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1985833333,128.6714166667),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위27<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위27,36.1985833333,128.6714166667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1535444444,128.65575),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위37<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위37,36.1535444444,128.65575" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1617583333,128.74915),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위40<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위40,36.1617583333,128.74915" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1401388889,128.7023583333),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위49<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위49,36.1401388889,128.7023583333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1125638889,128.6434694444),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위56<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위56,36.1125638889,128.6434694444" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.111,128.6967305556),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위58<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위58,36.111,128.6967305556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0908277778,128.592725),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위64<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위64,36.0908277778,128.592725" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0409722222,128.6684777778),
+    content: '<div style="width:190px; height:45px; padding:5px;">U군위87<br>통합기준점-<a href="https://map.kakao.com/link/to/U군위87,36.0409722222,128.6684777778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3087583333,128.4667975),
+    content: '<div style="width:190px; height:45px; padding:5px;">U안계79<br>통합기준점-<a href="https://map.kakao.com/link/to/U안계79,36.3087583333,128.4667975" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2973611111,128.4332611111),
+    content: '<div style="width:190px; height:45px; padding:5px;">U안계88<br>통합기준점-<a href="https://map.kakao.com/link/to/U안계88,36.2973611111,128.4332611111" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2757722222,128.4685655556),
+    content: '<div style="width:190px; height:45px; padding:5px;">U안계89<br>통합기준점-<a href="https://map.kakao.com/link/to/U안계89,36.2757722222,128.4685655556" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2638333333,128.4384722222),
+    content: '<div style="width:190px; height:45px; padding:5px;">U안계98<br>통합기준점-<a href="https://map.kakao.com/link/to/U안계98,36.2638333333,128.4384722222" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2661361111,128.5222583333),
+    content: '<div style="width:190px; height:45px; padding:5px;">U의성91<br>통합기준점-<a href="https://map.kakao.com/link/to/U의성91,36.2661361111,128.5222583333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1926333333,128.8227027778),
+    content: '<div style="width:190px; height:45px; padding:5px;">U화북23<br>통합기준점-<a href="https://map.kakao.com/link/to/U화북23,36.1926333333,128.8227027778" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1692858333,128.8702888889),
+    content: '<div style="width:190px; height:45px; padding:5px;">U화북35<br>통합기준점-<a href="https://map.kakao.com/link/to/U화북35,36.1692858333,128.8702888889" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1358944444,128.7494666667),
+    content: '<div style="width:190px; height:45px; padding:5px;">U화북41<br>통합기준점-<a href="https://map.kakao.com/link/to/U화북41,36.1358944444,128.7494666667" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1135944444,128.7536277778),
+    content: '<div style="width:190px; height:45px; padding:5px;">U화북51<br>통합기준점-<a href="https://map.kakao.com/link/to/U화북51,36.1135944444,128.7536277778" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다 -- 파란색
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+/*
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 0 빨간색
+for (var i = 0; i < newmarkerInfos0.length; i++) {
+    var newmarker = new kakao.maps.Marker({
+        position: newmarkerInfos0[i].position,
+        image: newMarkerImage0,
+        clickable: true
+    });
+    markers.push(newmarker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos0[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker, 'click', makeClickListener(newmarker, infowindow));
+}*/
+/*
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 1 보라색
+for (var i = 0; i < newmarkerInfos1.length; i++) {
+    var newmarker = new kakao.maps.Marker({
+        position: newmarkerInfos1[i].position,
+        image: newMarkerImage1,
+        clickable: true
+    });
+    markers.push(newmarker);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos1[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker, 'click', makeClickListener(newmarker, infowindow));
+}
+*/
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 2 초록색
+for (var i = 0; i < newmarkerInfos2.length; i++) {
+    var newmarker2 = new kakao.maps.Marker({
+        position: newmarkerInfos2[i].position,
+        image: newMarkerImage2,
+        clickable: true
+    });
+    markers.push(newmarker2);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos2[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker2, 'click', makeClickListener(newmarker2, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 3 오렌지
+for (var i = 0; i < newmarkerInfos3.length; i++) {
+    var newmarker3 = new kakao.maps.Marker({
+        position: newmarkerInfos3[i].position,
+        image: newMarkerImage3,
+        clickable: true
+    });
+    markers.push(newmarker3);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos3[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker3, 'click', makeClickListener(newmarker3, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
