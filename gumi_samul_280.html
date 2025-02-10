@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>구미 사물주소판</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(36.119562245936365, 128.34425010177793), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(36.24290636521546, 128.57281187098224),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize = new kakao.maps.Size(24, 35); 
+    
+    // 마커 이미지를 생성합니다    
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition,
+        image : markerImage // 마커 이미지
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 새로운 마커 이미지를 생성합니다. -- 삭제시 기본 이미지 (파란색) -- 빨간색 마커
+var newImageUrl0 = 'https://smbahk.github.io/dggis/p_r.png';
+var newMarkerImage0 = new kakao.maps.MarkerImage(newImageUrl0, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 보라색 마커
+var newImageUrl1 = 'https://smbahk.github.io/dggis/p_v.png';
+var newMarkerImage1 = new kakao.maps.MarkerImage(newImageUrl1, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 녹색 마커
+var newImageUrl2 = 'https://smbahk.github.io/dggis/p_g.png';
+var newMarkerImage2 = new kakao.maps.MarkerImage(newImageUrl2, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 오렌지 마커
+var newImageUrl3 = 'https://smbahk.github.io/dggis/p_o.png';
+var newMarkerImage3 = new kakao.maps.MarkerImage(newImageUrl3, new kakao.maps.Size(35, 35));
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+// 파란색 -- 무더위쉼터
+var markerInfos = [
+{
+    position: new kakao.maps.LatLng(36.1444914424613,128.522045105296),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 묵어길 299-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 묵어길 299-1,36.1444914424613,128.522045105296" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.127105364059,128.493070663783),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 강동로 207-10<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 강동로 207-10,36.127105364059,128.493070663783" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1373138688134,128.323595063387),
+    content: '<div style="width:190px; height:45px; padding:5px;">야은로 374<br>무더위쉼터-<a href="https://map.kakao.com/link/to/야은로 374,36.1373138688134,128.323595063387" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2409574990913,128.297036183826),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 선산중앙로8길 9-6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 선산중앙로8길 9-6,36.2409574990913,128.297036183826" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2178327526253,128.243863768958),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 배다리4길 29<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 배다리4길 29,36.2178327526253,128.243863768958" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.158292636392,128.307775591892),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉곡서로 82<br>무더위쉼터-<a href="https://map.kakao.com/link/to/봉곡서로 82,36.158292636392,128.307775591892" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0952205135945,128.353408662638),
+    content: '<div style="width:190px; height:45px; padding:5px;">박정희로 188<br>무더위쉼터-<a href="https://map.kakao.com/link/to/박정희로 188,36.0952205135945,128.353408662638" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2868719371545,128.367691921094),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 도개다곡길 464<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 도개다곡길 464,36.2868719371545,128.367691921094" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3013687602779,128.32823086442),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 궁기4길 13-24<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 궁기4길 13-24,36.3013687602779,128.32823086442" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1423261774413,128.362649709151),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 대평길 171<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 대평길 171,36.1423261774413,128.362649709151" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1275519286132,128.328062468405),
+    content: '<div style="width:190px; height:45px; padding:5px;">원남로4길 5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/원남로4길 5,36.1275519286132,128.328062468405" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1396043284681,128.425410220719),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계북로 69<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계북로 69,36.1396043284681,128.425410220719" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1293490839538,128.417427094819),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계2공단로 264-11<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계2공단로 264-11,36.1293490839538,128.417427094819" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.117663847227,128.37467242791),
+    content: '<div style="width:190px; height:45px; padding:5px;">수출대로3길 68-27<br>무더위쉼터-<a href="https://map.kakao.com/link/to/수출대로3길 68-27,36.117663847227,128.37467242791" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1227258572556,128.372883795108),
+    content: '<div style="width:190px; height:45px; padding:5px;">수출대로3길 130<br>무더위쉼터-<a href="https://map.kakao.com/link/to/수출대로3길 130,36.1227258572556,128.372883795108" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1454736956242,128.322517006173),
+    content: '<div style="width:190px; height:45px; padding:5px;">송동로 141<br>무더위쉼터-<a href="https://map.kakao.com/link/to/송동로 141,36.1454736956242,128.322517006173" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1402084929486,128.4355670832),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로39길 25<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로39길 25,36.1402084929486,128.4355670832" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1213759706416,128.379251478499),
+    content: '<div style="width:190px; height:45px; padding:5px;">비산로5길 19<br>무더위쉼터-<a href="https://map.kakao.com/link/to/비산로5길 19,36.1213759706416,128.379251478499" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1199899512339,128.374585921035),
+    content: '<div style="width:190px; height:45px; padding:5px;">비산로1길 4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/비산로1길 4,36.1199899512339,128.374585921035" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.149417633374,128.316250938433),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉곡남로20길 15-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/봉곡남로20길 15-1,36.149417633374,128.316250938433" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1403645029315,128.314833496333),
+    content: '<div style="width:190px; height:45px; padding:5px;">도봉로 10-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도봉로 10-1,36.1403645029315,128.314833496333" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1063743854915,128.382738697441),
+    content: '<div style="width:190px; height:45px; padding:5px;">1공단로9길 44<br>무더위쉼터-<a href="https://map.kakao.com/link/to/1공단로9길 44,36.1063743854915,128.382738697441" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1479526280514,128.416557080818),
+    content: '<div style="width:190px; height:45px; padding:5px;">흥안로2길 9-6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/흥안로2길 9-6,36.1479526280514,128.416557080818" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1469653569286,128.411474689972),
+    content: '<div style="width:190px; height:45px; padding:5px;">흥안로 63<br>무더위쉼터-<a href="https://map.kakao.com/link/to/흥안로 63,36.1469653569286,128.411474689972" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1472259722923,128.409661000051),
+    content: '<div style="width:190px; height:45px; padding:5px;">흥안로 75<br>무더위쉼터-<a href="https://map.kakao.com/link/to/흥안로 75,36.1472259722923,128.409661000051" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1478229819328,128.413863521767),
+    content: '<div style="width:190px; height:45px; padding:5px;">흥안로 60<br>무더위쉼터-<a href="https://map.kakao.com/link/to/흥안로 60,36.1478229819328,128.413863521767" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1468628534668,128.414418590959),
+    content: '<div style="width:190px; height:45px; padding:5px;">흥안로 43<br>무더위쉼터-<a href="https://map.kakao.com/link/to/흥안로 43,36.1468628534668,128.414418590959" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1148442247733,128.355486362409),
+    content: '<div style="width:190px; height:45px; padding:5px;">화신로 140-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/화신로 140-1,36.1148442247733,128.355486362409" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1121925736524,128.335134368959),
+    content: '<div style="width:190px; height:45px; padding:5px;">형곡서로 106<br>무더위쉼터-<a href="https://map.kakao.com/link/to/형곡서로 106,36.1121925736524,128.335134368959" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1143511223285,128.333261445917),
+    content: '<div style="width:190px; height:45px; padding:5px;">형곡로 73<br>무더위쉼터-<a href="https://map.kakao.com/link/to/형곡로 73,36.1143511223285,128.333261445917" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1063388766729,128.335584315939),
+    content: '<div style="width:190px; height:45px; padding:5px;">형곡로 180<br>무더위쉼터-<a href="https://map.kakao.com/link/to/형곡로 180,36.1063388766729,128.335584315939" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1108360672205,128.333590830701),
+    content: '<div style="width:190px; height:45px; padding:5px;">형곡로 109<br>무더위쉼터-<a href="https://map.kakao.com/link/to/형곡로 109,36.1108360672205,128.333590830701" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1063893962601,128.335320651471),
+    content: '<div style="width:190px; height:45px; padding:5px;">형곡동로5길 6-26<br>무더위쉼터-<a href="https://map.kakao.com/link/to/형곡동로5길 6-26,36.1063893962601,128.335320651471" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2650532036845,128.352515728912),
+    content: '<div style="width:190px; height:45px; padding:5px;">해평면 칠창길 41<br>무더위쉼터-<a href="https://map.kakao.com/link/to/해평면 칠창길 41,36.2650532036845,128.352515728912" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.190415585435,128.395809761974),
+    content: '<div style="width:190px; height:45px; padding:5px;">해평면 오상4길 6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/해평면 오상4길 6,36.190415585435,128.395809761974" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2072927712702,128.420855757797),
+    content: '<div style="width:190px; height:45px; padding:5px;">해평면 소상길 60<br>무더위쉼터-<a href="https://map.kakao.com/link/to/해평면 소상길 60,36.2072927712702,128.420855757797" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2534859927938,128.350538299822),
+    content: '<div style="width:190px; height:45px; padding:5px;">해평면 낙산1길 10<br>무더위쉼터-<a href="https://map.kakao.com/link/to/해평면 낙산1길 10,36.2534859927938,128.350538299822" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1979302867511,128.391874502469),
+    content: '<div style="width:190px; height:45px; padding:5px;">해평면 강동로 1652<br>무더위쉼터-<a href="https://map.kakao.com/link/to/해평면 강동로 1652,36.1979302867511,128.391874502469" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1208749222954,128.35927054865),
+    content: '<div style="width:190px; height:45px; padding:5px;">칠성로 32<br>무더위쉼터-<a href="https://map.kakao.com/link/to/칠성로 32,36.1208749222954,128.35927054865" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0800789904387,128.374316858374),
+    content: '<div style="width:190px; height:45px; padding:5px;">지주중류4길 3-14<br>무더위쉼터-<a href="https://map.kakao.com/link/to/지주중류4길 3-14,36.0800789904387,128.374316858374" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1332165913811,128.363624819151),
+    content: '<div style="width:190px; height:45px; padding:5px;">지산양호길 62-5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/지산양호길 62-5,36.1332165913811,128.363624819151" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1342831161946,128.344598482213),
+    content: '<div style="width:190px; height:45px; padding:5px;">지산1길 4-14<br>무더위쉼터-<a href="https://map.kakao.com/link/to/지산1길 4-14,36.1342831161946,128.344598482213" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1290073450902,128.485993301363),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 신장3길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 신장3길 3,36.1290073450902,128.485993301363" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1340960446188,128.483807431681),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 하장3길 57<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 하장3길 57,36.1340960446188,128.483807431681" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1859859902077,128.538130837145),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 장천오로5길 69<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 장천오로5길 69,36.1859859902077,128.538130837145" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1735998163467,128.526410443543),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 장천오로3길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 장천오로3길 3,36.1735998163467,128.526410443543" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1245266866416,128.524949039346),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 장군로 290<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 장군로 290,36.1245266866416,128.524949039346" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.161698017877,128.516286197714),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 장천로 305-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 장천로 305-4,36.161698017877,128.516286197714" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1551457313287,128.491263863594),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 송백로 13<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 송백로 13,36.1551457313287,128.491263863594" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1249916767686,128.494206560828),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 상장5길 11<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 상장5길 11,36.1249916767686,128.494206560828" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1259454115728,128.496646733709),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 상장3길 29-6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 상장3길 29-6,36.1259454115728,128.496646733709" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1406160592589,128.501708484186),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 묵어길 106<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 묵어길 106,36.1406160592589,128.501708484186" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1247783420868,128.542528228502),
+    content: '<div style="width:190px; height:45px; padding:5px;">장천면 명곡2길 51-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/장천면 명곡2길 51-1,36.1247783420868,128.542528228502" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0894653132209,128.368471587104),
+    content: '<div style="width:190px; height:45px; padding:5px;">임은길 55-2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/임은길 55-2,36.0894653132209,128.368471587104" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1176556632564,128.402852810272),
+    content: '<div style="width:190px; height:45px; padding:5px;">임수로2길 5-8<br>무더위쉼터-<a href="https://map.kakao.com/link/to/임수로2길 5-8,36.1176556632564,128.402852810272" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1079029858712,128.423073538159),
+    content: '<div style="width:190px; height:45px; padding:5px;">인동중앙로8길 9<br>무더위쉼터-<a href="https://map.kakao.com/link/to/인동중앙로8길 9,36.1079029858712,128.423073538159" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0987616986913,128.463423002505),
+    content: '<div style="width:190px; height:45px; padding:5px;">인동63길 48<br>무더위쉼터-<a href="https://map.kakao.com/link/to/인동63길 48,36.0987616986913,128.463423002505" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0913382618204,128.454997998297),
+    content: '<div style="width:190px; height:45px; padding:5px;">인동60길 6-10<br>무더위쉼터-<a href="https://map.kakao.com/link/to/인동60길 6-10,36.0913382618204,128.454997998297" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0911839326526,128.444345058105),
+    content: '<div style="width:190px; height:45px; padding:5px;">인동54길 20-82<br>무더위쉼터-<a href="https://map.kakao.com/link/to/인동54길 20-82,36.0911839326526,128.444345058105" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0912380728826,128.424270868165),
+    content: '<div style="width:190px; height:45px; padding:5px;">인동26길 66<br>무더위쉼터-<a href="https://map.kakao.com/link/to/인동26길 66,36.0912380728826,128.424270868165" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0973960377468,128.420477665629),
+    content: '<div style="width:190px; height:45px; padding:5px;">인동16길 48-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/인동16길 48-1,36.0973960377468,128.420477665629" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1290560575967,128.323476039665),
+    content: '<div style="width:190px; height:45px; padding:5px;">원남로 12-13<br>무더위쉼터-<a href="https://map.kakao.com/link/to/원남로 12-13,36.1290560575967,128.323476039665" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1287893535768,128.326022984838),
+    content: '<div style="width:190px; height:45px; padding:5px;">원남로 48<br>무더위쉼터-<a href="https://map.kakao.com/link/to/원남로 48,36.1287893535768,128.326022984838" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2932386464613,128.217746106283),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 태봉2길 178-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 태봉2길 178-1,36.2932386464613,128.217746106283" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.284153841038,128.227754713055),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 태봉1길 58-2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 태봉1길 58-2,36.284153841038,128.227754713055" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2961487032162,128.302348128795),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 초곡1길 7<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 초곡1길 7,36.2961487032162,128.302348128795" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2993323223825,128.283983101247),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 중농소길 3-8<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 중농소길 3-8,36.2993323223825,128.283983101247" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2852589716751,128.263624059279),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 주아5길 39<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 주아5길 39,36.2852589716751,128.263624059279" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.294105662851,128.276213415761),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 주아1길 37<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 주아1길 37,36.294105662851,128.276213415761" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2947120626801,128.277475718592),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 주아1길 27<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 주아1길 27,36.2947120626801,128.277475718592" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3391835006359,128.264243307105),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 옥관구평길 11-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 옥관구평길 11-3,36.3391835006359,128.264243307105" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.347151090838,128.27734911096),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 선상동로 1463<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 선상동로 1463,36.347151090838,128.27734911096" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3474776457445,128.276135596136),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 선상동로 1459-13<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 선상동로 1459-13,36.3474776457445,128.276135596136" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3136402324935,128.280486153803),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 선상동로 1045<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 선상동로 1045,36.3136402324935,128.280486153803" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.341013087156,128.257791848647),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 산촌옥관로 807<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 산촌옥관로 807,36.341013087156,128.257791848647" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3411546545113,128.257466324992),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 산촌옥관로 805<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 산촌옥관로 805,36.3411546545113,128.257466324992" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3051595240245,128.241274020174),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 산촌1길 12-2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 산촌1길 12-2,36.3051595240245,128.241274020174" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2642663330763,128.253538063136),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 덕촌3길 6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 덕촌3길 6,36.2642663330763,128.253538063136" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2544003721416,128.250364941306),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 덕촌2길 36<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 덕촌2길 36,36.2544003721416,128.250364941306" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2559933344698,128.251292219063),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 덕촌1길 50<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 덕촌1길 50,36.2559933344698,128.251292219063" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2832563165708,128.233725310249),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 대원1길 8-9<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 대원1길 8-9,36.2832563165708,128.233725310249" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3521422111921,128.257862488782),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥성면 구봉1길 217<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥성면 구봉1길 217,36.3521422111921,128.257862488782" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1309871058106,128.417309591272),
+    content: '<div style="width:190px; height:45px; padding:5px;">옥계2공단로 282<br>무더위쉼터-<a href="https://map.kakao.com/link/to/옥계2공단로 282,36.1309871058106,128.417309591272" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0707949168737,128.365136423693),
+    content: '<div style="width:190px; height:45px; padding:5px;">오태5길 7-13<br>무더위쉼터-<a href="https://map.kakao.com/link/to/오태5길 7-13,36.0707949168737,128.365136423693" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0744993933156,128.359408143807),
+    content: '<div style="width:190px; height:45px; padding:5px;">오태3안길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/오태3안길 3,36.0744993933156,128.359408143807" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.130868376895,128.332558378763),
+    content: '<div style="width:190px; height:45px; padding:5px;">역전로 26<br>무더위쉼터-<a href="https://map.kakao.com/link/to/역전로 26,36.130868376895,128.332558378763" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.130868376895,128.332558378763),
+    content: '<div style="width:190px; height:45px; padding:5px;">역전로 26-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/역전로 26-1,36.130868376895,128.332558378763" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1457601796444,128.303747247477),
+    content: '<div style="width:190px; height:45px; padding:5px;">야은로7길 45-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/야은로7길 45-1,36.1457601796444,128.303747247477" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1420721230307,128.311508995155),
+    content: '<div style="width:190px; height:45px; padding:5px;">야은로11길 23<br>무더위쉼터-<a href="https://map.kakao.com/link/to/야은로11길 23,36.1420721230307,128.311508995155" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1194352496758,128.336877146485),
+    content: '<div style="width:190px; height:45px; padding:5px;">신시로17길 41<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신시로17길 41,36.1194352496758,128.336877146485" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1138663158879,128.351066812736),
+    content: '<div style="width:190px; height:45px; padding:5px;">신시로10길 120-14<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신시로10길 120-14,36.1138663158879,128.351066812736" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1216076239384,128.369429359356),
+    content: '<div style="width:190px; height:45px; padding:5px;">신비로9길 9-10<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신비로9길 9-10,36.1216076239384,128.369429359356" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1229634986471,128.365346343995),
+    content: '<div style="width:190px; height:45px; padding:5px;">신비로7길 9-2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신비로7길 9-2,36.1229634986471,128.365346343995" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1229634986471,128.365346343995),
+    content: '<div style="width:190px; height:45px; padding:5px;">신비로7길 9-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신비로7길 9-3,36.1229634986471,128.365346343995" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1229275880923,128.365832441044),
+    content: '<div style="width:190px; height:45px; padding:5px;">신비로7길 9-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신비로7길 9-4,36.1229275880923,128.365832441044" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1229465385623,128.364470244611),
+    content: '<div style="width:190px; height:45px; padding:5px;">신비로3길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/신비로3길 3,36.1229465385623,128.364470244611" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1170955513036,128.427425062559),
+    content: '<div style="width:190px; height:45px; padding:5px;">수출대로31길 82-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/수출대로31길 82-3,36.1170955513036,128.427425062559" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1121611882563,128.425711106213),
+    content: '<div style="width:190px; height:45px; padding:5px;">수출대로31길 14-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/수출대로31길 14-1,36.1121611882563,128.425711106213" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.132955166438,128.299267513193),
+    content: '<div style="width:190px; height:45px; padding:5px;">수점로 24-56<br>무더위쉼터-<a href="https://map.kakao.com/link/to/수점로 24-56,36.132955166438,128.299267513193" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1424888469229,128.290755078394),
+    content: '<div style="width:190px; height:45px; padding:5px;">송선로2길 36<br>무더위쉼터-<a href="https://map.kakao.com/link/to/송선로2길 36,36.1424888469229,128.290755078394" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1441302687492,128.322313909741),
+    content: '<div style="width:190px; height:45px; padding:5px;">송동로 127<br>무더위쉼터-<a href="https://map.kakao.com/link/to/송동로 127,36.1441302687492,128.322313909741" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2383544247319,128.249428665694),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 포상6길 12<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 포상6길 12,36.2383544247319,128.249428665694" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2357526938311,128.242748071122),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 포상1길 8<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 포상1길 8,36.2357526938311,128.242748071122" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2426196128471,128.272353092867),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 죽장8길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 죽장8길 3,36.2426196128471,128.272353092867" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2411681720383,128.281258969265),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 죽장2길 5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 죽장2길 5,36.2411681720383,128.281258969265" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2400485160364,128.314398880754),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 조남로11길 25<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 조남로11길 25,36.2400485160364,128.314398880754" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2419281652548,128.327155459027),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 유학길 351<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 유학길 351,36.2419281652548,128.327155459027" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.271340055587,128.328656996909),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 유학길 18<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 유학길 18,36.271340055587,128.328656996909" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2265783769386,128.339271060081),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 유학17길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 유학17길 3,36.2265783769386,128.339271060081" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.231318206539,128.332540530209),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 유학13길 22<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 유학13길 22,36.231318206539,128.332540530209" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2131698578245,128.349660206409),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 어강길 405-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 어강길 405-3,36.2131698578245,128.349660206409" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2329524587264,128.239330492358),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 소재길 38<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 소재길 38,36.2329524587264,128.239330492358" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2453450389486,128.293612215021),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 선주로9길 23<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 선주로9길 23,36.2453450389486,128.293612215021" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.240043891275,128.291969174248),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 선상서로14길 17<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 선상서로14길 17,36.240043891275,128.291969174248" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2405324371534,128.299767543799),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 선산중앙로14길 25-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 선산중앙로14길 25-3,36.2405324371534,128.299767543799" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2420374122754,128.293815782361),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 선산중앙로13길 29<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 선산중앙로13길 29,36.2420374122754,128.293815782361" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2432577857585,128.302751388811),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 선산중앙로 105<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 선산중앙로 105,36.2432577857585,128.302751388811" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2510352289277,128.26242286695),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 선산봉곡6길 36<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 선산봉곡6길 36,36.2510352289277,128.26242286695" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2493237702806,128.264822862099),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 선산봉곡4길 27<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 선산봉곡4길 27,36.2493237702806,128.264822862099" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2104466514762,128.267940860634),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 북산6길 67<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 북산6길 67,36.2104466514762,128.267940860634" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2139863546852,128.245482481331),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 배다리2길 5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 배다리2길 5,36.2139863546852,128.245482481331" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2398475813499,128.307680055005),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 동화5길 1-14<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 동화5길 1-14,36.2398475813499,128.307680055005" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2494652108939,128.300140882386),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 동교5길 35<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 동교5길 35,36.2494652108939,128.300140882386" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2476752043236,128.301285355027),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 동교3길 20-5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 동교3길 20-5,36.2476752043236,128.301285355027" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2168460293338,128.23777025526),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 대조길 12<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 대조길 12,36.2168460293338,128.23777025526" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2439489807249,128.296636301037),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 단계서길 83-5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 단계서길 83-5,36.2439489807249,128.296636301037" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2439295744784,128.297437051082),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 단계서길 79-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 단계서길 79-1,36.2439295744784,128.297437051082" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.229483770563,128.262594296696),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 내고5안길 21<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 내고5안길 21,36.229483770563,128.262594296696" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2267612661581,128.262201629171),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 내고3길 117<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 내고3길 117,36.2267612661581,128.262201629171" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2135503712282,128.259807382466),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 김선로 573<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 김선로 573,36.2135503712282,128.259807382466" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2504250392433,128.302224654524),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 교리2안길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산읍 교리2안길 3,36.2504250392433,128.302224654524" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1466545765416,128.348122263671),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산대로 187<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선산대로 187,36.1466545765416,128.348122263671" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1279471909794,128.317977620406),
+    content: '<div style="width:190px; height:45px; padding:5px;">선기로3길 54<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선기로3길 54,36.1279471909794,128.317977620406" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1286069511389,128.316942269129),
+    content: '<div style="width:190px; height:45px; padding:5px;">선기로3길 51<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선기로3길 51,36.1286069511389,128.316942269129" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.128957880328,128.320410209407),
+    content: '<div style="width:190px; height:45px; padding:5px;">선기로1길 21<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선기로1길 21,36.128957880328,128.320410209407" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1293806119428,128.316177065497),
+    content: '<div style="width:190px; height:45px; padding:5px;">선기로 77<br>무더위쉼터-<a href="https://map.kakao.com/link/to/선기로 77,36.1293806119428,128.316177065497" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0963711258038,128.357324727578),
+    content: '<div style="width:190px; height:45px; padding:5px;">상사동로15길 13<br>무더위쉼터-<a href="https://map.kakao.com/link/to/상사동로15길 13,36.0963711258038,128.357324727578" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0893174650511,128.358228963525),
+    content: '<div style="width:190px; height:45px; padding:5px;">상사동로 51<br>무더위쉼터-<a href="https://map.kakao.com/link/to/상사동로 51,36.0893174650511,128.358228963525" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0887937376745,128.353233957059),
+    content: '<div style="width:190px; height:45px; padding:5px;">상모로2길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/상모로2길 3,36.0887937376745,128.353233957059" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0896150294905,128.360325360198),
+    content: '<div style="width:190px; height:45px; padding:5px;">상림로 41<br>무더위쉼터-<a href="https://map.kakao.com/link/to/상림로 41,36.0896150294905,128.360325360198" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1369174306206,128.423600261358),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로31길 12-85<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로31길 12-85,36.1369174306206,128.423600261358" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1376691803222,128.415052067608),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로25길 5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로25길 5,36.1376691803222,128.415052067608" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1419709410241,128.417212317233),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로25길 53<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로25길 53,36.1419709410241,128.417212317233" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1394710035883,128.415340391179),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로25길 25-50<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로25길 25-50,36.1394710035883,128.415340391179" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1377731254439,128.413171026414),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로21길 6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로21길 6,36.1377731254439,128.413171026414" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1221500495081,128.383704417957),
+    content: '<div style="width:190px; height:45px; padding:5px;">산호대로 423<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산호대로 423,36.1221500495081,128.383704417957" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1238751950195,128.336163920588),
+    content: '<div style="width:190px; height:45px; padding:5px;">산책길 7<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산책길 7,36.1238751950195,128.336163920588" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1217505733523,128.353675459117),
+    content: '<div style="width:190px; height:45px; padding:5px;">산업로 320-12<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산업로 320-12,36.1217505733523,128.353675459117" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1386312230234,128.462888615695),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 임봉길 86<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 임봉길 86,36.1386312230234,128.462888615695" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.140956428948,128.456231679161),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 임봉길 19-16<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 임봉길 19-16,36.140956428948,128.456231679161" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1642937838378,128.460350464117),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 인덕2길 15<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 인덕2길 15,36.1642937838378,128.460350464117" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2211530741407,128.479930682645),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 송백로 937<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 송백로 937,36.2211530741407,128.479930682645" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2040166574336,128.470824654647),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 송백로 712-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 송백로 712-3,36.2040166574336,128.470824654647" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1608626518547,128.412289885932),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 성수2길 15<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 성수2길 15,36.1608626518547,128.412289885932" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1567344923843,128.406979223774),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 성수1길 120-2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 성수1길 120-2,36.1567344923843,128.406979223774" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2145313203706,128.467893625746),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 백현2길 93-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 백현2길 93-1,36.2145313203706,128.467893625746" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1769743177749,128.443330276402),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 동백로 113<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 동백로 113,36.1769743177749,128.443330276402" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1733018791456,128.438697963165),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 동곡1길 24<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 동곡1길 24,36.1733018791456,128.438697963165" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1692674920754,128.43471675289),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 강동로 1032<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산동읍 강동로 1032,36.1692674920754,128.43471675289" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0950577008299,128.357826769005),
+    content: '<div style="width:190px; height:45px; padding:5px;">사곡로 21<br>무더위쉼터-<a href="https://map.kakao.com/link/to/사곡로 21,36.0950577008299,128.357826769005" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0951450514915,128.356065729),
+    content: '<div style="width:190px; height:45px; padding:5px;">사곡로 1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/사곡로 1,36.0951450514915,128.356065729" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1221070234909,128.382272069578),
+    content: '<div style="width:190px; height:45px; padding:5px;">비산로5길 28-33<br>무더위쉼터-<a href="https://map.kakao.com/link/to/비산로5길 28-33,36.1221070234909,128.382272069578" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1208747395578,128.376056687957),
+    content: '<div style="width:190px; height:45px; padding:5px;">비산로1안길 21-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/비산로1안길 21-3,36.1208747395578,128.376056687957" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1511158743121,128.293081604705),
+    content: '<div style="width:190px; height:45px; padding:5px;">부곡1길 14-5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/부곡1길 14-5,36.1511158743121,128.293081604705" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1564441523047,128.310509899382),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉곡로23길 6-20<br>무더위쉼터-<a href="https://map.kakao.com/link/to/봉곡로23길 6-20,36.1564441523047,128.310509899382" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1515544420027,128.312743243492),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉곡로18길 17-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/봉곡로18길 17-4,36.1515544420027,128.312743243492" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1506379356886,128.317792901915),
+    content: '<div style="width:190px; height:45px; padding:5px;">봉곡남로 148<br>무더위쉼터-<a href="https://map.kakao.com/link/to/봉곡남로 148,36.1506379356886,128.317792901915" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1187179932159,128.34025929733),
+    content: '<div style="width:190px; height:45px; padding:5px;">백산로2길 33<br>무더위쉼터-<a href="https://map.kakao.com/link/to/백산로2길 33,36.1187179932159,128.34025929733" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0864999238803,128.349282468975),
+    content: '<div style="width:190px; height:45px; padding:5px;">박정희로7길 10-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/박정희로7길 10-3,36.0864999238803,128.349282468975" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1090564116521,128.353555629551),
+    content: '<div style="width:190px; height:45px; padding:5px;">박정희로25길 29-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/박정희로25길 29-3,36.1090564116521,128.353555629551" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1232713034859,128.339732908454),
+    content: '<div style="width:190px; height:45px; padding:5px;">박정희로 599<br>무더위쉼터-<a href="https://map.kakao.com/link/to/박정희로 599,36.1232713034859,128.339732908454" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0991421411453,128.355493502596),
+    content: '<div style="width:190px; height:45px; padding:5px;">박정희로 236-10<br>무더위쉼터-<a href="https://map.kakao.com/link/to/박정희로 236-10,36.0991421411453,128.355493502596" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1404726144538,128.33254271296),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로12길 1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로12길 1,36.1404726144538,128.33254271296" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1374377062233,128.332110336265),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로 45<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로 45,36.1374377062233,128.332110336265" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1434651313428,128.332451897826),
+    content: '<div style="width:190px; height:45px; padding:5px;">문장로 110<br>무더위쉼터-<a href="https://map.kakao.com/link/to/문장로 110,36.1434651313428,128.332451897826" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2603291600381,128.231424539468),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 웅곡1길 5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 웅곡1길 5,36.2603291600381,128.231424539468" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2668721947978,128.171111477364),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 오가2길 17<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 오가2길 17,36.2668721947978,128.171111477364" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2679619964764,128.177593454551),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 오가1길 36<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 오가1길 36,36.2679619964764,128.177593454551" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.275275073261,128.178023026687),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 오가1길 128-7<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 오가1길 128-7,36.275275073261,128.178023026687" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2717463879348,128.145119074614),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 안곡1길 29<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 안곡1길 29,36.2717463879348,128.145119074614" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2594188235072,128.209374867989),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 송삼2길 17-2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 송삼2길 17-2,36.2594188235072,128.209374867989" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2614483789285,128.197785855735),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 송삼1길 12-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 송삼1길 12-4,36.2614483789285,128.197785855735" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2731888662157,128.159703583513),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 상송길 37-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 상송길 37-4,36.2731888662157,128.159703583513" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2605342653454,128.198595623141),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 상무로 991-2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 상무로 991-2,36.2605342653454,128.198595623141" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2613268768542,128.192865962489),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 상무로 942<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 상무로 942,36.2613268768542,128.192865962489" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2755557891048,128.149831133),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 상무로 517-39<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 상무로 517-39,36.2755557891048,128.149831133" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.247359277549,128.206807355723),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 삼원로 428<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 삼원로 428,36.247359277549,128.206807355723" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2445586735665,128.205481065591),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 삼원로 394<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 삼원로 394,36.2445586735665,128.205481065591" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2453032234765,128.227874577423),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 백자길 100<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 백자길 100,36.2453032234765,128.227874577423" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2583168178581,128.220914726621),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 무이1길 50<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 무이1길 50,36.2583168178581,128.220914726621" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2767412917514,128.192732866166),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 무수길 190<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 무수길 190,36.2767412917514,128.192732866166" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2566952817419,128.175246547423),
+    content: '<div style="width:190px; height:45px; padding:5px;">무을면 무등1길 94-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/무을면 무등1길 94-1,36.2566952817419,128.175246547423" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1427517543452,128.315100428746),
+    content: '<div style="width:190px; height:45px; padding:5px;">도봉로5길 13-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도봉로5길 13-1,36.1427517543452,128.315100428746" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3092682936551,128.332335790724),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 월림4길 14-11<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 월림4길 14-11,36.3092682936551,128.332335790724" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3084970390031,128.311138928215),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 월림2길 102-1<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 월림2길 102-1,36.3084970390031,128.311138928215" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3295334421709,128.297942025678),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 용산가산길 174<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 용산가산길 174,36.3295334421709,128.297942025678" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3390908692362,128.298370259872),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 용산4길 7-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 용산4길 7-3,36.3390908692362,128.298370259872" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3268460953081,128.306422663905),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 용산1길 13<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 용산1길 13,36.3268460953081,128.306422663905" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.316831222929,128.349605647464),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 신곡2길 67<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 신곡2길 67,36.316831222929,128.349605647464" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.3341959242406,128.330363044268),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 동산2길 5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 동산2길 5,36.3341959242406,128.330363044268" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2760365105261,128.393383731409),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 도군로 526-6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 도군로 526-6,36.2760365105261,128.393383731409" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2813554186373,128.353540782197),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 도군로 132<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 도군로 132,36.2813554186373,128.353540782197" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2882570340013,128.361573877225),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 도개다곡길 400<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 도개다곡길 400,36.2882570340013,128.361573877225" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2887582861643,128.360104651036),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 도개다곡길 394<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 도개다곡길 394,36.2887582861643,128.360104651036" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.308433378494,128.339860218846),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 도개다곡길 37-16<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 도개다곡길 37-16,36.308433378494,128.339860218846" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2890610354645,128.355655932343),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 도개다곡길 352<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 도개다곡길 352,36.2890610354645,128.355655932343" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2996501428435,128.341177303914),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 궁기8길 9<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 궁기8길 9,36.2996501428435,128.341177303914" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2993735313484,128.330109219175),
+    content: '<div style="width:190px; height:45px; padding:5px;">도개면 궁기2길 9-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/도개면 궁기2길 9-3,36.2993735313484,128.330109219175" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.127945916648,128.338455518262),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오산로5길 8<br>무더위쉼터-<a href="https://map.kakao.com/link/to/금오산로5길 8,36.127945916648,128.338455518262" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1259924658146,128.331920674004),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오산로22안길 15-17<br>무더위쉼터-<a href="https://map.kakao.com/link/to/금오산로22안길 15-17,36.1259924658146,128.331920674004" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0724266137674,128.34877416497),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로5길 8-7<br>무더위쉼터-<a href="https://map.kakao.com/link/to/금오대로5길 8-7,36.0724266137674,128.34877416497" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0702335878799,128.355419372524),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로22길 29-26<br>무더위쉼터-<a href="https://map.kakao.com/link/to/금오대로22길 29-26,36.0702335878799,128.355419372524" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0705815643444,128.354108120992),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로22길 21<br>무더위쉼터-<a href="https://map.kakao.com/link/to/금오대로22길 21,36.0705815643444,128.354108120992" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0697780526889,128.352684231995),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로14길 29<br>무더위쉼터-<a href="https://map.kakao.com/link/to/금오대로14길 29,36.0697780526889,128.352684231995" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0704150831426,128.350957679937),
+    content: '<div style="width:190px; height:45px; padding:5px;">금오대로12길 11-2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/금오대로12길 11-2,36.0704150831426,128.350957679937" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1259540962389,128.343014729488),
+    content: '<div style="width:190px; height:45px; padding:5px;">산업로26길 18<br>무더위쉼터-<a href="https://map.kakao.com/link/to/산업로26길 18,36.1259540962389,128.343014729488" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1307007277996,128.326571237721),
+    content: '<div style="width:190px; height:45px; padding:5px;">구미중앙로 32<br>무더위쉼터-<a href="https://map.kakao.com/link/to/구미중앙로 32,36.1307007277996,128.326571237721" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.0883584321345,128.363326324995),
+    content: '<div style="width:190px; height:45px; padding:5px;">구미대로4길 15-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/구미대로4길 15-3,36.0883584321345,128.363326324995" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2131107062588,128.287909832953),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 황산3길 6-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 황산3길 6-3,36.2131107062588,128.287909832953" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2129353253541,128.28913350054),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 황산1길 6-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 황산1길 6-4,36.2129353253541,128.28913350054" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1888796330112,128.346530346144),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 항곡3길 12-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 항곡3길 12-4,36.1888796330112,128.346530346144" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1939788175477,128.285085653929),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 포아로 650<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 포아로 650,36.1939788175477,128.285085653929" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1830411839256,128.282809391492),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 포아로 478-11<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 포아로 478-11,36.1830411839256,128.282809391492" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2084160893982,128.30773295805),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 파산3길 14-2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 파산3길 14-2,36.2084160893982,128.30773295805" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2071252027838,128.327709682194),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 이례로3길 5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 이례로3길 5,36.2071252027838,128.327709682194" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2061565690108,128.325296275435),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 이례로 90<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 이례로 90,36.2061565690108,128.325296275435" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1970797526559,128.316151427463),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 원대로21안길 3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 원대로21안길 3,36.1970797526559,128.316151427463" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1827080464901,128.316200049991),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 원대로 362<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 원대로 362,36.1827080464901,128.316200049991" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2169734845793,128.315083864237),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 오로3길 9<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 오로3길 9,36.2169734845793,128.315083864237" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1978068401439,128.336901637966),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 예강1안길 27<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 예강1안길 27,36.1978068401439,128.336901637966" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1997665779576,128.338710639744),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 예강1길 5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 예강1길 5,36.1997665779576,128.338710639744" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1715324947928,128.372808283887),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 송평구길 115<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 송평구길 115,36.1715324947928,128.372808283887" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1713323786762,128.371469661413),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 송평구길 103-4<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 송평구길 103-4,36.1713323786762,128.371469661413" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1697244871151,128.364902483188),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 송평구3길 13<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 송평구3길 13,36.1697244871151,128.364902483188" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1691578169719,128.364858536366),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 송평구3길 6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 송평구3길 6,36.1691578169719,128.364858536366" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2096120296283,128.328961389468),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 선산대로 969<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 선산대로 969,36.2096120296283,128.328961389468" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2091528549403,128.329006441986),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 선산대로 963<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 선산대로 963,36.2091528549403,128.329006441986" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2152881525822,128.316849145479),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 선산대로 1111-21<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 선산대로 1111-21,36.2152881525822,128.316849145479" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1799836459131,128.348590348339),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 봉한3안길 2<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 봉한3안길 2,36.1799836459131,128.348590348339" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1802578849786,128.348700089452),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 봉한3길 26<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 봉한3길 26,36.1802578849786,128.348700089452" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1770544770767,128.349481794133),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 봉한1길 29<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 봉한1길 29,36.1770544770767,128.349481794133" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1610305306991,128.354104625867),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 문성12길 15-9<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 문성12길 15-9,36.1610305306991,128.354104625867" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1636267053752,128.347714746844),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 들성로11길 28<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 들성로11길 28,36.1636267053752,128.347714746844" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1644875858489,128.371484862806),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 다평길 60-7<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 다평길 60-7,36.1644875858489,128.371484862806" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1627870812424,128.37214389901),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 다평8길 6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 다평8길 6,36.1627870812424,128.37214389901" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1868562139841,128.289804667411),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 내예길 6<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 내예길 6,36.1868562139841,128.289804667411" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.211934744246,128.334292387698),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 관심길 65<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 관심길 65,36.211934744246,128.334292387698" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2138362468275,128.333594196225),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 관심5길 17<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 관심5길 17,36.2138362468275,128.333594196225" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1944748774008,128.361009123481),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 강정4길 52-5<br>무더위쉼터-<a href="https://map.kakao.com/link/to/고아읍 강정4길 52-5,36.1944748774008,128.361009123481" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1138786114202,128.334438690229),
+    content: '<div style="width:190px; height:45px; padding:5px;">경은로 52<br>무더위쉼터-<a href="https://map.kakao.com/link/to/경은로 52,36.1138786114202,128.334438690229" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1141795981548,128.334422015397),
+    content: '<div style="width:190px; height:45px; padding:5px;">경은로 48<br>무더위쉼터-<a href="https://map.kakao.com/link/to/경은로 48,36.1141795981548,128.334422015397" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1152993793493,128.425029287853),
+    content: '<div style="width:190px; height:45px; padding:5px;">검성로 52<br>무더위쉼터-<a href="https://map.kakao.com/link/to/검성로 52,36.1152993793493,128.425029287853" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1128150622556,128.424361698539),
+    content: '<div style="width:190px; height:45px; padding:5px;">검성로 23<br>무더위쉼터-<a href="https://map.kakao.com/link/to/검성로 23,36.1128150622556,128.424361698539" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1356497866828,128.382913406727),
+    content: '<div style="width:190px; height:45px; padding:5px;">거양길 354<br>무더위쉼터-<a href="https://map.kakao.com/link/to/거양길 354,36.1356497866828,128.382913406727" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1318373020158,128.429751632497),
+    content: '<div style="width:190px; height:45px; padding:5px;">4공단로6길 8-8<br>무더위쉼터-<a href="https://map.kakao.com/link/to/4공단로6길 8-8,36.1318373020158,128.429751632497" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1069481722846,128.401462806598),
+    content: '<div style="width:190px; height:45px; padding:5px;">3공단1로 275-40<br>무더위쉼터-<a href="https://map.kakao.com/link/to/3공단1로 275-40,36.1069481722846,128.401462806598" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.104001082169,128.383439326329),
+    content: '<div style="width:190px; height:45px; padding:5px;">1공단로9길 30-12<br>무더위쉼터-<a href="https://map.kakao.com/link/to/1공단로9길 30-12,36.104001082169,128.383439326329" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1068812163027,128.36611646071),
+    content: '<div style="width:190px; height:45px; padding:5px;">1공단로3길 55-3<br>무더위쉼터-<a href="https://map.kakao.com/link/to/1공단로3길 55-3,36.1068812163027,128.36611646071" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 빨간
+// var newmarkerInfos0 = [
+// ];
+
+// 보라
+// var newmarkerInfos1 = [
+// ];
+
+// 초록 -- 민방위대피시설
+var newmarkerInfos2 = [
+{
+    position: new kakao.maps.LatLng(36.1120074907723,128.384493085782),
+    content: '<div style="width:190px; height:45px; padding:5px;">수출대로 179<br>민방위대피시설-<a href="https://map.kakao.com/link/to/수출대로 179,36.1120074907723,128.384493085782" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1144660099973,128.340528875643),
+    content: '<div style="width:190px; height:45px; padding:5px;">신시로10길 12<br>민방위대피시설-<a href="https://map.kakao.com/link/to/신시로10길 12,36.1144660099973,128.340528875643" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1113692883322,128.378157031357),
+    content: '<div style="width:190px; height:45px; padding:5px;">수출대로 127<br>민방위대피시설-<a href="https://map.kakao.com/link/to/수출대로 127,36.1113692883322,128.378157031357" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1106165953918,128.376501045192),
+    content: '<div style="width:190px; height:45px; padding:5px;">수출대로 112<br>민방위대피시설-<a href="https://map.kakao.com/link/to/수출대로 112,36.1106165953918,128.376501045192" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1192755194717,128.344441358603),
+    content: '<div style="width:190px; height:45px; padding:5px;">송정대로 55<br>민방위대피시설-<a href="https://map.kakao.com/link/to/송정대로 55,36.1192755194717,128.344441358603" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1169543462095,128.351769112345),
+    content: '<div style="width:190px; height:45px; padding:5px;">송정대로 120<br>민방위대피시설-<a href="https://map.kakao.com/link/to/송정대로 120,36.1169543462095,128.351769112345" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1183684707322,128.343305456692),
+    content: '<div style="width:190px; height:45px; padding:5px;">송원서로 6<br>민방위대피시설-<a href="https://map.kakao.com/link/to/송원서로 6,36.1183684707322,128.343305456692" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1189471214092,128.343278773797),
+    content: '<div style="width:190px; height:45px; padding:5px;">송원서로 14<br>민방위대피시설-<a href="https://map.kakao.com/link/to/송원서로 14,36.1189471214092,128.343278773797" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1227142319954,128.352273057924),
+    content: '<div style="width:190px; height:45px; padding:5px;">송원동로 72<br>민방위대피시설-<a href="https://map.kakao.com/link/to/송원동로 72,36.1227142319954,128.352273057924" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2434555459346,128.299913731348),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산읍 선산중앙로 83<br>민방위대피시설-<a href="https://map.kakao.com/link/to/선산읍 선산중앙로 83,36.2434555459346,128.299913731348" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1400155845012,128.346012358656),
+    content: '<div style="width:190px; height:45px; padding:5px;">선산대로 111<br>민방위대피시설-<a href="https://map.kakao.com/link/to/선산대로 111,36.1400155845012,128.346012358656" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1674174920383,128.467918835142),
+    content: '<div style="width:190px; height:45px; padding:5px;">산동읍 강동로 730<br>민방위대피시설-<a href="https://map.kakao.com/link/to/산동읍 강동로 730,36.1674174920383,128.467918835142" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.126147626549,128.338501848918),
+    content: '<div style="width:190px; height:45px; padding:5px;">구미중앙로 149<br>민방위대피시설-<a href="https://map.kakao.com/link/to/구미중앙로 149,36.126147626549,128.338501848918" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1029202894276,128.38267948903),
+    content: '<div style="width:190px; height:45px; padding:5px;">1공단로 179<br>민방위대피시설-<a href="https://map.kakao.com/link/to/1공단로 179,36.1029202894276,128.38267948903" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 오렌지 -- 어린이놀이시설
+var newmarkerInfos3 = [
+{
+    position: new kakao.maps.LatLng(36.15858839881,128.34834535249),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 가들로3길 11<br>어린이놀이시설-<a href="https://map.kakao.com/link/to/고아읍 가들로3길 11,36.15858839881,128.34834535249" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1616354788255,128.345486895021),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 들성로9길 13<br>어린이놀이시설-<a href="https://map.kakao.com/link/to/고아읍 들성로9길 13,36.1616354788255,128.345486895021" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2123778692775,128.337710722843),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 관심길 99<br>어린이놀이시설-<a href="https://map.kakao.com/link/to/고아읍 관심길 99,36.2123778692775,128.337710722843" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.2120227662477,128.329322967781),
+    content: '<div style="width:190px; height:45px; padding:5px;">고아읍 관심1길 46<br>어린이놀이시설-<a href="https://map.kakao.com/link/to/고아읍 관심1길 46,36.2120227662477,128.329322967781" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1131133333084,128.334764804199),
+    content: '<div style="width:190px; height:45px; padding:5px;">경은로 85<br>어린이놀이시설-<a href="https://map.kakao.com/link/to/경은로 85,36.1131133333084,128.334764804199" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1187171610732,128.427453086361),
+    content: '<div style="width:190px; height:45px; padding:5px;">검성로 103-3<br>어린이놀이시설-<a href="https://map.kakao.com/link/to/검성로 103-3,36.1187171610732,128.427453086361" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1395726106845,128.397752065937),
+    content: '<div style="width:190px; height:45px; padding:5px;">대학동로 10<br>어린이놀이시설-<a href="https://map.kakao.com/link/to/대학동로 10,36.1395726106845,128.397752065937" style="color:red" target="_blank">길찾기</a></div>'
+},
+{
+    position: new kakao.maps.LatLng(36.1017150887124,128.401040160927),
+    content: '<div style="width:190px; height:45px; padding:5px;">3공단1로 219<br>어린이놀이시설-<a href="https://map.kakao.com/link/to/3공단1로 219,36.1017150887124,128.401040160927" style="color:red" target="_blank">길찾기</a></div>'
+}
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+/*
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 0 빨간색
+for (var i = 0; i < newmarkerInfos0.length; i++) {
+    var newmarker0 = new kakao.maps.Marker({
+        position: newmarkerInfos0[i].position,
+        image: newMarkerImage0,
+        clickable: true
+    });
+    markers.push(newmarker0);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos0[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker0, 'click', makeClickListener(newmarker0, infowindow));
+}*/
+/*
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 1 보라색
+for (var i = 0; i < newmarkerInfos1.length; i++) {
+    var newmarker1 = new kakao.maps.Marker({
+        position: newmarkerInfos1[i].position,
+        image: newMarkerImage1,
+        clickable: true
+    });
+    markers.push(newmarker1);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos1[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker1, 'click', makeClickListener(newmarker1, infowindow));
+}
+*/
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 2 초록색
+for (var i = 0; i < newmarkerInfos2.length; i++) {
+    var newmarker2 = new kakao.maps.Marker({
+        position: newmarkerInfos2[i].position,
+        image: newMarkerImage2,
+        clickable: true
+    });
+    markers.push(newmarker2);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos2[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker2, 'click', makeClickListener(newmarker2, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 3 오렌지
+for (var i = 0; i < newmarkerInfos3.length; i++) {
+    var newmarker3 = new kakao.maps.Marker({
+        position: newmarkerInfos3[i].position,
+        image: newMarkerImage3,
+        clickable: true
+    });
+    markers.push(newmarker3);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos3[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker3, 'click', makeClickListener(newmarker3, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
