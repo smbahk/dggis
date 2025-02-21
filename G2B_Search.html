@@ -168,7 +168,7 @@
             const prtcptLmtRgnNm = document.getElementById('prtcptLmtRgnNm').value;
             const bidClseExcpYn = document.getElementById('bidClseExcpYn').value;
 
-            const apiUrl = `https://apis.data.go.kr/1230000/BidPublicInfoService05/getBidPblancListInfoServcPPSSrch02?numOfRows=999&pageNo=1&ServiceKey=%2BnzolWx1VGHmQUFX5j6bBoO9XWOaHkxqy1ASkkU3%2BiZhB84bQM8PA0EKv1b7K9RXlVGVVRDrOR1%2FncnajbeNoQ%3D%3D&inqryDiv=1&inqryBgnDt=${inqryBgnDt}&inqryEndDt=${inqryEndDt}&bidNtceNm=${bidNtceNm}&prtcptLmtRgnNm=${prtcptLmtRgnNm}&intrntnlDivCd=1&bidClseExcpYn=${bidClseExcpYn}&type=json`;
+            const apiUrl = `https://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoServcPPSSrch?numOfRows=999&pageNo=1&ServiceKey=%2BnzolWx1VGHmQUFX5j6bBoO9XWOaHkxqy1ASkkU3%2BiZhB84bQM8PA0EKv1b7K9RXlVGVVRDrOR1%2FncnajbeNoQ%3D%3D&inqryDiv=1&inqryBgnDt=${inqryBgnDt}&inqryEndDt=${inqryEndDt}&bidNtceNm=${bidNtceNm}&prtcptLmtRgnNm=${prtcptLmtRgnNm}&intrntnlDivCd=1&bidClseExcpYn=${bidClseExcpYn}&type=json`;
 
             fetch(apiUrl)
                 .then(response => response.json())
