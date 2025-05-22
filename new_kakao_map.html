@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>영천 사물주소판</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div class="button-container">
+    <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+    <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+</div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+// iOS/Android 분기 길찾기 함수
+function openKakaoMap(name, lat, lng) {
+    var encodedName = encodeURIComponent(name);
+    var isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
+    var url;
+    if (isIOS) {
+        // iOS용 URL Scheme
+        url = `kakaomap://route?ep=${lat},${lng}&by=CAR`;
+    } else {
+        // Android 및 PC용 Universal Link
+        url = `https://map.kakao.com/link/to/${encodedName},${lat},${lng}`;
+    }
+    window.open(url, '_blank');
+}
+
+var mapContainer = document.getElementById('map'),
+    mapOption = {
+        center: new kakao.maps.LatLng(35.97321870739986, 128.93855054098663),
+        level: 3
+    };
+var map = new kakao.maps.Map(mapContainer, mapOption);
+var mapTypeControl = new kakao.maps.MapTypeControl();
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// 내위치 표시
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude,
+            lon = position.coords.longitude;
+        var locPosition = new kakao.maps.LatLng(lat, lon),
+            message = '<div style="padding:5px; color:red;">★내위치★</div>';
+        displayMarker(locPosition, message);
+    });
+} else {
+    var locPosition = new kakao.maps.LatLng(35.97321870739986, 128.93855054098663),
+        message = '내위치를 찾을수 없음';
+    displayMarker(locPosition, message);
+}
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+function displayMarker(locPosition, message) {
+    var imageSize = new kakao.maps.Size(24, 35);
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+    var marker = new kakao.maps.Marker({
+        map: map,
+        position: locPosition,
+        image: markerImage
+    });
+    var infowindow = new kakao.maps.InfoWindow({
+        content: message,
+        removable: true
+    });
+    infowindow.open(map, marker);
+    map.setCenter(locPosition);
+}
+
+// 지도 타입 변경 함수
+var currentTypeId;
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    if (maptype === 'use_district') {
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;
+    } else if (maptype === 'roadmap') {
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;
+    }
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);
+    }
+    map.addOverlayMapTypeId(changeMaptype);
+    currentTypeId = changeMaptype;
+}
+
+// 마커 및 클릭 리스너 설정
+var markers = [];
+var infowindows = [];
+var markerInfos = [
+    {
+        position: new kakao.maps.LatLng(36.0183030088187,128.918357130323),
+        content: '<div style="width:190px; height:45px; padding:5px;">갈마일길_119-4<br>동지역-무더위쉼터-<a href="#" onclick="openKakaoMap(\'갈마일길_119-4\',36.0183030088187,128.918357130323)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9644912460242,128.93524646768),
+        content: '<div style="width:190px; height:45px; padding:5px;">강남2길_7<br>동지역-무더위쉼터-<a href="#" onclick="openKakaoMap(\'강남2길_7\',35.9644912460242,128.93524646768)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9651007534629,128.935669399172),
+        content: '<div style="width:190px; height:45px; padding:5px;">강남길_31<br>동지역-무더위쉼터-<a href="#" onclick="openKakaoMap(\'강남길_31\',35.9651007534629,128.935669399172)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9616627491957,128.934146169154),
+        content: '<div style="width:190px; height:45px; padding:5px;">구읍2길_16-3<br>동지역-무더위쉼터-<a href="#" onclick="openKakaoMap(\'구읍2길_16-3\',35.9616627491957,128.934146169154)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9617398359061,128.924508602672),
+        content: '<div style="width:190px; height:45px; padding:5px;">나루터길_11<br>동지역-무더위쉼터-<a href="#" onclick="openKakaoMap(\'나루터길_11\',35.9617398359061,128.924508602672)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9622511557338,128.927917091905),
+        content: '<div style="width:190px; height:45px; padding:5px;">담안1길_29<br>동지역-무더위쉼터-<a href="#" onclick="openKakaoMap(\'담안1길_29\',35.9622511557338,128.927917091905)" style="color:red">길찾기</a></div>'
+    }
+];
+var newmarkerInfos2 = [
+    {
+        position: new kakao.maps.LatLng(36.0171478859537,128.909649569479),
+        content: '<div style="width:190px; height:45px; padding:5px;">상주영천고속도로_74<br>졸음쉼터-<a href="#" onclick="openKakaoMap(\'상주영천고속도로_74\',36.0171478859537,128.909649569479)" style="color:red">길찾기</a></div>'
+    }
+];
+var newmarkerInfos3 = [
+    {
+        position: new kakao.maps.LatLng(36.0407959283833,128.788638694928),
+        content: '<div style="width:190px; height:45px; padding:5px;">신녕면_장수로_1670<br>공중전화-<a href="#" onclick="openKakaoMap(\'신녕면_장수로_1670\',36.0407959283833,128.788638694928)" style="color:red">길찾기</a></div>'
+    }
+];
+
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 모든 마커 렌더링
+[markerInfos, newmarkerInfos2, newmarkerInfos3].forEach(function(group) {
+    group.forEach(function(info) {
+        var marker = new kakao.maps.Marker({ position: info.position, clickable: true });
+        markers.push(marker);
+        var infowindow = new kakao.maps.InfoWindow({ content: info.content, removable: true });
+        infowindows.push(infowindow);
+        kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+    });
+});
+markers.forEach(marker => marker.setMap(map));
+
+// 반응형 높이 조정
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+</script>
+</body>
+</html>
