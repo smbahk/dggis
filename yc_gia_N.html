@@ -169,7 +169,7 @@ function setOverlayMapTypeId(maptype) {
 var markers = [];
 var infowindows = [];
 
-// 새로운 마커 이미지를 생성합니다. -- 삭제시 기본 이미지 (파란색) -- 빨간색 마커
+// 새로운 마커 이미지를 생성합니다. -- 빨간색 마커
 var newImageUrl0 = 'https://smbahk.github.io/dggis/p_r.png';
 var newMarkerImage0 = new kakao.maps.MarkerImage(newImageUrl0, new kakao.maps.Size(35, 35));
 
@@ -1482,8 +1482,8 @@ var markerInfos = [
     }
 ];
 
-// 보라
-var newmarkerInfos1 = [
+// 빨간
+var newmarkerInfos0 = [
     {
         position: new kakao.maps.LatLng(35.9729286890274, 128.948225390576),
         content: '<div style="width:190px; height:45px; padding:5px;">동부로 31<br>야사동 220-1-<a href="#" onclick="openKakaoMap(\'동부로 31\', 35.9729286890274, 128.948225390576)" style="color:red">길찾기</a></div>'
@@ -2296,6 +2296,10 @@ var newmarkerInfos1 = [
         position: new kakao.maps.LatLng(35.9720953220182, 128.946863395226),
         content: '<div style="width:190px; height:45px; padding:5px;">영천고2길 9<br>야사동 186-<a href="#" onclick="openKakaoMap(\'영천고2길 9\', 35.9720953220182, 128.946863395226)" style="color:red">길찾기</a></div>'
     }
+]
+
+// 보라
+var newmarkerInfos1 = [
 ];
 
 // 초록
