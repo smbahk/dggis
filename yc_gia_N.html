@@ -1,0 +1,2423 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>영천시 평가 설치</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+// iOS/Android 분기 길찾기 함수
+function openKakaoMap(name, lat, lng) {
+    var encodedName = encodeURIComponent(name);
+    var isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
+    var url;
+    if (isIOS) {
+        // iOS용 URL Scheme
+        url = `kakaomap://route?ep=${lat},${lng}&by=CAR&en=${encodedName}`;
+    } else {
+        // Android 및 PC용 Universal Link
+        url = `https://map.kakao.com/link/to/${encodedName},${lat},${lng}`;
+    }
+    window.open(url, '_blank');
+}
+
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.97321870739986, 128.93855054098663), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.97321870739986, 128.93855054098663),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize = new kakao.maps.Size(24, 35); 
+    
+    // 마커 이미지를 생성합니다    
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition,
+        image : markerImage // 마커 이미지
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 새로운 마커 이미지를 생성합니다. -- 삭제시 기본 이미지 (파란색) -- 빨간색 마커
+var newImageUrl0 = 'https://smbahk.github.io/dggis/p_r.png';
+var newMarkerImage0 = new kakao.maps.MarkerImage(newImageUrl0, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 보라색 마커
+var newImageUrl1 = 'https://smbahk.github.io/dggis/p_v.png';
+var newMarkerImage1 = new kakao.maps.MarkerImage(newImageUrl1, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 녹색 마커
+var newImageUrl2 = 'https://smbahk.github.io/dggis/p_g.png';
+var newMarkerImage2 = new kakao.maps.MarkerImage(newImageUrl2, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 오렌지 마커
+var newImageUrl3 = 'https://smbahk.github.io/dggis/p_o.png';
+var newMarkerImage3 = new kakao.maps.MarkerImage(newImageUrl3, new kakao.maps.Size(35, 35));
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+// 파란색
+var markerInfos = [
+    {
+        position: new kakao.maps.LatLng(36.1531765201638, 128.914779882401),
+        content: '<div style="width:190px; height:45px; padding:5px;">탑들소일길 4<br>화북면 죽전리 95-<a href="#" onclick="openKakaoMap(\'탑들소일길 4\', 36.1531765201638, 128.914779882401)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0818790951754, 128.925050545036),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산2길 28-10<br>화북면 오산리 908-<a href="#" onclick="openKakaoMap(\'오산2길 28-10\', 36.0818790951754, 128.925050545036)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1153863095892, 128.947329555145),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 113<br>화북면 횡계리 452-1-<a href="#" onclick="openKakaoMap(\'별빛로 113\', 36.1153863095892, 128.947329555145)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1151436421732, 128.947806856926),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 117<br>화북면 횡계리 448-1-<a href="#" onclick="openKakaoMap(\'별빛로 117\', 36.1151436421732, 128.947806856926)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1147924769052, 128.948461932291),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 125<br>화북면 횡계리 188-<a href="#" onclick="openKakaoMap(\'별빛로 125\', 36.1147924769052, 128.948461932291)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1142414862078, 128.94971839509),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 139-1<br>화북면 횡계리 170-1-<a href="#" onclick="openKakaoMap(\'별빛로 139-1\', 36.1142414862078, 128.94971839509)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1140834209814, 128.950289613258),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 141-6<br>화북면 횡계리 167-<a href="#" onclick="openKakaoMap(\'별빛로 141-6\', 36.1140834209814, 128.950289613258)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.114107423402, 128.950647121049),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 149-3<br>화북면 횡계리 164-<a href="#" onclick="openKakaoMap(\'별빛로 149-3\', 36.114107423402, 128.950647121049)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1137005353095, 128.950728337241),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 151<br>화북면 횡계리 258-1-<a href="#" onclick="openKakaoMap(\'별빛로 151\', 36.1137005353095, 128.950728337241)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1139147278152, 128.951242021242),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 155-1<br>화북면 횡계리 161-<a href="#" onclick="openKakaoMap(\'별빛로 155-1\', 36.1139147278152, 128.951242021242)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1141166984395, 128.951117646468),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 159-6<br>화북면 횡계리 160-<a href="#" onclick="openKakaoMap(\'별빛로 159-6\', 36.1141166984395, 128.951117646468)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1139887897602, 128.951546464297),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 159-2<br>화북면 횡계리 156-<a href="#" onclick="openKakaoMap(\'별빛로 159-2\', 36.1139887897602, 128.951546464297)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.126438136055, 128.98316244215),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 509<br>화북면 정각리 1277-<a href="#" onclick="openKakaoMap(\'별빛로 509\', 36.126438136055, 128.98316244215)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1288801756857, 128.986564103782),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 553<br>화북면 정각리 1319-<a href="#" onclick="openKakaoMap(\'별빛로 553\', 36.1288801756857, 128.986564103782)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1370576180916, 128.994629078981),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 678<br>화북면 정각리 603-3-<a href="#" onclick="openKakaoMap(\'별빛로 678\', 36.1370576180916, 128.994629078981)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.139885236655, 128.995658899449),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 681-29<br>화북면 정각리 754-<a href="#" onclick="openKakaoMap(\'별빛로 681-29\', 36.139885236655, 128.995658899449)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1333373914943, 128.997471409512),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 710-49<br>화북면 정각리 530-1-<a href="#" onclick="openKakaoMap(\'별빛로 710-49\', 36.1333373914943, 128.997471409512)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1334757842578, 128.997509684922),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 710-47<br>화북면 정각리 530-<a href="#" onclick="openKakaoMap(\'별빛로 710-47\', 36.1334757842578, 128.997509684922)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1547287342613, 128.915373505605),
+        content: '<div style="width:190px; height:45px; padding:5px;">삼국유사로 2000-13<br>화북면 상송리 131-<a href="#" onclick="openKakaoMap(\'삼국유사로 2000-13\', 36.1547287342613, 128.915373505605)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0896655568766, 128.910573692397),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 1988-18<br>화북면 오동리 407-<a href="#" onclick="openKakaoMap(\'천문로 1988-18\', 36.0896655568766, 128.910573692397)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0896850607805, 128.910226461842),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 1988-9<br>화북면 오동리 409-<a href="#" onclick="openKakaoMap(\'천문로 1988-9\', 36.0896850607805, 128.910226461842)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.120388578171, 128.902310118712),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2149-248<br>화북면 자천리 2403-1-<a href="#" onclick="openKakaoMap(\'천문로 2149-248\', 36.120388578171, 128.902310118712)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1178748683603, 128.903127693184),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2149-214<br>화북면 자천리 2419-<a href="#" onclick="openKakaoMap(\'천문로 2149-214\', 36.1178748683603, 128.903127693184)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1056873116594, 128.915368073211),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2177-10<br>화북면 자천리 2459-<a href="#" onclick="openKakaoMap(\'천문로 2177-10\', 36.1056873116594, 128.915368073211)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1057187711581, 128.915609569065),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2183<br>화북면 자천리 2459-<a href="#" onclick="openKakaoMap(\'천문로 2183\', 36.1057187711581, 128.915609569065)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.106360083876, 128.916407752281),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2193<br>화북면 자천리 2459-<a href="#" onclick="openKakaoMap(\'천문로 2193\', 36.106360083876, 128.916407752281)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1062448764087, 128.916748841972),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2194<br>화북면 자천리 1428-2-<a href="#" onclick="openKakaoMap(\'천문로 2194\', 36.1062448764087, 128.916748841972)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1063253318178, 128.915966636137),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2195-9<br>화북면 자천리 2459-<a href="#" onclick="openKakaoMap(\'천문로 2195-9\', 36.1063253318178, 128.915966636137)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1080286121743, 128.922725048707),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2255<br>화북면 자천리 923-<a href="#" onclick="openKakaoMap(\'천문로 2255\', 36.1080286121743, 128.922725048707)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.117670878033, 128.93358106659),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2413<br>화북면 옥계리 370-7-<a href="#" onclick="openKakaoMap(\'천문로 2413\', 36.117670878033, 128.93358106659)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1179606952995, 128.933863370574),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2417-1<br>화북면 옥계리 379-<a href="#" onclick="openKakaoMap(\'천문로 2417-1\', 36.1179606952995, 128.933863370574)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1180752642288, 128.933503472944),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2421-23<br>화북면 옥계리 383-<a href="#" onclick="openKakaoMap(\'천문로 2421-23\', 36.1180752642288, 128.933503472944)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1185554613028, 128.933680613356),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2421-14<br>화북면 옥계리 389-<a href="#" onclick="openKakaoMap(\'천문로 2421-14\', 36.1185554613028, 128.933680613356)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1185501812507, 128.933929472314),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2421-12<br>화북면 옥계리 388-<a href="#" onclick="openKakaoMap(\'천문로 2421-12\', 36.1185501812507, 128.933929472314)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.118509940824, 128.9342005732),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2421-10<br>화북면 옥계리 387-<a href="#" onclick="openKakaoMap(\'천문로 2421-10\', 36.118509940824, 128.9342005732)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1186655634878, 128.936084689806),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2435-1<br>화북면 옥계리 357-7-<a href="#" onclick="openKakaoMap(\'천문로 2435-1\', 36.1186655634878, 128.936084689806)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1185960983938, 128.936212475597),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2437<br>화북면 옥계리 358-10-<a href="#" onclick="openKakaoMap(\'천문로 2437\', 36.1185960983938, 128.936212475597)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1187454738655, 128.936336307663),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2439<br>화북면 옥계리 358-2-<a href="#" onclick="openKakaoMap(\'천문로 2439\', 36.1187454738655, 128.936336307663)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1512323634668, 128.954546525533),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2774-225<br>화북면 입석리 산 89-<a href="#" onclick="openKakaoMap(\'천문로 2774-225\', 36.1512323634668, 128.954546525533)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1561645252977, 128.921448366974),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 3034-46<br>화북면 상송리 7-<a href="#" onclick="openKakaoMap(\'천문로 3034-46\', 36.1561645252977, 128.921448366974)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1547177918479, 128.916929637668),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 3077-1<br>화북면 상송리 158-<a href="#" onclick="openKakaoMap(\'천문로 3077-1\', 36.1547177918479, 128.916929637668)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1554914407653, 128.915882607335),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 3087<br>화북면 상송리 145-3-<a href="#" onclick="openKakaoMap(\'천문로 3087\', 36.1554914407653, 128.915882607335)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0915689323671, 128.948414901836),
+        content: '<div style="width:190px; height:45px; padding:5px;">공덕길 10-5<br>화북면 공덕리 396-<a href="#" onclick="openKakaoMap(\'공덕길 10-5\', 36.0915689323671, 128.948414901836)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0916268699383, 128.947500654449),
+        content: '<div style="width:190px; height:45px; padding:5px;">공덕길 14<br>화북면 공덕리 650-<a href="#" onclick="openKakaoMap(\'공덕길 14\', 36.0916268699383, 128.947500654449)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0916035809629, 128.947054230761),
+        content: '<div style="width:190px; height:45px; padding:5px;">공덕길 18<br>화북면 공덕리 647-<a href="#" onclick="openKakaoMap(\'공덕길 18\', 36.0916035809629, 128.947054230761)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0916251711634, 128.946662758218),
+        content: '<div style="width:190px; height:45px; padding:5px;">공덕길 20-1<br>화북면 공덕리 645-<a href="#" onclick="openKakaoMap(\'공덕길 20-1\', 36.0916251711634, 128.946662758218)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.091623040917, 128.946156129602),
+        content: '<div style="width:190px; height:45px; padding:5px;">공덕길 26<br>화북면 공덕리 661-<a href="#" onclick="openKakaoMap(\'공덕길 26\', 36.091623040917, 128.946156129602)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0911474488405, 128.945141689937),
+        content: '<div style="width:190px; height:45px; padding:5px;">공덕길 33-13<br>화북면 공덕리 699-3-<a href="#" onclick="openKakaoMap(\'공덕길 33-13\', 36.0911474488405, 128.945141689937)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.091016550433, 128.945622832193),
+        content: '<div style="width:190px; height:45px; padding:5px;">공덕길 33-5<br>화북면 공덕리 699-1-<a href="#" onclick="openKakaoMap(\'공덕길 33-5\', 36.091016550433, 128.945622832193)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0917915295017, 128.945474412966),
+        content: '<div style="width:190px; height:45px; padding:5px;">공덕길 34-1<br>화북면 공덕리 669-<a href="#" onclick="openKakaoMap(\'공덕길 34-1\', 36.0917915295017, 128.945474412966)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1183401785953, 128.934992791354),
+        content: '<div style="width:190px; height:45px; padding:5px;">금계길 1<br>화북면 옥계리 364-1-<a href="#" onclick="openKakaoMap(\'금계길 1\', 36.1183401785953, 128.934992791354)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1281816558326, 128.930926670258),
+        content: '<div style="width:190px; height:45px; padding:5px;">금계길 120-15<br>화북면 옥계리 292-<a href="#" onclick="openKakaoMap(\'금계길 120-15\', 36.1281816558326, 128.930926670258)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1277760966243, 128.930948610174),
+        content: '<div style="width:190px; height:45px; padding:5px;">금계길 120-12<br>화북면 옥계리 179-<a href="#" onclick="openKakaoMap(\'금계길 120-12\', 36.1277760966243, 128.930948610174)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1276009968863, 128.93053658469),
+        content: '<div style="width:190px; height:45px; padding:5px;">금계길 120-8<br>화북면 옥계리 177-<a href="#" onclick="openKakaoMap(\'금계길 120-8\', 36.1276009968863, 128.93053658469)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1273935431859, 128.929878861575),
+        content: '<div style="width:190px; height:45px; padding:5px;">금계길 120<br>화북면 옥계리 197-<a href="#" onclick="openKakaoMap(\'금계길 120\', 36.1273935431859, 128.929878861575)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.131313201291, 128.929500568406),
+        content: '<div style="width:190px; height:45px; padding:5px;">금계길 162<br>화북면 옥계리 281-2-<a href="#" onclick="openKakaoMap(\'금계길 162\', 36.131313201291, 128.929500568406)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1508047425296, 128.927599170933),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 5-1<br>화북면 하송리 158-<a href="#" onclick="openKakaoMap(\'내국길 5-1\', 36.1508047425296, 128.927599170933)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1507311037528, 128.927678917066),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 7<br>화북면 하송리 159-4-<a href="#" onclick="openKakaoMap(\'내국길 7\', 36.1507311037528, 128.927678917066)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1522896942361, 128.926422822443),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 27-30<br>화북면 하송리 131-<a href="#" onclick="openKakaoMap(\'내국길 27-30\', 36.1522896942361, 128.926422822443)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1523103509883, 128.926824525133),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 27-10<br>화북면 하송리 142-<a href="#" onclick="openKakaoMap(\'내국길 27-10\', 36.1523103509883, 128.926824525133)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1524472379293, 128.926991420693),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 27-6<br>화북면 하송리 125-<a href="#" onclick="openKakaoMap(\'내국길 27-6\', 36.1524472379293, 128.926991420693)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1528732613656, 128.926940739607),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 29<br>화북면 하송리 114-<a href="#" onclick="openKakaoMap(\'내국길 29\', 36.1528732613656, 128.926940739607)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1528704677536, 128.927209434202),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 31<br>화북면 하송리 111-<a href="#" onclick="openKakaoMap(\'내국길 31\', 36.1528704677536, 128.927209434202)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1531207899471, 128.927080124037),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 35<br>화북면 하송리 116-2-<a href="#" onclick="openKakaoMap(\'내국길 35\', 36.1531207899471, 128.927080124037)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1536483984053, 128.926904046419),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 41<br>화북면 하송리 116-9-<a href="#" onclick="openKakaoMap(\'내국길 41\', 36.1536483984053, 128.926904046419)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1605974556607, 128.924330695156),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 120-14<br>화북면 하송리 360-<a href="#" onclick="openKakaoMap(\'내국길 120-14\', 36.1605974556607, 128.924330695156)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1620688984467, 128.923303381132),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 140-10<br>화북면 하송리 454-<a href="#" onclick="openKakaoMap(\'내국길 140-10\', 36.1620688984467, 128.923303381132)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1618968698311, 128.923478299397),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 140-1<br>화북면 하송리 455-<a href="#" onclick="openKakaoMap(\'내국길 140-1\', 36.1618968698311, 128.923478299397)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1614824895454, 128.922383668637),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 146<br>화북면 하송리 389-<a href="#" onclick="openKakaoMap(\'내국길 146\', 36.1614824895454, 128.922383668637)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1629841872958, 128.921311708885),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 156-15<br>화북면 하송리 426-<a href="#" onclick="openKakaoMap(\'내국길 156-15\', 36.1629841872958, 128.921311708885)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1622142283566, 128.921390808705),
+        content: '<div style="width:190px; height:45px; padding:5px;">내국길 156-5<br>화북면 하송리 418-<a href="#" onclick="openKakaoMap(\'내국길 156-5\', 36.1622142283566, 128.921390808705)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0949208790368, 128.946679784225),
+        content: '<div style="width:190px; height:45px; padding:5px;">대왕길 50<br>화북면 공덕리 598-<a href="#" onclick="openKakaoMap(\'대왕길 50\', 36.0949208790368, 128.946679784225)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1000325026712, 128.949648727351),
+        content: '<div style="width:190px; height:45px; padding:5px;">대왕길 116<br>화북면 공덕리 482-<a href="#" onclick="openKakaoMap(\'대왕길 116\', 36.1000325026712, 128.949648727351)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1439314073721, 128.957062411095),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 125<br>화북면 입석리 235-2-<a href="#" onclick="openKakaoMap(\'배나무정길 125\', 36.1439314073721, 128.957062411095)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1467518769082, 128.959326418839),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 137-33<br>화북면 입석리 211-<a href="#" onclick="openKakaoMap(\'배나무정길 137-33\', 36.1467518769082, 128.959326418839)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1450371528501, 128.958733291257),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 137-16<br>화북면 입석리 221-<a href="#" onclick="openKakaoMap(\'배나무정길 137-16\', 36.1450371528501, 128.958733291257)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1444571148329, 128.959186786899),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 137-10<br>화북면 입석리 251-<a href="#" onclick="openKakaoMap(\'배나무정길 137-10\', 36.1444571148329, 128.959186786899)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1454139812312, 128.964512317735),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 181-27<br>화북면 입석리 194-3-<a href="#" onclick="openKakaoMap(\'배나무정길 181-27\', 36.1454139812312, 128.964512317735)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1454489735745, 128.96380741197),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 181-13<br>화북면 입석리 196-<a href="#" onclick="openKakaoMap(\'배나무정길 181-13\', 36.1454489735745, 128.96380741197)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1446936686489, 128.965084141175),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 192<br>화북면 입석리 165-<a href="#" onclick="openKakaoMap(\'배나무정길 192\', 36.1446936686489, 128.965084141175)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1441297432468, 128.970245949847),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 247-1<br>화북면 입석리 141-<a href="#" onclick="openKakaoMap(\'배나무정길 247-1\', 36.1441297432468, 128.970245949847)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1440101911271, 128.970584343586),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 253<br>화북면 입석리 69-<a href="#" onclick="openKakaoMap(\'배나무정길 253\', 36.1440101911271, 128.970584343586)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1441765214992, 128.971684537135),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 263<br>화북면 입석리 76-<a href="#" onclick="openKakaoMap(\'배나무정길 263\', 36.1441765214992, 128.971684537135)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1586611351697, 128.9373880373),
+        content: '<div style="width:190px; height:45px; padding:5px;">법화길 150-7<br>화북면 법화리 431-<a href="#" onclick="openKakaoMap(\'법화길 150-7\', 36.1586611351697, 128.9373880373)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1590795786722, 128.936207754234),
+        content: '<div style="width:190px; height:45px; padding:5px;">법화길 159-14<br>화북면 법화리 497-3-<a href="#" onclick="openKakaoMap(\'법화길 159-14\', 36.1590795786722, 128.936207754234)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1595359555225, 128.938657603288),
+        content: '<div style="width:190px; height:45px; padding:5px;">법화길 174<br>화북면 법화리 421-<a href="#" onclick="openKakaoMap(\'법화길 174\', 36.1595359555225, 128.938657603288)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1625290222702, 128.948836756065),
+        content: '<div style="width:190px; height:45px; padding:5px;">법화길 275<br>화북면 법화리 63-<a href="#" onclick="openKakaoMap(\'법화길 275\', 36.1625290222702, 128.948836756065)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1627349645204, 128.949060425484),
+        content: '<div style="width:190px; height:45px; padding:5px;">법화길 277-4<br>화북면 법화리 61-<a href="#" onclick="openKakaoMap(\'법화길 277-4\', 36.1627349645204, 128.949060425484)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1626651589045, 128.949258043203),
+        content: '<div style="width:190px; height:45px; padding:5px;">법화길 277-2<br>화북면 법화리 68-2-<a href="#" onclick="openKakaoMap(\'법화길 277-2\', 36.1626651589045, 128.949258043203)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1625445386508, 128.949471958623),
+        content: '<div style="width:190px; height:45px; padding:5px;">법화길 279<br>화북면 법화리 68-<a href="#" onclick="openKakaoMap(\'법화길 279\', 36.1625445386508, 128.949471958623)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1626527690887, 128.951152193032),
+        content: '<div style="width:190px; height:45px; padding:5px;">법화길 294<br>화북면 법화리 151-<a href="#" onclick="openKakaoMap(\'법화길 294\', 36.1626527690887, 128.951152193032)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.153651441514, 128.916814011788),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 16<br>화북면 상송리 152-<a href="#" onclick="openKakaoMap(\'상송안길 16\', 36.153651441514, 128.916814011788)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1524797077017, 128.917759206751),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 19-13<br>화북면 상송리 77-13-<a href="#" onclick="openKakaoMap(\'상송안길 19-13\', 36.1524797077017, 128.917759206751)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.153123946922, 128.917360808284),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 19-6<br>화북면 상송리 83-<a href="#" onclick="openKakaoMap(\'상송안길 19-6\', 36.153123946922, 128.917360808284)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1533016975503, 128.917295029189),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 19-4<br>화북면 상송리 81-<a href="#" onclick="openKakaoMap(\'상송안길 19-4\', 36.1533016975503, 128.917295029189)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1532218777331, 128.916962212727),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 20-3<br>화북면 상송리 99-<a href="#" onclick="openKakaoMap(\'상송안길 20-3\', 36.1532218777331, 128.916962212727)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1532628380831, 128.916840771473),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 20-2<br>화북면 상송리 98-<a href="#" onclick="openKakaoMap(\'상송안길 20-2\', 36.1532628380831, 128.916840771473)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1527826556266, 128.916931408934),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 26<br>화북면 상송리 104-<a href="#" onclick="openKakaoMap(\'상송안길 26\', 36.1527826556266, 128.916931408934)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1527353067468, 128.9172604602),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 27<br>화북면 상송리 92-<a href="#" onclick="openKakaoMap(\'상송안길 27\', 36.1527353067468, 128.9172604602)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1525941876463, 128.917255690606),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 29<br>화북면 상송리 91-<a href="#" onclick="openKakaoMap(\'상송안길 29\', 36.1525941876463, 128.917255690606)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1525923048697, 128.917395747898),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 31<br>화북면 상송리 90-1-<a href="#" onclick="openKakaoMap(\'상송안길 31\', 36.1525923048697, 128.917395747898)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1521619664413, 128.917834129152),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 37<br>화북면 상송리 76-1-<a href="#" onclick="openKakaoMap(\'상송안길 37\', 36.1521619664413, 128.917834129152)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1524035096703, 128.919320257791),
+        content: '<div style="width:190px; height:45px; padding:5px;">상송안길 52-3<br>화북면 상송리 37-<a href="#" onclick="openKakaoMap(\'상송안길 52-3\', 36.1524035096703, 128.919320257791)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1172942158731, 128.928692973736),
+        content: '<div style="width:190px; height:45px; padding:5px;">새옥길 11-53<br>화북면 옥계리 483-<a href="#" onclick="openKakaoMap(\'새옥길 11-53\', 36.1172942158731, 128.928692973736)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1170686755576, 128.928698894726),
+        content: '<div style="width:190px; height:45px; padding:5px;">새옥길 11<br>화북면 옥계리 476-<a href="#" onclick="openKakaoMap(\'새옥길 11\', 36.1170686755576, 128.928698894726)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1173383533232, 128.929001564263),
+        content: '<div style="width:190px; height:45px; padding:5px;">새옥길 15<br>화북면 옥계리 486-<a href="#" onclick="openKakaoMap(\'새옥길 15\', 36.1173383533232, 128.929001564263)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1176981854623, 128.92920049542),
+        content: '<div style="width:190px; height:45px; padding:5px;">새옥길 17-14<br>화북면 옥계리 504-<a href="#" onclick="openKakaoMap(\'새옥길 17-14\', 36.1176981854623, 128.92920049542)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1176754260962, 128.929505784678),
+        content: '<div style="width:190px; height:45px; padding:5px;">새옥길 17-10<br>화북면 옥계리 501-<a href="#" onclick="openKakaoMap(\'새옥길 17-10\', 36.1176754260962, 128.929505784678)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1173130606546, 128.929251595991),
+        content: '<div style="width:190px; height:45px; padding:5px;">새옥길 17<br>화북면 옥계리 489-<a href="#" onclick="openKakaoMap(\'새옥길 17\', 36.1173130606546, 128.929251595991)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.13115968539, 128.993268406012),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 29<br>화북면 정각리 454-<a href="#" onclick="openKakaoMap(\'송림길 29\', 36.13115968539, 128.993268406012)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1309776956729, 128.993261691901),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 31<br>화북면 정각리 456-2-<a href="#" onclick="openKakaoMap(\'송림길 31\', 36.1309776956729, 128.993261691901)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1306998255815, 128.994213328057),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 45<br>화북면 정각리 393-<a href="#" onclick="openKakaoMap(\'송림길 45\', 36.1306998255815, 128.994213328057)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1313447033645, 128.995300505971),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 47-10<br>화북면 정각리 442-3-<a href="#" onclick="openKakaoMap(\'송림길 47-10\', 36.1313447033645, 128.995300505971)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1309517183115, 128.994599793753),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 47-6<br>화북면 정각리 446-1-<a href="#" onclick="openKakaoMap(\'송림길 47-6\', 36.1309517183115, 128.994599793753)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1294750963755, 128.993982295002),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 48-21<br>화북면 정각리 326-<a href="#" onclick="openKakaoMap(\'송림길 48-21\', 36.1294750963755, 128.993982295002)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1295255312562, 128.993837624366),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 48-15<br>화북면 정각리 325-<a href="#" onclick="openKakaoMap(\'송림길 48-15\', 36.1295255312562, 128.993837624366)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1298765472119, 128.993747541608),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 48-12<br>화북면 정각리 333-<a href="#" onclick="openKakaoMap(\'송림길 48-12\', 36.1298765472119, 128.993747541608)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1306086353643, 128.995089823269),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 51-1<br>화북면 정각리 405-<a href="#" onclick="openKakaoMap(\'송림길 51-1\', 36.1306086353643, 128.995089823269)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1302953849093, 128.995087223465),
+        content: '<div style="width:190px; height:45px; padding:5px;">송림길 53<br>화북면 정각리 404-<a href="#" onclick="openKakaoMap(\'송림길 53\', 36.1302953849093, 128.995087223465)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1669374417344, 128.903957350957),
+        content: '<div style="width:190px; height:45px; padding:5px;">아차골길 103<br>화북면 상송리 383-<a href="#" onclick="openKakaoMap(\'아차골길 103\', 36.1669374417344, 128.903957350957)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1674861175805, 128.903089062503),
+        content: '<div style="width:190px; height:45px; padding:5px;">아차골길 127<br>화북면 상송리 399-<a href="#" onclick="openKakaoMap(\'아차골길 127\', 36.1674861175805, 128.903089062503)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.168792028602, 128.901954690545),
+        content: '<div style="width:190px; height:45px; padding:5px;">아차골길 164<br>화북면 상송리 346-<a href="#" onclick="openKakaoMap(\'아차골길 164\', 36.168792028602, 128.901954690545)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1517015827286, 128.917808138725),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 4<br>화북면 상송리 60-<a href="#" onclick="openKakaoMap(\'연지안길 4\', 36.1517015827286, 128.917808138725)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1508783707984, 128.916722727756),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 12-9<br>화북면 죽전리 149-1-<a href="#" onclick="openKakaoMap(\'연지안길 12-9\', 36.1508783707984, 128.916722727756)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1506521994179, 128.917358947743),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 18<br>화북면 죽전리 151-7-<a href="#" onclick="openKakaoMap(\'연지안길 18\', 36.1506521994179, 128.917358947743)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1506939226438, 128.916632800371),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 20-8<br>화북면 죽전리 149-2-<a href="#" onclick="openKakaoMap(\'연지안길 20-8\', 36.1506939226438, 128.916632800371)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1505272764743, 128.916837948918),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 20-5<br>화북면 죽전리 145-<a href="#" onclick="openKakaoMap(\'연지안길 20-5\', 36.1505272764743, 128.916837948918)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1506888373491, 128.917152967767),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 20-4<br>화북면 죽전리 151-2-<a href="#" onclick="openKakaoMap(\'연지안길 20-4\', 36.1506888373491, 128.917152967767)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1505057787947, 128.917021299154),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 20-3<br>화북면 죽전리 146-<a href="#" onclick="openKakaoMap(\'연지안길 20-3\', 36.1505057787947, 128.917021299154)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1505656634007, 128.917242961112),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 20-2<br>화북면 죽전리 151-8-<a href="#" onclick="openKakaoMap(\'연지안길 20-2\', 36.1505656634007, 128.917242961112)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1503598407908, 128.917024856714),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 26<br>화북면 죽전리 142-<a href="#" onclick="openKakaoMap(\'연지안길 26\', 36.1503598407908, 128.917024856714)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1503249495539, 128.916705367891),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 28<br>화북면 죽전리 144-<a href="#" onclick="openKakaoMap(\'연지안길 28\', 36.1503249495539, 128.916705367891)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1503456647718, 128.916385121722),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 30<br>화북면 죽전리 136-<a href="#" onclick="openKakaoMap(\'연지안길 30\', 36.1503456647718, 128.916385121722)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1503202495137, 128.916194075037),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 32<br>화북면 죽전리 130-<a href="#" onclick="openKakaoMap(\'연지안길 32\', 36.1503202495137, 128.916194075037)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0817003697933, 128.913714707979),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 69-14<br>화북면 오산리 1490-13-<a href="#" onclick="openKakaoMap(\'오공길 69-14\', 36.0817003697933, 128.913714707979)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0780355851504, 128.916148119831),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 118<br>화북면 오산리 1514-<a href="#" onclick="openKakaoMap(\'오공길 118\', 36.0780355851504, 128.916148119831)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0766123075792, 128.917429344718),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 120<br>화북면 오산리 1529-<a href="#" onclick="openKakaoMap(\'오공길 120\', 36.0766123075792, 128.917429344718)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0824813941903, 128.917531044728),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 133-46<br>화북면 오산리 727-<a href="#" onclick="openKakaoMap(\'오공길 133-46\', 36.0824813941903, 128.917531044728)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0797209962309, 128.923269509701),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 183<br>화북면 오산리 777-3-<a href="#" onclick="openKakaoMap(\'오공길 183\', 36.0797209962309, 128.923269509701)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.07818132359, 128.924449336338),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 194<br>화북면 오산리 788-<a href="#" onclick="openKakaoMap(\'오공길 194\', 36.07818132359, 128.924449336338)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0803272089061, 128.925240146619),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 199-1<br>화북면 오산리 860-1-<a href="#" onclick="openKakaoMap(\'오공길 199-1\', 36.0803272089061, 128.925240146619)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0800148581305, 128.924928716074),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 199<br>화북면 오산리 859-<a href="#" onclick="openKakaoMap(\'오공길 199\', 36.0800148581305, 128.924928716074)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0829285839541, 128.934151458753),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 288<br>화북면 오산리 108-1-<a href="#" onclick="openKakaoMap(\'오공길 288\', 36.0829285839541, 128.934151458753)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0838198528478, 128.933435208811),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 297-9<br>화북면 오산리 525-<a href="#" onclick="openKakaoMap(\'오공길 297-9\', 36.0838198528478, 128.933435208811)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0840041823129, 128.934179368332),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 299<br>화북면 오산리 120-1-<a href="#" onclick="openKakaoMap(\'오공길 299\', 36.0840041823129, 128.934179368332)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.085797029232, 128.933967090099),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 333-26<br>화북면 오산리 490-<a href="#" onclick="openKakaoMap(\'오공길 333-26\', 36.085797029232, 128.933967090099)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0881894609671, 128.936169165084),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 353-41<br>화북면 오산리 139-<a href="#" onclick="openKakaoMap(\'오공길 353-41\', 36.0881894609671, 128.936169165084)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0876460133516, 128.935902612769),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 353-33<br>화북면 오산리 142-6-<a href="#" onclick="openKakaoMap(\'오공길 353-33\', 36.0876460133516, 128.935902612769)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0886439734887, 128.936346503931),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 353-22<br>화북면 오산리 136-<a href="#" onclick="openKakaoMap(\'오공길 353-22\', 36.0886439734887, 128.936346503931)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0880867239444, 128.937591279846),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 356<br>화북면 오산리 208-<a href="#" onclick="openKakaoMap(\'오공길 356\', 36.0880867239444, 128.937591279846)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0884207805309, 128.93804042832),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 364-12<br>화북면 오산리 210-1-<a href="#" onclick="openKakaoMap(\'오공길 364-12\', 36.0884207805309, 128.93804042832)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0905806995364, 128.944546769462),
+        content: '<div style="width:190px; height:45px; padding:5px;">오공길 428-3<br>화북면 공덕리 737-<a href="#" onclick="openKakaoMap(\'오공길 428-3\', 36.0905806995364, 128.944546769462)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0877899960277, 128.912233566635),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 16<br>화북면 오산리 1167-<a href="#" onclick="openKakaoMap(\'오동안길 16\', 36.0877899960277, 128.912233566635)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0904981441625, 128.912053172089),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 31-18<br>화북면 오동리 37-2-<a href="#" onclick="openKakaoMap(\'오동안길 31-18\', 36.0904981441625, 128.912053172089)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0906203770493, 128.913551205926),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 43-12<br>화북면 오동리 300-<a href="#" onclick="openKakaoMap(\'오동안길 43-12\', 36.0906203770493, 128.913551205926)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.09124381162, 128.916004174273),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 45-4<br>화북면 오산리 1125-<a href="#" onclick="openKakaoMap(\'오동안길 45-4\', 36.09124381162, 128.916004174273)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0884182290589, 128.914794014326),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 56-13<br>화북면 오산리 1194-<a href="#" onclick="openKakaoMap(\'오동안길 56-13\', 36.0884182290589, 128.914794014326)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0895097243699, 128.914087014945),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 58-1<br>화북면 오산리 1142-<a href="#" onclick="openKakaoMap(\'오동안길 58-1\', 36.0895097243699, 128.914087014945)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0888894738714, 128.914152013486),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 63-5<br>화북면 오산리 1191-<a href="#" onclick="openKakaoMap(\'오동안길 63-5\', 36.0888894738714, 128.914152013486)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0889983243954, 128.914072946419),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 63-3<br>화북면 오산리 1161-<a href="#" onclick="openKakaoMap(\'오동안길 63-3\', 36.0889983243954, 128.914072946419)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0889893661547, 128.913736908325),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 63-2<br>화북면 오산리 1164-<a href="#" onclick="openKakaoMap(\'오동안길 63-2\', 36.0889893661547, 128.913736908325)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0889727117651, 128.913617496253),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 71<br>화북면 오산리 1165-<a href="#" onclick="openKakaoMap(\'오동안길 71\', 36.0889727117651, 128.913617496253)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0888067940119, 128.913681525312),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 73-3<br>화북면 오산리 1184-<a href="#" onclick="openKakaoMap(\'오동안길 73-3\', 36.0888067940119, 128.913681525312)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0885246671415, 128.913331982533),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 74<br>화북면 오산리 1135-5-<a href="#" onclick="openKakaoMap(\'오동안길 74\', 36.0885246671415, 128.913331982533)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0868804587875, 128.915076643539),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 101-7<br>화북면 오산리 1237-5-<a href="#" onclick="openKakaoMap(\'오동안길 101-7\', 36.0868804587875, 128.915076643539)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0866464615053, 128.916000245759),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 121<br>화북면 오산리 1231-3-<a href="#" onclick="openKakaoMap(\'오동안길 121\', 36.0866464615053, 128.916000245759)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0867360528235, 128.916398622229),
+        content: '<div style="width:190px; height:45px; padding:5px;">오동안길 123-2<br>화북면 오산리 1202-2-<a href="#" onclick="openKakaoMap(\'오동안길 123-2\', 36.0867360528235, 128.916398622229)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.081778209282, 128.922298717925),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산1길 19-18<br>화북면 오산리 947-1-<a href="#" onclick="openKakaoMap(\'오산1길 19-18\', 36.081778209282, 128.922298717925)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0818327041936, 128.922732298022),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산1길 19-16<br>화북면 오산리 946-<a href="#" onclick="openKakaoMap(\'오산1길 19-16\', 36.0818327041936, 128.922732298022)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0816013624378, 128.923430765286),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산1길 23-7<br>화북면 오산리 757-<a href="#" onclick="openKakaoMap(\'오산1길 23-7\', 36.0816013624378, 128.923430765286)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.081867073777, 128.923757044667),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산1길 23-4<br>화북면 오산리 920-<a href="#" onclick="openKakaoMap(\'오산1길 23-4\', 36.081867073777, 128.923757044667)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.082124232427, 128.924195011125),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산1길 27-1<br>화북면 오산리 914-1-<a href="#" onclick="openKakaoMap(\'오산1길 27-1\', 36.082124232427, 128.924195011125)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0820457518207, 128.924497807301),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산1길 28<br>화북면 오산리 911-<a href="#" onclick="openKakaoMap(\'오산1길 28\', 36.0820457518207, 128.924497807301)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0813753871253, 128.926996264558),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산2길 2-3<br>화북면 오산리 833-<a href="#" onclick="openKakaoMap(\'오산2길 2-3\', 36.0813753871253, 128.926996264558)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0810264675005, 128.927031593844),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산2길 2-1<br>화북면 오산리 849-<a href="#" onclick="openKakaoMap(\'오산2길 2-1\', 36.0810264675005, 128.927031593844)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0811846766932, 128.925345754229),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산2길 24-5<br>화북면 오산리 886-<a href="#" onclick="openKakaoMap(\'오산2길 24-5\', 36.0811846766932, 128.925345754229)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0819080308936, 128.924864762337),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산2길 28-9<br>화북면 오산리 909-1-<a href="#" onclick="openKakaoMap(\'오산2길 28-9\', 36.0819080308936, 128.924864762337)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0815032049476, 128.924762424594),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산2길 28-5<br>화북면 오산리 879-<a href="#" onclick="openKakaoMap(\'오산2길 28-5\', 36.0815032049476, 128.924762424594)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0812286388646, 128.924415391846),
+        content: '<div style="width:190px; height:45px; padding:5px;">오산2길 32-2<br>화북면 오산리 873-<a href="#" onclick="openKakaoMap(\'오산2길 32-2\', 36.0812286388646, 128.924415391846)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.108203964243, 128.918336054639),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천1길 8<br>화북면 자천리 1526-<a href="#" onclick="openKakaoMap(\'자천1길 8\', 36.108203964243, 128.918336054639)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.107980158601, 128.917305139431),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천1길 16-5<br>화북면 자천리 1604-<a href="#" onclick="openKakaoMap(\'자천1길 16-5\', 36.107980158601, 128.917305139431)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1076839722629, 128.917249302685),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천1길 16<br>화북면 자천리 1611-<a href="#" onclick="openKakaoMap(\'자천1길 16\', 36.1076839722629, 128.917249302685)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1075949947314, 128.916407445282),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천1길 24-4<br>화북면 자천리 1635-<a href="#" onclick="openKakaoMap(\'자천1길 24-4\', 36.1075949947314, 128.916407445282)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1071492246576, 128.916323881761),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천1길 28<br>화북면 자천리 1646-<a href="#" onclick="openKakaoMap(\'자천1길 28\', 36.1071492246576, 128.916323881761)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1108235488549, 128.923015285601),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천2길 57<br>화북면 자천리 786-<a href="#" onclick="openKakaoMap(\'자천2길 57\', 36.1108235488549, 128.923015285601)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1113944532743, 128.923111160357),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천2길 63-1<br>화북면 자천리 729-<a href="#" onclick="openKakaoMap(\'자천2길 63-1\', 36.1113944532743, 128.923111160357)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1119658711827, 128.923304104588),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천2길 69<br>화북면 자천리 715-<a href="#" onclick="openKakaoMap(\'자천2길 69\', 36.1119658711827, 128.923304104588)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1079402271421, 128.917643734405),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 1-1<br>화북면 자천리 1599-<a href="#" onclick="openKakaoMap(\'자천3길 1-1\', 36.1079402271421, 128.917643734405)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1083066916418, 128.917435335486),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 5<br>화북면 자천리 1597-<a href="#" onclick="openKakaoMap(\'자천3길 5\', 36.1083066916418, 128.917435335486)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1086528217806, 128.91824925537),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 8-12<br>화북면 자천리 1539-<a href="#" onclick="openKakaoMap(\'자천3길 8-12\', 36.1086528217806, 128.91824925537)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1087194405048, 128.917982929366),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 8-11<br>화북면 자천리 1552-<a href="#" onclick="openKakaoMap(\'자천3길 8-11\', 36.1087194405048, 128.917982929366)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1084977677126, 128.917477180434),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 9<br>화북면 자천리 1587-<a href="#" onclick="openKakaoMap(\'자천3길 9\', 36.1084977677126, 128.917477180434)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1092048744851, 128.917716460362),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 10-9<br>화북면 자천리 1562-1-<a href="#" onclick="openKakaoMap(\'자천3길 10-9\', 36.1092048744851, 128.917716460362)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1088244978089, 128.917752627214),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 10-3<br>화북면 자천리 1558-<a href="#" onclick="openKakaoMap(\'자천3길 10-3\', 36.1088244978089, 128.917752627214)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1092301914326, 128.917108779183),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 17<br>화북면 자천리 1577-<a href="#" onclick="openKakaoMap(\'자천3길 17\', 36.1092301914326, 128.917108779183)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1094481738934, 128.917006476785),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 19-6<br>화북면 자천리 1717-<a href="#" onclick="openKakaoMap(\'자천3길 19-6\', 36.1094481738934, 128.917006476785)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.109782974693, 128.917132433536),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 23<br>화북면 자천리 1720-<a href="#" onclick="openKakaoMap(\'자천3길 23\', 36.109782974693, 128.917132433536)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.111822208019, 128.91662322132),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천3길 53<br>화북면 자천리 1858-3-<a href="#" onclick="openKakaoMap(\'자천3길 53\', 36.111822208019, 128.91662322132)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1089356770582, 128.917314378375),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 2<br>화북면 자천리 1583-1-<a href="#" onclick="openKakaoMap(\'자천4길 2\', 36.1089356770582, 128.917314378375)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1080968642909, 128.916020222455),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 17<br>화북면 자천리 1627-<a href="#" onclick="openKakaoMap(\'자천4길 17\', 36.1080968642909, 128.916020222455)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1081041824395, 128.915737354088),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 18-1<br>화북면 자천리 1674-<a href="#" onclick="openKakaoMap(\'자천4길 18-1\', 36.1081041824395, 128.915737354088)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1081789997758, 128.915865093309),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 18<br>화북면 자천리 1675-<a href="#" onclick="openKakaoMap(\'자천4길 18\', 36.1081789997758, 128.915865093309)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1079399578404, 128.915627875128),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 20-1<br>화북면 자천리 1666-<a href="#" onclick="openKakaoMap(\'자천4길 20-1\', 36.1079399578404, 128.915627875128)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1079950576957, 128.916115132798),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 21<br>화북면 자천리 1628-<a href="#" onclick="openKakaoMap(\'자천4길 21\', 36.1079950576957, 128.916115132798)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1077716886959, 128.91624439924),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 23<br>화북면 자천리 1632-<a href="#" onclick="openKakaoMap(\'자천4길 23\', 36.1077716886959, 128.91624439924)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1072589234433, 128.915594788049),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 28<br>화북면 자천리 1660-1-<a href="#" onclick="openKakaoMap(\'자천4길 28\', 36.1072589234433, 128.915594788049)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1072901067888, 128.915836615244),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 29<br>화북면 자천리 1656-1-<a href="#" onclick="openKakaoMap(\'자천4길 29\', 36.1072901067888, 128.915836615244)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.106332455047, 128.914726719441),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 30-16<br>화북면 자천리 2153-<a href="#" onclick="openKakaoMap(\'자천4길 30-16\', 36.106332455047, 128.914726719441)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1069942384316, 128.91605939289),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천4길 34<br>화북면 자천리 1650-<a href="#" onclick="openKakaoMap(\'자천4길 34\', 36.1069942384316, 128.91605939289)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1088459668951, 128.919073117857),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 3-1<br>화북면 자천리 1505-<a href="#" onclick="openKakaoMap(\'자천5길 3-1\', 36.1088459668951, 128.919073117857)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1090631330129, 128.919066853996),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 6-1<br>화북면 자천리 1780-<a href="#" onclick="openKakaoMap(\'자천5길 6-1\', 36.1090631330129, 128.919066853996)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1090079049148, 128.919178885205),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 6<br>화북면 자천리 1781-<a href="#" onclick="openKakaoMap(\'자천5길 6\', 36.1090079049148, 128.919178885205)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1086330983263, 128.918428664855),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 9-14<br>화북면 자천리 1541-<a href="#" onclick="openKakaoMap(\'자천5길 9-14\', 36.1086330983263, 128.918428664855)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1087432583806, 128.918583029211),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 9-12<br>화북면 자천리 1542-<a href="#" onclick="openKakaoMap(\'자천5길 9-12\', 36.1087432583806, 128.918583029211)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.109072159655, 128.918520296216),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 9-8<br>화북면 자천리 1549-<a href="#" onclick="openKakaoMap(\'자천5길 9-8\', 36.109072159655, 128.918520296216)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.109221630122, 128.918701269059),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 9<br>화북면 자천리 1548-<a href="#" onclick="openKakaoMap(\'자천5길 9\', 36.109221630122, 128.918701269059)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.109418062863, 128.919196084732),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 10-6<br>화북면 자천리 1775-1-<a href="#" onclick="openKakaoMap(\'자천5길 10-6\', 36.109418062863, 128.919196084732)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1093084077156, 128.918290297857),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 11-4<br>화북면 자천리 1567-<a href="#" onclick="openKakaoMap(\'자천5길 11-4\', 36.1093084077156, 128.918290297857)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1093863335583, 128.918780675055),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 12<br>화북면 자천리 1756-<a href="#" onclick="openKakaoMap(\'자천5길 12\', 36.1093863335583, 128.918780675055)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1094132807423, 128.918521599194),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 13<br>화북면 자천리 1570-<a href="#" onclick="openKakaoMap(\'자천5길 13\', 36.1094132807423, 128.918521599194)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1102444146465, 128.918938139005),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 16-10<br>화북면 자천리 1800-<a href="#" onclick="openKakaoMap(\'자천5길 16-10\', 36.1102444146465, 128.918938139005)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1100594903711, 128.918866679105),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 16-8<br>화북면 자천리 1745-<a href="#" onclick="openKakaoMap(\'자천5길 16-8\', 36.1100594903711, 128.918866679105)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1093861538038, 128.917931185625),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천5길 19<br>화북면 자천리 1573-<a href="#" onclick="openKakaoMap(\'자천5길 19\', 36.1093861538038, 128.917931185625)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1084786239936, 128.919797170377),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천6길 3<br>화북면 자천리 1477-<a href="#" onclick="openKakaoMap(\'자천6길 3\', 36.1084786239936, 128.919797170377)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1083565085048, 128.919916566324),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천6길 5<br>화북면 자천리 1468-<a href="#" onclick="openKakaoMap(\'자천6길 5\', 36.1083565085048, 128.919916566324)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1084225762878, 128.920314374028),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천6길 10-1<br>화북면 자천리 1465-<a href="#" onclick="openKakaoMap(\'자천6길 10-1\', 36.1084225762878, 128.920314374028)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1100172651583, 128.920151993041),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 4<br>화북면 자천리 1793-4-<a href="#" onclick="openKakaoMap(\'자천7길 4\', 36.1100172651583, 128.920151993041)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1099235799365, 128.919818799208),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 5<br>화북면 자천리 1771-<a href="#" onclick="openKakaoMap(\'자천7길 5\', 36.1099235799365, 128.919818799208)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.109944298816, 128.919127607026),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 7-6<br>화북면 자천리 1764-<a href="#" onclick="openKakaoMap(\'자천7길 7-6\', 36.109944298816, 128.919127607026)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1102143795192, 128.919862079387),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 8-1<br>화북면 자천리 1797-<a href="#" onclick="openKakaoMap(\'자천7길 8-1\', 36.1102143795192, 128.919862079387)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.110390744409, 128.919562442452),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 9<br>화북면 자천리 1798-<a href="#" onclick="openKakaoMap(\'자천7길 9\', 36.110390744409, 128.919562442452)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1107378376228, 128.91805489566),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 11-16<br>화북면 자천리 1831-<a href="#" onclick="openKakaoMap(\'자천7길 11-16\', 36.1107378376228, 128.91805489566)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1105272597423, 128.919387870819),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 13<br>화북면 자천리 1801-6-<a href="#" onclick="openKakaoMap(\'자천7길 13\', 36.1105272597423, 128.919387870819)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1108775690781, 128.919439927389),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 15<br>화북면 자천리 1801-3-<a href="#" onclick="openKakaoMap(\'자천7길 15\', 36.1108775690781, 128.919439927389)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1110436798796, 128.91951581753),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 17<br>화북면 자천리 1801-2-<a href="#" onclick="openKakaoMap(\'자천7길 17\', 36.1110436798796, 128.91951581753)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1110149160925, 128.919764415785),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 18<br>화북면 자천리 1801-11-<a href="#" onclick="openKakaoMap(\'자천7길 18\', 36.1110149160925, 128.919764415785)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.111181481859, 128.919575805537),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 19<br>화북면 자천리 1801-1-<a href="#" onclick="openKakaoMap(\'자천7길 19\', 36.111181481859, 128.919575805537)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1111759246434, 128.919838183698),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천7길 20<br>화북면 자천리 1801-12-<a href="#" onclick="openKakaoMap(\'자천7길 20\', 36.1111759246434, 128.919838183698)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1113041135512, 128.921070811031),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천8길 10<br>화북면 자천리 757-1-<a href="#" onclick="openKakaoMap(\'자천8길 10\', 36.1113041135512, 128.921070811031)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1120354940125, 128.921200676149),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천8길 25<br>화북면 자천리 624-<a href="#" onclick="openKakaoMap(\'자천8길 25\', 36.1120354940125, 128.921200676149)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1120166527434, 128.921431528928),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천8길 27<br>화북면 자천리 627-<a href="#" onclick="openKakaoMap(\'자천8길 27\', 36.1120166527434, 128.921431528928)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1116157986536, 128.921098392802),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천8길 28-1<br>화북면 자천리 768-<a href="#" onclick="openKakaoMap(\'자천8길 28-1\', 36.1116157986536, 128.921098392802)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1120036892664, 128.921722823579),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천8길 29<br>화북면 자천리 631-<a href="#" onclick="openKakaoMap(\'자천8길 29\', 36.1120036892664, 128.921722823579)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1106023507387, 128.922369048286),
+        content: '<div style="width:190px; height:45px; padding:5px;">자천9길 28<br>화북면 자천리 784-2-<a href="#" onclick="openKakaoMap(\'자천9길 28\', 36.1106023507387, 128.922369048286)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1416131809909, 128.993126888294),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각1길 6<br>화북면 정각리 804-<a href="#" onclick="openKakaoMap(\'정각1길 6\', 36.1416131809909, 128.993126888294)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1417245605698, 128.99302883891),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각1길 10-4<br>화북면 정각리 803-<a href="#" onclick="openKakaoMap(\'정각1길 10-4\', 36.1417245605698, 128.99302883891)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1415293547964, 128.992868821204),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각1길 10-1<br>화북면 정각리 801-<a href="#" onclick="openKakaoMap(\'정각1길 10-1\', 36.1415293547964, 128.992868821204)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1419392886623, 128.992178337614),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각1길 16<br>화북면 정각리 874-<a href="#" onclick="openKakaoMap(\'정각1길 16\', 36.1419392886623, 128.992178337614)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1412755792674, 128.990385153607),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각1길 32<br>화북면 정각리 905-<a href="#" onclick="openKakaoMap(\'정각1길 32\', 36.1412755792674, 128.990385153607)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1496478168573, 128.994970176036),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각2길 20-2<br>화북면 정각리 136-<a href="#" onclick="openKakaoMap(\'정각2길 20-2\', 36.1496478168573, 128.994970176036)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1495684294873, 128.995100261355),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각2길 20-1<br>화북면 정각리 135-<a href="#" onclick="openKakaoMap(\'정각2길 20-1\', 36.1495684294873, 128.995100261355)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1494201285072, 128.995050953362),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각2길 20<br>화북면 정각리 134-<a href="#" onclick="openKakaoMap(\'정각2길 20\', 36.1494201285072, 128.995050953362)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1497322860015, 128.99515151908),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각2길 22-5<br>화북면 정각리 140-<a href="#" onclick="openKakaoMap(\'정각2길 22-5\', 36.1497322860015, 128.99515151908)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1497909758962, 128.994765714156),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각2길 22-1<br>화북면 정각리 137-<a href="#" onclick="openKakaoMap(\'정각2길 22-1\', 36.1497909758962, 128.994765714156)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1501832541974, 128.994702992607),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각2길 26-1<br>화북면 정각리 36-<a href="#" onclick="openKakaoMap(\'정각2길 26-1\', 36.1501832541974, 128.994702992607)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1504557511924, 128.994355597183),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각2길 32-3<br>화북면 정각리 45-<a href="#" onclick="openKakaoMap(\'정각2길 32-3\', 36.1504557511924, 128.994355597183)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.15066118862, 128.994106824891),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각2길 38-4<br>화북면 정각리 48-<a href="#" onclick="openKakaoMap(\'정각2길 38-4\', 36.15066118862, 128.994106824891)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1508139037352, 128.993425867623),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각2길 42<br>화북면 정각리 63-<a href="#" onclick="openKakaoMap(\'정각2길 42\', 36.1508139037352, 128.993425867623)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1396729426164, 128.993447262244),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 27-8<br>화북면 정각리 782-1-<a href="#" onclick="openKakaoMap(\'정각길 27-8\', 36.1396729426164, 128.993447262244)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1395564692052, 128.993715917079),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 27-7<br>화북면 정각리 776-<a href="#" onclick="openKakaoMap(\'정각길 27-7\', 36.1395564692052, 128.993715917079)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1397218048618, 128.993635121711),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 27-6<br>화북면 정각리 775-<a href="#" onclick="openKakaoMap(\'정각길 27-6\', 36.1397218048618, 128.993635121711)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.139742228621, 128.994123857585),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 27-2<br>화북면 정각리 771-<a href="#" onclick="openKakaoMap(\'정각길 27-2\', 36.139742228621, 128.994123857585)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1403264753533, 128.9928949304),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 37-12<br>화북면 정각리 789-3-<a href="#" onclick="openKakaoMap(\'정각길 37-12\', 36.1403264753533, 128.9928949304)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.139924672625, 128.993497289347),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 37-11<br>화북면 정각리 765-<a href="#" onclick="openKakaoMap(\'정각길 37-11\', 36.139924672625, 128.993497289347)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.141193286402, 128.994128378053),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 46<br>화북면 정각리 735-<a href="#" onclick="openKakaoMap(\'정각길 46\', 36.141193286402, 128.994128378053)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1444277807713, 128.993900326522),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 71-45<br>화북면 정각리 196-<a href="#" onclick="openKakaoMap(\'정각길 71-45\', 36.1444277807713, 128.993900326522)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1443356794968, 128.99272686729),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 71-29<br>화북면 정각리 204-1-<a href="#" onclick="openKakaoMap(\'정각길 71-29\', 36.1443356794968, 128.99272686729)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.145839042918, 128.993204949218),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 93-15<br>화북면 정각리 182-<a href="#" onclick="openKakaoMap(\'정각길 93-15\', 36.145839042918, 128.993204949218)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1473073288184, 128.995328601828),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 116<br>화북면 정각리 153-<a href="#" onclick="openKakaoMap(\'정각길 116\', 36.1473073288184, 128.995328601828)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1643344795632, 128.97690648882),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 475<br>화북면 정각리 73-13-<a href="#" onclick="openKakaoMap(\'정각길 475\', 36.1643344795632, 128.97690648882)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1478900375942, 128.908289069989),
+        content: '<div style="width:190px; height:45px; padding:5px;">죽전대운길 98<br>화북면 죽전리 655-<a href="#" onclick="openKakaoMap(\'죽전대운길 98\', 36.1478900375942, 128.908289069989)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1475597424917, 128.908015653431),
+        content: '<div style="width:190px; height:45px; padding:5px;">죽전대운길 99<br>화북면 죽전리 669-<a href="#" onclick="openKakaoMap(\'죽전대운길 99\', 36.1475597424917, 128.908015653431)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1478730506391, 128.907907591165),
+        content: '<div style="width:190px; height:45px; padding:5px;">죽전대운길 102-3<br>화북면 죽전리 659-<a href="#" onclick="openKakaoMap(\'죽전대운길 102-3\', 36.1478730506391, 128.907907591165)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1477823958067, 128.90782895928),
+        content: '<div style="width:190px; height:45px; padding:5px;">죽전대운길 102-1<br>화북면 죽전리 658-<a href="#" onclick="openKakaoMap(\'죽전대운길 102-1\', 36.1477823958067, 128.90782895928)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1479149443921, 128.90740466392),
+        content: '<div style="width:190px; height:45px; padding:5px;">죽전대운길 112-6<br>화북면 죽전리 663-<a href="#" onclick="openKakaoMap(\'죽전대운길 112-6\', 36.1479149443921, 128.90740466392)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1481160052622, 128.907374204493),
+        content: '<div style="width:190px; height:45px; padding:5px;">죽전대운길 112-5<br>화북면 죽전리 642-<a href="#" onclick="openKakaoMap(\'죽전대운길 112-5\', 36.1481160052622, 128.907374204493)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1479815239967, 128.907116753928),
+        content: '<div style="width:190px; height:45px; padding:5px;">죽전대운길 112-1<br>화북면 죽전리 639-<a href="#" onclick="openKakaoMap(\'죽전대운길 112-1\', 36.1479815239967, 128.907116753928)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1464549798114, 128.91075418479),
+        content: '<div style="width:190px; height:45px; padding:5px;">직당숲길 20<br>화북면 죽전리 281-1-<a href="#" onclick="openKakaoMap(\'직당숲길 20\', 36.1464549798114, 128.91075418479)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1452893532511, 128.910744013125),
+        content: '<div style="width:190px; height:45px; padding:5px;">직당숲길 30-4<br>화북면 죽전리 342-1-<a href="#" onclick="openKakaoMap(\'직당숲길 30-4\', 36.1452893532511, 128.910744013125)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1454330354813, 128.910627738841),
+        content: '<div style="width:190px; height:45px; padding:5px;">직당숲길 30-2<br>화북면 죽전리 362-1-<a href="#" onclick="openKakaoMap(\'직당숲길 30-2\', 36.1454330354813, 128.910627738841)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1456094058199, 128.911224043124),
+        content: '<div style="width:190px; height:45px; padding:5px;">직당숲길 33<br>화북면 죽전리 378-<a href="#" onclick="openKakaoMap(\'직당숲길 33\', 36.1456094058199, 128.911224043124)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.145132089071, 128.911598179572),
+        content: '<div style="width:190px; height:45px; padding:5px;">직당숲길 37-1<br>화북면 죽전리 399-<a href="#" onclick="openKakaoMap(\'직당숲길 37-1\', 36.145132089071, 128.911598179572)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1452276889486, 128.911666045728),
+        content: '<div style="width:190px; height:45px; padding:5px;">직당숲길 37<br>화북면 죽전리 398-<a href="#" onclick="openKakaoMap(\'직당숲길 37\', 36.1452276889486, 128.911666045728)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.151018966934, 128.898938932448),
+        content: '<div style="width:190px; height:45px; padding:5px;">탑들소일길 190<br>화북면 죽전리 793-1-<a href="#" onclick="openKakaoMap(\'탑들소일길 190\', 36.151018966934, 128.898938932448)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1498456361609, 128.897647193034),
+        content: '<div style="width:190px; height:45px; padding:5px;">탑들소일길 198-16<br>화북면 죽전리 1046-1-<a href="#" onclick="openKakaoMap(\'탑들소일길 198-16\', 36.1498456361609, 128.897647193034)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1501771872283, 128.89750752885),
+        content: '<div style="width:190px; height:45px; padding:5px;">탑들소일길 198-12<br>화북면 죽전리 1017-<a href="#" onclick="openKakaoMap(\'탑들소일길 198-12\', 36.1501771872283, 128.89750752885)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1505197451665, 128.89761710892),
+        content: '<div style="width:190px; height:45px; padding:5px;">탑들소일길 198-8<br>화북면 죽전리 1031-<a href="#" onclick="openKakaoMap(\'탑들소일길 198-8\', 36.1505197451665, 128.89761710892)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1501323493759, 128.898113508068),
+        content: '<div style="width:190px; height:45px; padding:5px;">탑들소일길 200-1<br>화북면 죽전리 1040-<a href="#" onclick="openKakaoMap(\'탑들소일길 200-1\', 36.1501323493759, 128.898113508068)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1297740356014, 128.983334251117),
+        content: '<div style="width:190px; height:45px; padding:5px;">태양길 47<br>화북면 정각리 1411-<a href="#" onclick="openKakaoMap(\'태양길 47\', 36.1297740356014, 128.983334251117)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1301614520475, 128.983510387739),
+        content: '<div style="width:190px; height:45px; padding:5px;">태양길 52<br>화북면 정각리 1400-<a href="#" onclick="openKakaoMap(\'태양길 52\', 36.1301614520475, 128.983510387739)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1156134216479, 128.923766105043),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 18-22<br>화북면 자천리 580-<a href="#" onclick="openKakaoMap(\'화북길 18-22\', 36.1156134216479, 128.923766105043)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1133444524966, 128.922610801996),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 28-28<br>화북면 자천리 681-<a href="#" onclick="openKakaoMap(\'화북길 28-28\', 36.1133444524966, 128.922610801996)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1133138923829, 128.923212165841),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 28-13<br>화북면 자천리 677-<a href="#" onclick="openKakaoMap(\'화북길 28-13\', 36.1133138923829, 128.923212165841)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1132287694897, 128.923047735801),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 28-11<br>화북면 자천리 678-<a href="#" onclick="openKakaoMap(\'화북길 28-11\', 36.1132287694897, 128.923047735801)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1133092442867, 128.923423046006),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 28-5<br>화북면 자천리 691-<a href="#" onclick="openKakaoMap(\'화북길 28-5\', 36.1133092442867, 128.923423046006)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1130395198681, 128.923021354673),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 30-6<br>화북면 자천리 672-<a href="#" onclick="openKakaoMap(\'화북길 30-6\', 36.1130395198681, 128.923021354673)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1129198629716, 128.922852751809),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 30-5<br>화북면 자천리 671-<a href="#" onclick="openKakaoMap(\'화북길 30-5\', 36.1129198629716, 128.922852751809)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1130898438275, 128.923136407139),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 30-4<br>화북면 자천리 674-1-<a href="#" onclick="openKakaoMap(\'화북길 30-4\', 36.1130898438275, 128.923136407139)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1126626322373, 128.92298606675),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 34<br>화북면 자천리 651-1-<a href="#" onclick="openKakaoMap(\'화북길 34\', 36.1126626322373, 128.92298606675)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1125010926048, 128.922911833768),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 36<br>화북면 자천리 651-3-<a href="#" onclick="openKakaoMap(\'화북길 36\', 36.1125010926048, 128.922911833768)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1126773616049, 128.922607417947),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 38-8<br>화북면 자천리 662-3-<a href="#" onclick="openKakaoMap(\'화북길 38-8\', 36.1126773616049, 128.922607417947)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1122466083281, 128.922666431005),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 40<br>화북면 자천리 644-1-<a href="#" onclick="openKakaoMap(\'화북길 40\', 36.1122466083281, 128.922666431005)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.111939963071, 128.922560677229),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 42<br>화북면 자천리 637-1-<a href="#" onclick="openKakaoMap(\'화북길 42\', 36.111939963071, 128.922560677229)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1113310191165, 128.922168161489),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 49<br>화북면 자천리 739-<a href="#" onclick="openKakaoMap(\'화북길 49\', 36.1113310191165, 128.922168161489)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1111208729086, 128.922405119642),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 53-7<br>화북면 자천리 740-1-<a href="#" onclick="openKakaoMap(\'화북길 53-7\', 36.1111208729086, 128.922405119642)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1115100084124, 128.921239176817),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 54-12<br>화북면 자천리 758-1-<a href="#" onclick="openKakaoMap(\'화북길 54-12\', 36.1115100084124, 128.921239176817)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1102942378112, 128.920551836582),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 68-1<br>화북면 자천리 1793-1-<a href="#" onclick="openKakaoMap(\'화북길 68-1\', 36.1102942378112, 128.920551836582)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1102286440854, 128.920697706762),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 68<br>화북면 자천리 777-1-<a href="#" onclick="openKakaoMap(\'화북길 68\', 36.1102286440854, 128.920697706762)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1096602037334, 128.919706118131),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 78-2<br>화북면 자천리 1790-<a href="#" onclick="openKakaoMap(\'화북길 78-2\', 36.1096602037334, 128.919706118131)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1093982647778, 128.919790464512),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 80-1<br>화북면 자천리 1784-1-<a href="#" onclick="openKakaoMap(\'화북길 80-1\', 36.1093982647778, 128.919790464512)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1080579478625, 128.919744733914),
+        content: '<div style="width:190px; height:45px; padding:5px;">화북길 93<br>화북면 자천리 1470-<a href="#" onclick="openKakaoMap(\'화북길 93\', 36.1080579478625, 128.919744733914)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1136202890911, 128.9492650564),
+        content: '<div style="width:190px; height:45px; padding:5px;">횡계1길 5-4<br>화북면 횡계리 228-<a href="#" onclick="openKakaoMap(\'횡계1길 5-4\', 36.1136202890911, 128.9492650564)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1136470436327, 128.948667495843),
+        content: '<div style="width:190px; height:45px; padding:5px;">횡계1길 8<br>화북면 횡계리 199-<a href="#" onclick="openKakaoMap(\'횡계1길 8\', 36.1136470436327, 128.948667495843)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1133918056842, 128.947873518392),
+        content: '<div style="width:190px; height:45px; padding:5px;">횡계2길 9-11<br>화북면 횡계리 383-<a href="#" onclick="openKakaoMap(\'횡계2길 9-11\', 36.1133918056842, 128.947873518392)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1433399791563, 128.958030980838),
+        content: '<div style="width:190px; height:45px; padding:5px;">배나무정길 130<br>화북면 입석리 245-<a href="#" onclick="openKakaoMap(\'배나무정길 130\', 36.1433399791563, 128.958030980838)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1228171693331, 128.966372665858),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 330<br>화북면 횡계리 3-3-<a href="#" onclick="openKakaoMap(\'별빛로 330\', 36.1228171693331, 128.966372665858)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1243566208507, 128.972437287683),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 404<br>화북면 정각리 1511-2-<a href="#" onclick="openKakaoMap(\'별빛로 404\', 36.1243566208507, 128.972437287683)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1249143811772, 128.980276297196),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 468-18<br>화북면 정각리 1497-<a href="#" onclick="openKakaoMap(\'별빛로 468-18\', 36.1249143811772, 128.980276297196)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1233676574543, 128.922745753595),
+        content: '<div style="width:190px; height:45px; padding:5px;">새옥길 11-206<br>화북면 옥계리 540-<a href="#" onclick="openKakaoMap(\'새옥길 11-206\', 36.1233676574543, 128.922745753595)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1505616289679, 128.915671325968),
+        content: '<div style="width:190px; height:45px; padding:5px;">연지안길 36-2<br>화북면 죽전리 122-<a href="#" onclick="openKakaoMap(\'연지안길 36-2\', 36.1505616289679, 128.915671325968)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1050081597653, 128.921299089021),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2250-40<br>화북면 자천리 1074-<a href="#" onclick="openKakaoMap(\'천문로 2250-40\', 36.1050081597653, 128.921299089021)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1055913130954, 128.925530641902),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2250-11<br>화북면 자천리 1033-<a href="#" onclick="openKakaoMap(\'천문로 2250-11\', 36.1055913130954, 128.925530641902)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1198294342483, 128.940044843131),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 2468-62<br>화북면 횡계리 534-17-<a href="#" onclick="openKakaoMap(\'천문로 2468-62\', 36.1198294342483, 128.940044843131)" style="color:red">길찾기</a></div>'
+    }
+];
+
+// 보라
+var newmarkerInfos1 = [
+    {
+        position: new kakao.maps.LatLng(35.9729286890274, 128.948225390576),
+        content: '<div style="width:190px; height:45px; padding:5px;">동부로 31<br>야사동 220-1-<a href="#" onclick="openKakaoMap(\'동부로 31\', 35.9729286890274, 128.948225390576)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9761732534592, 128.948132660112),
+        content: '<div style="width:190px; height:45px; padding:5px;">동부로 64<br>야사동 106-6-<a href="#" onclick="openKakaoMap(\'동부로 64\', 35.9761732534592, 128.948132660112)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9771112210087, 128.948679408659),
+        content: '<div style="width:190px; height:45px; padding:5px;">망정1길 49<br>야사동 103-3-<a href="#" onclick="openKakaoMap(\'망정1길 49\', 35.9771112210087, 128.948679408659)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9774868936417, 128.948778330788),
+        content: '<div style="width:190px; height:45px; padding:5px;">망정1길 57<br>야사동 103-5-<a href="#" onclick="openKakaoMap(\'망정1길 57\', 35.9774868936417, 128.948778330788)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9751461288271, 128.940549894278),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란1길 4-1<br>야사동 331-34-<a href="#" onclick="openKakaoMap(\'모란1길 4-1\', 35.9751461288271, 128.940549894278)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9750121050854, 128.94065779967),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란1길 4<br>야사동 331-51-<a href="#" onclick="openKakaoMap(\'모란1길 4\', 35.9750121050854, 128.94065779967)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.97538448635, 128.940353531127),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란1길 8<br>야사동 331-18-<a href="#" onclick="openKakaoMap(\'모란1길 8\', 35.97538448635, 128.940353531127)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9756789328462, 128.940154549177),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란1길 12<br>야사동 331-<a href="#" onclick="openKakaoMap(\'모란1길 12\', 35.9756789328462, 128.940154549177)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9753203559451, 128.94042989202),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 3<br>야사동 331-33-<a href="#" onclick="openKakaoMap(\'모란2길 3\', 35.9753203559451, 128.94042989202)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9761631394185, 128.941242484301),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 21-10<br>야사동 333-3-<a href="#" onclick="openKakaoMap(\'모란2길 21-10\', 35.9761631394185, 128.941242484301)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9760299229192, 128.941361716896),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 21-8<br>야사동 333-4-<a href="#" onclick="openKakaoMap(\'모란2길 21-8\', 35.9760299229192, 128.941361716896)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9759201139067, 128.941426538069),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 21-4<br>야사동 333-7-<a href="#" onclick="openKakaoMap(\'모란2길 21-4\', 35.9759201139067, 128.941426538069)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9756427911317, 128.941591791873),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 22-3<br>야사동 333-20-<a href="#" onclick="openKakaoMap(\'모란2길 22-3\', 35.9756427911317, 128.941591791873)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.976388458168, 128.94158456394),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 29-12<br>야사동 333-10-<a href="#" onclick="openKakaoMap(\'모란2길 29-12\', 35.976388458168, 128.94158456394)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9763061316626, 128.941365490182),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 29-11<br>야사동 333-1-<a href="#" onclick="openKakaoMap(\'모란2길 29-11\', 35.9763061316626, 128.941365490182)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9762126812254, 128.941633246622),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 29-10<br>야사동 333-13-<a href="#" onclick="openKakaoMap(\'모란2길 29-10\', 35.9762126812254, 128.941633246622)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9761846000029, 128.941731442314),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 29-8<br>야사동 333-14-<a href="#" onclick="openKakaoMap(\'모란2길 29-8\', 35.9761846000029, 128.941731442314)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9760817554145, 128.94180020284),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 29-6<br>야사동 333-17-<a href="#" onclick="openKakaoMap(\'모란2길 29-6\', 35.9760817554145, 128.94180020284)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9758835731704, 128.941652121202),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 29<br>야사동 333-9-<a href="#" onclick="openKakaoMap(\'모란2길 29\', 35.9758835731704, 128.941652121202)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9760415353436, 128.941996984381),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 37<br>야사동 333-19-<a href="#" onclick="openKakaoMap(\'모란2길 37\', 35.9760415353436, 128.941996984381)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9761734447129, 128.942181134107),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 38-1<br>야사동 330-1-<a href="#" onclick="openKakaoMap(\'모란2길 38-1\', 35.9761734447129, 128.942181134107)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9763156519576, 128.942185617006),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 45<br>야사동 154-16-<a href="#" onclick="openKakaoMap(\'모란2길 45\', 35.9763156519576, 128.942185617006)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9765006895009, 128.942294024554),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 49-5<br>야사동 154-12-<a href="#" onclick="openKakaoMap(\'모란2길 49-5\', 35.9765006895009, 128.942294024554)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9765705031514, 128.942423220858),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 49-4<br>야사동 154-9-<a href="#" onclick="openKakaoMap(\'모란2길 49-4\', 35.9765705031514, 128.942423220858)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9763961394965, 128.94226219599),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 49-1<br>야사동 154-73-<a href="#" onclick="openKakaoMap(\'모란2길 49-1\', 35.9763961394965, 128.94226219599)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.976092628493, 128.942403082672),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 50-12<br>야사동 328-4-<a href="#" onclick="openKakaoMap(\'모란2길 50-12\', 35.976092628493, 128.942403082672)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9760810376196, 128.942779376438),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란2길 50-9<br>야사동 154-71-<a href="#" onclick="openKakaoMap(\'모란2길 50-9\', 35.9760810376196, 128.942779376438)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9755790981793, 128.940343663112),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란3길 5<br>야사동 331-16-<a href="#" onclick="openKakaoMap(\'모란3길 5\', 35.9755790981793, 128.940343663112)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9756821507988, 128.940568340671),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란3길 9<br>야사동 331-14-<a href="#" onclick="openKakaoMap(\'모란3길 9\', 35.9756821507988, 128.940568340671)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9759597029689, 128.94099029238),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란3길 19<br>야사동 331-10-<a href="#" onclick="openKakaoMap(\'모란3길 19\', 35.9759597029689, 128.94099029238)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9760279674002, 128.940190586499),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란4길 3<br>야사동 167-14-<a href="#" onclick="openKakaoMap(\'모란4길 3\', 35.9760279674002, 128.940190586499)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9757335850165, 128.940268627274),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란4길 6<br>야사동 331-1-<a href="#" onclick="openKakaoMap(\'모란4길 6\', 35.9757335850165, 128.940268627274)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9758461233339, 128.940346986186),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란4길 8<br>야사동 331-2-<a href="#" onclick="openKakaoMap(\'모란4길 8\', 35.9758461233339, 128.940346986186)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9766776415588, 128.941521587564),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란4길 35<br>야사동 154-<a href="#" onclick="openKakaoMap(\'모란4길 35\', 35.9766776415588, 128.941521587564)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.976811368233, 128.941877389283),
+        content: '<div style="width:190px; height:45px; padding:5px;">모란4길 41<br>야사동 154-108-<a href="#" onclick="openKakaoMap(\'모란4길 41\', 35.976811368233, 128.941877389283)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9740818512717, 128.946218141688),
+        content: '<div style="width:190px; height:45px; padding:5px;">문화새길 3<br>야사동 184-10-<a href="#" onclick="openKakaoMap(\'문화새길 3\', 35.9740818512717, 128.946218141688)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9738539487561, 128.94645819499),
+        content: '<div style="width:190px; height:45px; padding:5px;">문화새길 7<br>야사동 186-4-<a href="#" onclick="openKakaoMap(\'문화새길 7\', 35.9738539487561, 128.94645819499)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9736619536701, 128.946762093147),
+        content: '<div style="width:190px; height:45px; padding:5px;">문화새길 25<br>야사동 187-2-<a href="#" onclick="openKakaoMap(\'문화새길 25\', 35.9736619536701, 128.946762093147)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9724792410485, 128.947287075309),
+        content: '<div style="width:190px; height:45px; padding:5px;">문화새길 39<br>야사동 187-7-<a href="#" onclick="openKakaoMap(\'문화새길 39\', 35.9724792410485, 128.947287075309)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9721029716262, 128.947568923865),
+        content: '<div style="width:190px; height:45px; padding:5px;">문화새길 53<br>야사동 210-24-<a href="#" onclick="openKakaoMap(\'문화새길 53\', 35.9721029716262, 128.947568923865)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9720168551532, 128.947445205117),
+        content: '<div style="width:190px; height:45px; padding:5px;">문화새길 55<br>야사동 210-28-<a href="#" onclick="openKakaoMap(\'문화새길 55\', 35.9720168551532, 128.947445205117)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9705915253012, 128.94352894422),
+        content: '<div style="width:190px; height:45px; padding:5px;">보목1길 43-6<br>야사동 239-<a href="#" onclick="openKakaoMap(\'보목1길 43-6\', 35.9705915253012, 128.94352894422)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9729351250213, 128.941715680337),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록1길 11<br>야사동 301-<a href="#" onclick="openKakaoMap(\'상록1길 11\', 35.9729351250213, 128.941715680337)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9733621830862, 128.941807951861),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록1길 20<br>야사동 335-81-<a href="#" onclick="openKakaoMap(\'상록1길 20\', 35.9733621830862, 128.941807951861)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9734940215631, 128.94176273948),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록1길 24<br>야사동 335-78-<a href="#" onclick="openKakaoMap(\'상록1길 24\', 35.9734940215631, 128.94176273948)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9732026280067, 128.940676123531),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록1길 9<br>야사동 301-<a href="#" onclick="openKakaoMap(\'상록1길 9\', 35.9732026280067, 128.940676123531)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9734780391278, 128.94264406768),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록2길 13<br>야사동 168-8-<a href="#" onclick="openKakaoMap(\'상록2길 13\', 35.9734780391278, 128.94264406768)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9737372506197, 128.942695870914),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록2길 19<br>야사동 335-62-<a href="#" onclick="openKakaoMap(\'상록2길 19\', 35.9737372506197, 128.942695870914)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9747035019182, 128.942293544046),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록2길 40<br>야사동 334-14-<a href="#" onclick="openKakaoMap(\'상록2길 40\', 35.9747035019182, 128.942293544046)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9747996806891, 128.942297009728),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록2길 42<br>야사동 334-13-<a href="#" onclick="openKakaoMap(\'상록2길 42\', 35.9747996806891, 128.942297009728)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9749076388124, 128.94221296745),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록2길 46<br>야사동 334-10-<a href="#" onclick="openKakaoMap(\'상록2길 46\', 35.9749076388124, 128.94221296745)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9742649248299, 128.94392475697),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록3길 20-1<br>야사동 173-6-<a href="#" onclick="openKakaoMap(\'상록3길 20-1\', 35.9742649248299, 128.94392475697)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9743478936464, 128.943753638781),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록3길 24-1<br>야사동 173-5-<a href="#" onclick="openKakaoMap(\'상록3길 24-1\', 35.9743478936464, 128.943753638781)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9742144574267, 128.942178575952),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록4길 53<br>야사동 335-55-<a href="#" onclick="openKakaoMap(\'상록4길 53\', 35.9742144574267, 128.942178575952)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9745162850318, 128.942859409535),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록4길 67<br>야사동 334-33-<a href="#" onclick="openKakaoMap(\'상록4길 67\', 35.9745162850318, 128.942859409535)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9744220125848, 128.94317214462),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록4길 74<br>야사동 334-38-<a href="#" onclick="openKakaoMap(\'상록4길 74\', 35.9744220125848, 128.94317214462)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9749296225795, 128.943242345841),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록4길 77-6<br>야사동 161-10-<a href="#" onclick="openKakaoMap(\'상록4길 77-6\', 35.9749296225795, 128.943242345841)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9748376306933, 128.943308598131),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록4길 77-4<br>야사동 161-9-<a href="#" onclick="openKakaoMap(\'상록4길 77-4\', 35.9748376306933, 128.943308598131)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9748849581654, 128.9436799012),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록4길 83<br>야사동 161-18-<a href="#" onclick="openKakaoMap(\'상록4길 83\', 35.9748849581654, 128.9436799012)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9747310443567, 128.94117104494),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록5길 7<br>야사동 335-13-<a href="#" onclick="openKakaoMap(\'상록5길 7\', 35.9747310443567, 128.94117104494)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9748042040193, 128.941544531183),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록5길 15<br>야사동 335-10-<a href="#" onclick="openKakaoMap(\'상록5길 15\', 35.9748042040193, 128.941544531183)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.974992561155, 128.941793025577),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록5길 19<br>야사동 335-8-<a href="#" onclick="openKakaoMap(\'상록5길 19\', 35.974992561155, 128.941793025577)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9753529459096, 128.942524852027),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록5길 35<br>야사동 334-5-<a href="#" onclick="openKakaoMap(\'상록5길 35\', 35.9753529459096, 128.942524852027)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9754508445119, 128.942817137813),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록5길 43<br>야사동 154-41-<a href="#" onclick="openKakaoMap(\'상록5길 43\', 35.9754508445119, 128.942817137813)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9760281511658, 128.943896837863),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록5길 61-4<br>야사동 154-33-<a href="#" onclick="openKakaoMap(\'상록5길 61-4\', 35.9760281511658, 128.943896837863)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9759645750406, 128.943933301934),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록5길 63<br>야사동 154-90-<a href="#" onclick="openKakaoMap(\'상록5길 63\', 35.9759645750406, 128.943933301934)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9735797254063, 128.942368652896),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록6길 13<br>야사동 335-73-<a href="#" onclick="openKakaoMap(\'상록6길 13\', 35.9735797254063, 128.942368652896)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.974308883219, 128.943475215686),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록6길 33-6<br>야사동 165-8-<a href="#" onclick="openKakaoMap(\'상록6길 33-6\', 35.974308883219, 128.943475215686)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9740565915121, 128.943391210007),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록6길 35<br>야사동 165-7-<a href="#" onclick="openKakaoMap(\'상록6길 35\', 35.9740565915121, 128.943391210007)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9738950214173, 128.941956247455),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록7길 12<br>야사동 335-64-<a href="#" onclick="openKakaoMap(\'상록7길 12\', 35.9738950214173, 128.941956247455)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9745192555235, 128.941501744636),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록7길 28<br>야사동 335-33-<a href="#" onclick="openKakaoMap(\'상록7길 28\', 35.9745192555235, 128.941501744636)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9736718703565, 128.942565568403),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록8길 4<br>야사동 335-63-<a href="#" onclick="openKakaoMap(\'상록8길 4\', 35.9736718703565, 128.942565568403)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9740379883802, 128.942308938013),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록8길 12<br>야사동 335-56-<a href="#" onclick="openKakaoMap(\'상록8길 12\', 35.9740379883802, 128.942308938013)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9743213712131, 128.942103376788),
+        content: '<div style="width:190px; height:45px; padding:5px;">상록8길 18<br>야사동 335-52-<a href="#" onclick="openKakaoMap(\'상록8길 18\', 35.9743213712131, 128.942103376788)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9739530444396, 128.944598520574),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말1길 10<br>야사동 175-10-<a href="#" onclick="openKakaoMap(\'새말1길 10\', 35.9739530444396, 128.944598520574)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9742251876238, 128.944380609068),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말1길 14<br>야사동 174-18-<a href="#" onclick="openKakaoMap(\'새말1길 14\', 35.9742251876238, 128.944380609068)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9743711163313, 128.944305594075),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말1길 18<br>야사동 174-17-<a href="#" onclick="openKakaoMap(\'새말1길 18\', 35.9743711163313, 128.944305594075)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9747584186562, 128.944076426905),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말1길 28<br>야사동 158-18-<a href="#" onclick="openKakaoMap(\'새말1길 28\', 35.9747584186562, 128.944076426905)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9754303418083, 128.94414368135),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말1길 42<br>야사동 158-29-<a href="#" onclick="openKakaoMap(\'새말1길 42\', 35.9754303418083, 128.94414368135)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9755179092948, 128.943744422894),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말1길 44<br>야사동 158-8-<a href="#" onclick="openKakaoMap(\'새말1길 44\', 35.9755179092948, 128.943744422894)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9754750240263, 128.943332541898),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말1길 47<br>야사동 154-84-<a href="#" onclick="openKakaoMap(\'새말1길 47\', 35.9754750240263, 128.943332541898)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9756383890721, 128.94357167214),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말1길 48<br>야사동 154-85-<a href="#" onclick="openKakaoMap(\'새말1길 48\', 35.9756383890721, 128.94357167214)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9757367259279, 128.943180546776),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말1길 53<br>야사동 154-36-<a href="#" onclick="openKakaoMap(\'새말1길 53\', 35.9757367259279, 128.943180546776)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9751014620429, 128.943002900898),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말2길 16-1<br>야사동 154-58-<a href="#" onclick="openKakaoMap(\'새말2길 16-1\', 35.9751014620429, 128.943002900898)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9749720752111, 128.942540680421),
+        content: '<div style="width:190px; height:45px; padding:5px;">새말4길 14<br>야사동 334-25-<a href="#" onclick="openKakaoMap(\'새말4길 14\', 35.9749720752111, 128.942540680421)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9753155981058, 128.941158314417),
+        content: '<div style="width:190px; height:45px; padding:5px;">충효로 113-2<br>야사동 331-46-<a href="#" onclick="openKakaoMap(\'충효로 113-2\', 35.9753155981058, 128.941158314417)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9753784873161, 128.941297869373),
+        content: '<div style="width:190px; height:45px; padding:5px;">충효로 115<br>야사동 331-45-<a href="#" onclick="openKakaoMap(\'충효로 115\', 35.9753784873161, 128.941297869373)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.975012783696, 128.941451091412),
+        content: '<div style="width:190px; height:45px; padding:5px;">충효로 116<br>야사동 335-5-<a href="#" onclick="openKakaoMap(\'충효로 116\', 35.975012783696, 128.941451091412)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9757623741571, 128.942131040932),
+        content: '<div style="width:190px; height:45px; padding:5px;">충효로 123-2<br>야사동 333-27-<a href="#" onclick="openKakaoMap(\'충효로 123-2\', 35.9757623741571, 128.942131040932)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9757109426964, 128.942012938817),
+        content: '<div style="width:190px; height:45px; padding:5px;">충효로 123-1<br>야사동 333-28-<a href="#" onclick="openKakaoMap(\'충효로 123-1\', 35.9757109426964, 128.942012938817)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9756661455607, 128.94189134119),
+        content: '<div style="width:190px; height:45px; padding:5px;">충효로 123<br>야사동 333-29-<a href="#" onclick="openKakaoMap(\'충효로 123\', 35.9756661455607, 128.94189134119)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9758260021626, 128.942236028582),
+        content: '<div style="width:190px; height:45px; padding:5px;">충효로 125<br>야사동 333-26-<a href="#" onclick="openKakaoMap(\'충효로 125\', 35.9758260021626, 128.942236028582)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9761980030315, 128.943285198297),
+        content: '<div style="width:190px; height:45px; padding:5px;">충효로 135<br>야사동 154-30-<a href="#" onclick="openKakaoMap(\'충효로 135\', 35.9761980030315, 128.943285198297)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9757595217978, 128.944426124238),
+        content: '<div style="width:190px; height:45px; padding:5px;">충효로 142<br>야사동 151-1-<a href="#" onclick="openKakaoMap(\'충효로 142\', 35.9757595217978, 128.944426124238)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.972509905374, 128.941587760921),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 31-4<br>야사동 294-15-<a href="#" onclick="openKakaoMap(\'호국로 31-4\', 35.972509905374, 128.941587760921)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9723795307427, 128.941470169074),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 31<br>야사동 294-11-<a href="#" onclick="openKakaoMap(\'호국로 31\', 35.9723795307427, 128.941470169074)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9725414343768, 128.941771991809),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 33-1<br>야사동 294-25-<a href="#" onclick="openKakaoMap(\'호국로 33-1\', 35.9725414343768, 128.941771991809)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9726047405262, 128.941958109944),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 35-1<br>야사동 299-11-<a href="#" onclick="openKakaoMap(\'호국로 35-1\', 35.9726047405262, 128.941958109944)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9726468808864, 128.941765152829),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 35<br>야사동 294-1-<a href="#" onclick="openKakaoMap(\'호국로 35\', 35.9726468808864, 128.941765152829)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9729672154485, 128.942527457255),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 41-1<br>야사동 296-1-<a href="#" onclick="openKakaoMap(\'호국로 41-1\', 35.9729672154485, 128.942527457255)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9728783352102, 128.942284731057),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 41<br>야사동 297-1-<a href="#" onclick="openKakaoMap(\'호국로 41\', 35.9728783352102, 128.942284731057)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9729761574915, 128.942609595796),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 43<br>야사동 296-7-<a href="#" onclick="openKakaoMap(\'호국로 43\', 35.9729761574915, 128.942609595796)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9733439747964, 128.942854504608),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 47<br>야사동 169-1-<a href="#" onclick="openKakaoMap(\'호국로 47\', 35.9733439747964, 128.942854504608)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9732319832292, 128.943098515866),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 49<br>야사동 170-7-<a href="#" onclick="openKakaoMap(\'호국로 49\', 35.9732319832292, 128.943098515866)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9733817576099, 128.943442393301),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 51<br>야사동 171-15-<a href="#" onclick="openKakaoMap(\'호국로 51\', 35.9733817576099, 128.943442393301)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9731743700917, 128.943895902326),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 54-1<br>야사동 178-29-<a href="#" onclick="openKakaoMap(\'호국로 54-1\', 35.9731743700917, 128.943895902326)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9735276061999, 128.943972851199),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 57<br>야사동 172-21-<a href="#" onclick="openKakaoMap(\'호국로 57\', 35.9735276061999, 128.943972851199)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9732740495964, 128.944200418974),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 58<br>야사동 178-23-<a href="#" onclick="openKakaoMap(\'호국로 58\', 35.9732740495964, 128.944200418974)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9736782357948, 128.94428604635),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 59-1<br>야사동 172-14-<a href="#" onclick="openKakaoMap(\'호국로 59-1\', 35.9736782357948, 128.94428604635)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9736739829705, 128.944181518865),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 59<br>야사동 172-10-<a href="#" onclick="openKakaoMap(\'호국로 59\', 35.9736739829705, 128.944181518865)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.973753877619, 128.944316834564),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 61<br>야사동 172-22-<a href="#" onclick="openKakaoMap(\'호국로 61\', 35.973753877619, 128.944316834564)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9738213884656, 128.944676877901),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 63-1<br>야사동 175-1-<a href="#" onclick="openKakaoMap(\'호국로 63-1\', 35.9738213884656, 128.944676877901)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9739557581322, 128.945031357222),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 67-1<br>야사동 179-14-<a href="#" onclick="openKakaoMap(\'호국로 67-1\', 35.9739557581322, 128.945031357222)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9739319633797, 128.944953952163),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 67<br>야사동 179-5-<a href="#" onclick="openKakaoMap(\'호국로 67\', 35.9739319633797, 128.944953952163)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9744828615779, 128.945321871139),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 69-14<br>야사동 182-5-<a href="#" onclick="openKakaoMap(\'호국로 69-14\', 35.9744828615779, 128.945321871139)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9741835555561, 128.945369951109),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 69-4<br>야사동 182-6-<a href="#" onclick="openKakaoMap(\'호국로 69-4\', 35.9741835555561, 128.945369951109)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.97385316409, 128.945612368709),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 72<br>야사동 184-9-<a href="#" onclick="openKakaoMap(\'호국로 72\', 35.97385316409, 128.945612368709)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9742546899909, 128.945695278244),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 73-1<br>야사동 183-12-<a href="#" onclick="openKakaoMap(\'호국로 73-1\', 35.9742546899909, 128.945695278244)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9745226925501, 128.94623262565),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 79-1<br>야사동 137-2-<a href="#" onclick="openKakaoMap(\'호국로 79-1\', 35.9745226925501, 128.94623262565)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9743818398372, 128.946100243996),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 79<br>야사동 185-16-<a href="#" onclick="openKakaoMap(\'호국로 79\', 35.9743818398372, 128.946100243996)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9748151506885, 128.946156777953),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 81-7<br>야사동 137-1-<a href="#" onclick="openKakaoMap(\'호국로 81-7\', 35.9748151506885, 128.946156777953)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9745529930843, 128.946486559816),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 81-1<br>야사동 136-6-<a href="#" onclick="openKakaoMap(\'호국로 81-1\', 35.9745529930843, 128.946486559816)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9746315114736, 128.946528839102),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 83<br>야사동 136-7-<a href="#" onclick="openKakaoMap(\'호국로 83\', 35.9746315114736, 128.946528839102)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9747080571774, 128.946631596309),
+        content: '<div style="width:190px; height:45px; padding:5px;">호국로 85<br>야사동 136-5-<a href="#" onclick="openKakaoMap(\'호국로 85\', 35.9747080571774, 128.946631596309)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9794399476371, 128.9461882131),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사1길 14<br>야사동 457-1-<a href="#" onclick="openKakaoMap(\'안야사1길 14\', 35.9794399476371, 128.9461882131)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9792736761694, 128.945589806596),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사1길 34<br>야사동 460-<a href="#" onclick="openKakaoMap(\'안야사1길 34\', 35.9792736761694, 128.945589806596)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9798370450229, 128.945549871837),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 6-60<br>야사동 464-1-<a href="#" onclick="openKakaoMap(\'안야사2길 6-60\', 35.9798370450229, 128.945549871837)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9801890932553, 128.9461109398),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 6-23<br>야사동 438-<a href="#" onclick="openKakaoMap(\'안야사2길 6-23\', 35.9801890932553, 128.9461109398)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9801935850945, 128.946456051715),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 6-14<br>야사동 432-<a href="#" onclick="openKakaoMap(\'안야사2길 6-14\', 35.9801935850945, 128.946456051715)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9800687792128, 128.946550876539),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 6-10<br>야사동 432-4-<a href="#" onclick="openKakaoMap(\'안야사2길 6-10\', 35.9800687792128, 128.946550876539)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9799615853418, 128.946626511294),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 6-8<br>야사동 432-1-<a href="#" onclick="openKakaoMap(\'안야사2길 6-8\', 35.9799615853418, 128.946626511294)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.979464687395, 128.94674035257),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 7<br>야사동 415-1-<a href="#" onclick="openKakaoMap(\'안야사2길 7\', 35.979464687395, 128.94674035257)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9797229593941, 128.946572313521),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 8<br>야사동 450-<a href="#" onclick="openKakaoMap(\'안야사2길 8\', 35.9797229593941, 128.946572313521)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9796799291574, 128.946392105095),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 10<br>야사동 451-<a href="#" onclick="openKakaoMap(\'안야사2길 10\', 35.9796799291574, 128.946392105095)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9798604567048, 128.945995221963),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 20<br>야사동 445-<a href="#" onclick="openKakaoMap(\'안야사2길 20\', 35.9798604567048, 128.945995221963)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9798735538069, 128.945737791203),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 24<br>야사동 443-<a href="#" onclick="openKakaoMap(\'안야사2길 24\', 35.9798735538069, 128.945737791203)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9794859161466, 128.94561530539),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 32<br>야사동 461-<a href="#" onclick="openKakaoMap(\'안야사2길 32\', 35.9794859161466, 128.94561530539)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9795862331664, 128.945585840665),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 34-4<br>야사동 463-<a href="#" onclick="openKakaoMap(\'안야사2길 34-4\', 35.9795862331664, 128.945585840665)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9795903699546, 128.94535302356),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사2길 34-3<br>야사동 467-<a href="#" onclick="openKakaoMap(\'안야사2길 34-3\', 35.9795903699546, 128.94535302356)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9777444319677, 128.946469168304),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 13<br>야사동 393-<a href="#" onclick="openKakaoMap(\'안야사길 13\', 35.9777444319677, 128.946469168304)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.979812821564, 128.946998232433),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 53-2<br>야사동 429-3-<a href="#" onclick="openKakaoMap(\'안야사길 53-2\', 35.979812821564, 128.946998232433)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.979705254652, 128.947246689467),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 54<br>야사동 426-1-<a href="#" onclick="openKakaoMap(\'안야사길 54\', 35.979705254652, 128.947246689467)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9797848510196, 128.94708933814),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 55<br>야사동 429-18-<a href="#" onclick="openKakaoMap(\'안야사길 55\', 35.9797848510196, 128.94708933814)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9802500312065, 128.946964409184),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 61-12<br>야사동 429-10-<a href="#" onclick="openKakaoMap(\'안야사길 61-12\', 35.9802500312065, 128.946964409184)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9801354586932, 128.947133761994),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 61-2<br>야사동 429-16-<a href="#" onclick="openKakaoMap(\'안야사길 61-2\', 35.9801354586932, 128.947133761994)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9830713019963, 128.947596603031),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 129-2<br>야사동 516-<a href="#" onclick="openKakaoMap(\'안야사길 129-2\', 35.9830713019963, 128.947596603031)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9829148948173, 128.947595418956),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 129-1<br>야사동 515-<a href="#" onclick="openKakaoMap(\'안야사길 129-1\', 35.9829148948173, 128.947595418956)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9834420155991, 128.947684652885),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 137<br>야사동 520-<a href="#" onclick="openKakaoMap(\'안야사길 137\', 35.9834420155991, 128.947684652885)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9831870339731, 128.948349012036),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 138-11<br>야사동 31-4-<a href="#" onclick="openKakaoMap(\'안야사길 138-11\', 35.9831870339731, 128.948349012036)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9836535400611, 128.947515570835),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 143-5<br>야사동 523-<a href="#" onclick="openKakaoMap(\'안야사길 143-5\', 35.9836535400611, 128.947515570835)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.983996913121, 128.948648868092),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 151<br>야사동 530-1-<a href="#" onclick="openKakaoMap(\'안야사길 151\', 35.983996913121, 128.948648868092)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.983626567624, 128.948527118648),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 155<br>야사동 29-<a href="#" onclick="openKakaoMap(\'안야사길 155\', 35.983626567624, 128.948527118648)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9834752100181, 128.948536810891),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 159<br>야사동 30-1-<a href="#" onclick="openKakaoMap(\'안야사길 159\', 35.9834752100181, 128.948536810891)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9833728181407, 128.948987845809),
+        content: '<div style="width:190px; height:45px; padding:5px;">안야사길 169<br>야사동 23-4-<a href="#" onclick="openKakaoMap(\'안야사길 169\', 35.9833728181407, 128.948987845809)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9743861799013, 128.945949368012),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사1길 6<br>야사동 183-1-<a href="#" onclick="openKakaoMap(\'야사1길 6\', 35.9743861799013, 128.945949368012)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9746412631775, 128.945861183752),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사1길 12<br>야사동 137-7-<a href="#" onclick="openKakaoMap(\'야사1길 12\', 35.9746412631775, 128.945861183752)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9747610585368, 128.94581412988),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사1길 14<br>야사동 137-6-<a href="#" onclick="openKakaoMap(\'야사1길 14\', 35.9747610585368, 128.94581412988)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9750265174411, 128.945919529748),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사1길 16-14<br>야사동 138-8-<a href="#" onclick="openKakaoMap(\'야사1길 16-14\', 35.9750265174411, 128.945919529748)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9748858847361, 128.945406922999),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사1길 17<br>야사동 140-12-<a href="#" onclick="openKakaoMap(\'야사1길 17\', 35.9748858847361, 128.945406922999)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9760132204787, 128.946434405723),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사2길 39<br>야사동 129-1-<a href="#" onclick="openKakaoMap(\'야사2길 39\', 35.9760132204787, 128.946434405723)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9761517731041, 128.946941649402),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사2길 40<br>야사동 112-7-<a href="#" onclick="openKakaoMap(\'야사2길 40\', 35.9761517731041, 128.946941649402)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9763432407342, 128.946975619432),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사2길 46<br>야사동 112-5-<a href="#" onclick="openKakaoMap(\'야사2길 46\', 35.9763432407342, 128.946975619432)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9764479294661, 128.946993267954),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사2길 48<br>야사동 112-4-<a href="#" onclick="openKakaoMap(\'야사2길 48\', 35.9764479294661, 128.946993267954)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9765287513274, 128.946804802102),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사2길 49<br>야사동 114-2-<a href="#" onclick="openKakaoMap(\'야사2길 49\', 35.9765287513274, 128.946804802102)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9771357566021, 128.947218579209),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사2길 56<br>야사동 401-3-<a href="#" onclick="openKakaoMap(\'야사2길 56\', 35.9771357566021, 128.947218579209)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9749569421229, 128.945264778287),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사3길 20<br>야사동 140-6-<a href="#" onclick="openKakaoMap(\'야사3길 20\', 35.9749569421229, 128.945264778287)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9750351578566, 128.944981247823),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사3길 23<br>야사동 142-12-<a href="#" onclick="openKakaoMap(\'야사3길 23\', 35.9750351578566, 128.944981247823)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.975186474718, 128.945029635915),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사3길 27<br>야사동 142-10-<a href="#" onclick="openKakaoMap(\'야사3길 27\', 35.975186474718, 128.945029635915)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9753321333548, 128.944949071926),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사3길 29-8<br>야사동 142-5-<a href="#" onclick="openKakaoMap(\'야사3길 29-8\', 35.9753321333548, 128.944949071926)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9753790129272, 128.945058749466),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사3길 31<br>야사동 142-4-<a href="#" onclick="openKakaoMap(\'야사3길 31\', 35.9753790129272, 128.945058749466)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9765365933345, 128.945588454714),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사4길 11<br>야사동 116-<a href="#" onclick="openKakaoMap(\'야사4길 11\', 35.9765365933345, 128.945588454714)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9764972758655, 128.945918063593),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사4길 17-5<br>야사동 117-2-<a href="#" onclick="openKakaoMap(\'야사4길 17-5\', 35.9764972758655, 128.945918063593)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9763274463334, 128.945716680069),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사4길 17-3<br>야사동 117-6-<a href="#" onclick="openKakaoMap(\'야사4길 17-3\', 35.9763274463334, 128.945716680069)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.975958709291, 128.945917698408),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사4길 22-9<br>야사동 126-5-<a href="#" onclick="openKakaoMap(\'야사4길 22-9\', 35.975958709291, 128.945917698408)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9759482020576, 128.945987722954),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사4길 28<br>야사동 126-4-<a href="#" onclick="openKakaoMap(\'야사4길 28\', 35.9759482020576, 128.945987722954)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9755392217534, 128.946591928815),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사4길 37<br>야사동 129-3-<a href="#" onclick="openKakaoMap(\'야사4길 37\', 35.9755392217534, 128.946591928815)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9753491147538, 128.946457448169),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사4길 44<br>야사동 127-9-<a href="#" onclick="openKakaoMap(\'야사4길 44\', 35.9753491147538, 128.946457448169)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9738950633251, 128.947150594051),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장1길 3<br>야사동 187-1-<a href="#" onclick="openKakaoMap(\'야사시장1길 3\', 35.9738950633251, 128.947150594051)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9740922549625, 128.947220509554),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장1길 7-3<br>야사동 189-<a href="#" onclick="openKakaoMap(\'야사시장1길 7-3\', 35.9740922549625, 128.947220509554)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9739308926247, 128.947679910094),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장1길 14<br>야사동 189-13-<a href="#" onclick="openKakaoMap(\'야사시장1길 14\', 35.9739308926247, 128.947679910094)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9740359506428, 128.947796892256),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장1길 16<br>야사동 189-15-<a href="#" onclick="openKakaoMap(\'야사시장1길 16\', 35.9740359506428, 128.947796892256)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9740937361212, 128.946940530928),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장길 11<br>야사동 135-26-<a href="#" onclick="openKakaoMap(\'야사시장길 11\', 35.9740937361212, 128.946940530928)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9742616947495, 128.947257041807),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장길 13-40<br>야사동 134-4-<a href="#" onclick="openKakaoMap(\'야사시장길 13-40\', 35.9742616947495, 128.947257041807)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9745502188476, 128.947873050654),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장길 13-26<br>야사동 134-14-<a href="#" onclick="openKakaoMap(\'야사시장길 13-26\', 35.9745502188476, 128.947873050654)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9743135426333, 128.94699393026),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장길 13-11<br>야사동 135-11-<a href="#" onclick="openKakaoMap(\'야사시장길 13-11\', 35.9743135426333, 128.94699393026)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9735122921344, 128.947322322732),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장길 25<br>야사동 188-6-<a href="#" onclick="openKakaoMap(\'야사시장길 25\', 35.9735122921344, 128.947322322732)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9734208375159, 128.947421948832),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장길 27<br>야사동 187-11-<a href="#" onclick="openKakaoMap(\'야사시장길 27\', 35.9734208375159, 128.947421948832)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9735945133938, 128.947591608138),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사시장길 35-8<br>야사동 191-9-<a href="#" onclick="openKakaoMap(\'야사시장길 35-8\', 35.9735945133938, 128.947591608138)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9764938319347, 128.94347392479),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사오미길 4-7<br>야사동 154-25-<a href="#" onclick="openKakaoMap(\'야사오미길 4-7\', 35.9764938319347, 128.94347392479)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9763345529503, 128.94292693332),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사오미길 5<br>야사동 154-19-<a href="#" onclick="openKakaoMap(\'야사오미길 5\', 35.9763345529503, 128.94292693332)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.976703408986, 128.943213340654),
+        content: '<div style="width:190px; height:45px; padding:5px;">야사오미길 8-7<br>야사동 154-64-<a href="#" onclick="openKakaoMap(\'야사오미길 8-7\', 35.976703408986, 128.943213340654)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.971850154881, 128.944373667559),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 33<br>야사동 242-5-<a href="#" onclick="openKakaoMap(\'영천고1길 33\', 35.971850154881, 128.944373667559)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9717241232903, 128.944455265122),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 37<br>야사동 242-4-<a href="#" onclick="openKakaoMap(\'영천고1길 37\', 35.9717241232903, 128.944455265122)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9716503232209, 128.944833336767),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 41<br>야사동 232-<a href="#" onclick="openKakaoMap(\'영천고1길 41\', 35.9716503232209, 128.944833336767)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9713498263557, 128.944443533251),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 44<br>야사동 232-8-<a href="#" onclick="openKakaoMap(\'영천고1길 44\', 35.9713498263557, 128.944443533251)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9708751816872, 128.944807777289),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 60<br>야사동 216-3-<a href="#" onclick="openKakaoMap(\'영천고1길 60\', 35.9708751816872, 128.944807777289)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.971995367332, 128.944987571308),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 85-16<br>야사동 232-3-<a href="#" onclick="openKakaoMap(\'영천고1길 85-16\', 35.971995367332, 128.944987571308)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9716808335637, 128.945202328434),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 85-14<br>야사동 216-1-<a href="#" onclick="openKakaoMap(\'영천고1길 85-14\', 35.9716808335637, 128.945202328434)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9719168345365, 128.945935075437),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 85-8<br>야사동 217-7-<a href="#" onclick="openKakaoMap(\'영천고1길 85-8\', 35.9719168345365, 128.945935075437)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.971708377381, 128.946176265857),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 85-6<br>야사동 210-<a href="#" onclick="openKakaoMap(\'영천고1길 85-6\', 35.971708377381, 128.946176265857)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9708897913576, 128.947356324953),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 86-26<br>야사동 207-2-<a href="#" onclick="openKakaoMap(\'영천고1길 86-26\', 35.9708897913576, 128.947356324953)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9707331173316, 128.945994582392),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고1길 86-12<br>야사동 214-<a href="#" onclick="openKakaoMap(\'영천고1길 86-12\', 35.9707331173316, 128.945994582392)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9720953220182, 128.946863395226),
+        content: '<div style="width:190px; height:45px; padding:5px;">영천고2길 9<br>야사동 186-<a href="#" onclick="openKakaoMap(\'영천고2길 9\', 35.9720953220182, 128.946863395226)" style="color:red">길찾기</a></div>'
+    }
+];
+
+// 초록
+var newmarkerInfos2 = [
+];
+
+// 오렌지
+var newmarkerInfos3 = [
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 0 빨간색
+for (var i = 0; i < newmarkerInfos0.length; i++) {
+    var newmarker0 = new kakao.maps.Marker({
+        position: newmarkerInfos0[i].position,
+        image: newMarkerImage0,
+        clickable: true
+    });
+    markers.push(newmarker0);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos0[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker0, 'click', makeClickListener(newmarker0, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 1 보라색
+for (var i = 0; i < newmarkerInfos1.length; i++) {
+    var newmarker1 = new kakao.maps.Marker({
+        position: newmarkerInfos1[i].position,
+        image: newMarkerImage1,
+        clickable: true
+    });
+    markers.push(newmarker1);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos1[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker1, 'click', makeClickListener(newmarker1, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 2 초록색
+for (var i = 0; i < newmarkerInfos2.length; i++) {
+    var newmarker2 = new kakao.maps.Marker({
+        position: newmarkerInfos2[i].position,
+        image: newMarkerImage2,
+        clickable: true
+    });
+    markers.push(newmarker2);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos2[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker2, 'click', makeClickListener(newmarker2, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 3 오렌지
+for (var i = 0; i < newmarkerInfos3.length; i++) {
+    var newmarker3 = new kakao.maps.Marker({
+        position: newmarkerInfos3[i].position,
+        image: newMarkerImage3,
+        clickable: true
+    });
+    markers.push(newmarker3);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos3[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker3, 'click', makeClickListener(newmarker3, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
