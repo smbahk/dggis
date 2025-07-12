@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>영천시 기초번호판(183) 설치</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+
+    </style>
+</head>
+<div id="map"></div>
+    <div class="button-container">
+        <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+        <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    </div>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script>
+<script>
+// iOS/Android 분기 길찾기 함수
+function openKakaoMap(name, lat, lng) {
+    var encodedName = encodeURIComponent(name);
+    var isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
+    var url;
+    if (isIOS) {
+        // iOS용 URL Scheme
+        url = `kakaomap://route?ep=${lat},${lng}&by=CAR&en=${encodedName}`;
+    } else {
+        // Android 및 PC용 Universal Link
+        url = `https://map.kakao.com/link/to/${encodedName},${lat},${lng}`;
+    }
+    window.open(url, '_blank');
+}
+
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.97321870739986, 128.93855054098663), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
+
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
+
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// ----- 내위치 시작
+
+if (navigator.geolocation) {
+    
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            message = '<div style="padding:5px; color:red;">★내위치★</div>'; // 인포윈도우에 표시될 내용입니다
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.97321870739986, 128.93855054098663),    
+        message = '내위치를 찾을수 없음'
+        
+    displayMarker(locPosition, message);
+}
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize = new kakao.maps.Size(24, 35); 
+    
+    // 마커 이미지를 생성합니다    
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({  
+        map: map, 
+        position: locPosition,
+        image : markerImage // 마커 이미지
+    }); 
+    
+    var iwContent = message, // 인포윈도우에 표시할 내용
+        iwRemoveable = true;
+
+    // 인포윈도우를 생성합니다
+    var infowindow = new kakao.maps.InfoWindow({
+        content : iwContent,
+        removable : iwRemoveable
+    });
+    
+    // 인포윈도우를 마커위에 표시합니다 
+    infowindow.open(map, marker);
+    
+    // 지도 중심좌표를 접속위치로 변경합니다
+    map.setCenter(locPosition);      
+}
+
+// ------------ 내위치 끝
+
+// ================================================== 지도 타입 시작 ==
+// 지도에 추가된 지도타입정보를 가지고 있을 변수입니다
+var currentTypeId;
+
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
+    }
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
+    }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
+
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
+
+// 새로운 마커 이미지를 생성합니다. -- 빨간색 마커
+var newImageUrl0 = 'https://smbahk.github.io/dggis/p_r.png';
+var newMarkerImage0 = new kakao.maps.MarkerImage(newImageUrl0, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 보라색 마커
+var newImageUrl1 = 'https://smbahk.github.io/dggis/p_v.png';
+var newMarkerImage1 = new kakao.maps.MarkerImage(newImageUrl1, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 녹색 마커
+var newImageUrl2 = 'https://smbahk.github.io/dggis/p_g.png';
+var newMarkerImage2 = new kakao.maps.MarkerImage(newImageUrl2, new kakao.maps.Size(35, 35));
+
+// 새로운 마커 이미지를 생성합니다. -- 오렌지 마커
+var newImageUrl3 = 'https://smbahk.github.io/dggis/p_o.png';
+var newMarkerImage3 = new kakao.maps.MarkerImage(newImageUrl3, new kakao.maps.Size(35, 35));
+
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+// 파란색
+var markerInfos = [
+    {
+        position: new kakao.maps.LatLng(36.0195789256, 128.8879680802),
+        content: '<div style="width:190px; height:45px; padding:5px;">가래실로 214<br>nan-<a href="#" onclick="openKakaoMap(\'가래실로 214\', 36.0195789256, 128.8879680802)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0889869299, 128.7289417808),
+        content: '<div style="width:190px; height:45px; padding:5px;">갑티로 146<br>nan-<a href="#" onclick="openKakaoMap(\'갑티로 146\', 36.0889869299, 128.7289417808)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0154976908, 128.8885113851),
+        content: '<div style="width:190px; height:45px; padding:5px;">대암길 12<br>nan-<a href="#" onclick="openKakaoMap(\'대암길 12\', 36.0154976908, 128.8885113851)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0096884053, 128.8961405386),
+        content: '<div style="width:190px; height:45px; padding:5px;">대암길 137<br>nan-<a href="#" onclick="openKakaoMap(\'대암길 137\', 36.0096884053, 128.8961405386)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1133529037, 129.0659270925),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 1476<br>nan-<a href="#" onclick="openKakaoMap(\'별빛로 1476\', 36.1133529037, 129.0659270925)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1114577168, 129.0670193909),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 1500<br>nan-<a href="#" onclick="openKakaoMap(\'별빛로 1500\', 36.1114577168, 129.0670193909)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1101101883, 129.067676064),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 1515<br>nan-<a href="#" onclick="openKakaoMap(\'별빛로 1515\', 36.1101101883, 129.067676064)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1099222175, 129.0676138449),
+        content: '<div style="width:190px; height:45px; padding:5px;">별빛로 1518<br>nan-<a href="#" onclick="openKakaoMap(\'별빛로 1518\', 36.1099222175, 129.0676138449)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.068658098, 129.0757650647),
+        content: '<div style="width:190px; height:45px; padding:5px;">신방로 668<br>nan-<a href="#" onclick="openKakaoMap(\'신방로 668\', 36.068658098, 129.0757650647)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0779921861, 129.0772396651),
+        content: '<div style="width:190px; height:45px; padding:5px;">신방로 790<br>nan-<a href="#" onclick="openKakaoMap(\'신방로 790\', 36.0779921861, 129.0772396651)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0727488876, 128.7616122242),
+        content: '<div style="width:190px; height:45px; padding:5px;">장수로 2124<br>nan-<a href="#" onclick="openKakaoMap(\'장수로 2124\', 36.0727488876, 128.7616122242)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1586659304, 128.9958883715),
+        content: '<div style="width:190px; height:45px; padding:5px;">정각길 249<br>nan-<a href="#" onclick="openKakaoMap(\'정각길 249\', 36.1586659304, 128.9958883715)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1624873945, 128.9067394371),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 3206<br>nan-<a href="#" onclick="openKakaoMap(\'천문로 3206\', 36.1624873945, 128.9067394371)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.1701633914, 128.9087157117),
+        content: '<div style="width:190px; height:45px; padding:5px;">천문로 3330<br>nan-<a href="#" onclick="openKakaoMap(\'천문로 3330\', 36.1701633914, 128.9087157117)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(35.9846022518, 129.0757661471),
+        content: '<div style="width:190px; height:45px; padding:5px;">초일길 225<br>nan-<a href="#" onclick="openKakaoMap(\'초일길 225\', 35.9846022518, 129.0757661471)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0738397534, 128.9993010987),
+        content: '<div style="width:190px; height:45px; padding:5px;">포은로 1324<br>nan-<a href="#" onclick="openKakaoMap(\'포은로 1324\', 36.0738397534, 128.9993010987)" style="color:red">길찾기</a></div>'
+    },
+    {
+        position: new kakao.maps.LatLng(36.0860391632, 129.0375685501),
+        content: '<div style="width:190px; height:45px; padding:5px;">포은로 1882<br>nan-<a href="#" onclick="openKakaoMap(\'포은로 1882\', 36.0860391632, 129.0375685501)" style="color:red">길찾기</a></div>'
+    }
+];
+
+// 빨간
+var newmarkerInfos0 = [
+]
+
+// 보라
+var newmarkerInfos1 = [
+];
+
+// 초록
+var newmarkerInfos2 = [
+];
+
+// 오렌지
+var newmarkerInfos3 = [
+];
+
+// 마커와 인포윈도우를 생성하고 지도에 표시합니다
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker);
+
+    var infowindow = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(marker, 'click', makeClickListener(marker, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 0 빨간색
+for (var i = 0; i < newmarkerInfos0.length; i++) {
+    var newmarker0 = new kakao.maps.Marker({
+        position: newmarkerInfos0[i].position,
+        image: newMarkerImage0,
+        clickable: true
+    });
+    markers.push(newmarker0);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos0[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker0, 'click', makeClickListener(newmarker0, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 1 보라색
+for (var i = 0; i < newmarkerInfos1.length; i++) {
+    var newmarker1 = new kakao.maps.Marker({
+        position: newmarkerInfos1[i].position,
+        image: newMarkerImage1,
+        clickable: true
+    });
+    markers.push(newmarker1);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos1[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker1, 'click', makeClickListener(newmarker1, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 2 초록색
+for (var i = 0; i < newmarkerInfos2.length; i++) {
+    var newmarker2 = new kakao.maps.Marker({
+        position: newmarkerInfos2[i].position,
+        image: newMarkerImage2,
+        clickable: true
+    });
+    markers.push(newmarker2);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos2[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker2, 'click', makeClickListener(newmarker2, infowindow));
+}
+
+// 뉴마커와 인포윈도우를 생성하고 지도에 표시합니다 --- 3 오렌지
+for (var i = 0; i < newmarkerInfos3.length; i++) {
+    var newmarker3 = new kakao.maps.Marker({
+        position: newmarkerInfos3[i].position,
+        image: newMarkerImage3,
+        clickable: true
+    });
+    markers.push(newmarker3);
+    
+    var infowindow = new kakao.maps.InfoWindow({
+        content: newmarkerInfos3[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow);
+
+    kakao.maps.event.addListener(newmarker3, 'click', makeClickListener(newmarker3, infowindow));
+}
+
+// 마커 클릭 이벤트 핸들러를 만들어 반환하는 함수입니다
+function makeClickListener(marker, infowindow) {
+    return function() {
+        infowindow.open(map, marker);
+    };
+}
+
+// 마커와 인포윈도우를 지도에 표시합니다
+for (var i = 0; i < markers.length; i++) {
+    markers[i].setMap(map);
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+
+</script>
+</body>
+</html>
