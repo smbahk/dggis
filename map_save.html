@@ -30,19 +30,17 @@
 
 <div id="savedList"></div>
 
-<!-- Kakao SDK -->
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ca1951eaafbfe12089ef2f2d40755c2b&autoload=false"></script>
+<!-- 1) SDK를 먼저 동기 로드 (autoload 기본 true) -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ca1951eaafbfe12089ef2f2d40755c2b"></script>
+
+<!-- 2) kakao 객체를 사용하는 모든 스크립트 -->
 <script>
-/* ===== 전역 ===== */
 let map, marker=null, infowindow;
 let currentLatLng=null;
 const savedKey='savedCoords';
 let currentOverlayId=null;
 
-/* ===== Kakao SDK 로드 후 실행 ===== */
-kakao.maps.load(initMap);
-
-function initMap(){
+(function initMap(){
   const mapContainer=document.getElementById('map');
   map=new kakao.maps.Map(mapContainer,{
     center:new kakao.maps.LatLng(35.84286091497955,128.76508285268582),
@@ -55,10 +53,9 @@ function initMap(){
 
   infowindow=new kakao.maps.InfoWindow({zIndex:1});
 
-  // 지도 클릭 → 좌표 표시 & 현재좌표 저장
+  // 지도 클릭 → 좌표 표시
   kakao.maps.event.addListener(map,'click',e=>{
-    const lat=e.latLng.getLat();
-    const lng=e.latLng.getLng();
+    const lat=e.latLng.getLat(), lng=e.latLng.getLng();
     const msg=`위도: ${lat.toFixed(6)}, 경도: ${lng.toFixed(6)} 입니다.`;
     if(marker) marker.setMap(null);
     displayMarker(e.latLng,msg);
@@ -74,9 +71,7 @@ function initMap(){
       displayMarker(loc,msg);
       currentLatLng={lat,lng};
       map.setCenter(loc);
-    },err=>{
-      console.warn('geo error:',err);
-    },{enableHighAccuracy:true,timeout:5000});
+    },err=>console.warn('geo error:',err),{enableHighAccuracy:true,timeout:5000});
   }
 
   // 반응형 높이
@@ -88,7 +83,7 @@ function initMap(){
   }
   window.addEventListener('resize',setMapHeight);
   setMapHeight();
-}
+})();
 
 /* ===== 공통 함수 ===== */
 function displayMarker(position,message){
@@ -98,7 +93,6 @@ function displayMarker(position,message){
 }
 
 function setOverlayMapTypeId(type){
-  // ROADMAP은 기본 지도 → setMapTypeId
   if(type==='roadmap'){
     map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
     if(currentOverlayId){
@@ -107,7 +101,6 @@ function setOverlayMapTypeId(type){
     }
     return;
   }
-  // USE_DISTRICT 등 오버레이
   const id=kakao.maps.MapTypeId.USE_DISTRICT;
   if(currentOverlayId){
     map.removeOverlayMapTypeId(currentOverlayId);
