@@ -7,7 +7,6 @@
   <style>
     html, body {height:100%; margin:0; padding:0; cursor:crosshair;}
     #map       {width:100%; height:100%; min-height:300px; cursor:crosshair;}
-
     .button-container{
       position:fixed; bottom:0; left:0; width:100%;
       background:#fff; padding:10px; box-sizing:border-box;
@@ -34,127 +33,123 @@
   <pre id="savedCoords" readonly></pre>
 </div>
 
-<!-- Kakao Maps SDK (먼저 로드) -->
-<script defer src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ca1951eaafbfe12089ef2f2d40755c2b&autoload=false"></script>
+<!-- 1) Kakao SDK: autoload=false + onload에서 initMap 호출 -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf&autoload=false"
+        onload="kakao.maps.load(initMap)"></script>
 
-<!-- 내 스크립트 -->
-<script defer>
-document.addEventListener('DOMContentLoaded', () => {
-  kakao.maps.load(initMap);   // SDK 로드 후 실행
+<!-- 2) 나의 스크립트 -->
+<script>
+function initMap(){
+  /* ===== 지도 초기화 ===== */
+  const mapContainer = document.getElementById('map');
+  const mapOption = {
+    center: new kakao.maps.LatLng(35.84286091497955, 128.76508285268582),
+    level : 3
+  };
+  const map = new kakao.maps.Map(mapContainer, mapOption);
+  map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
+  map.addControl(new kakao.maps.ZoomControl(),    kakao.maps.ControlPosition.RIGHT);
 
-  function initMap(){
-    /* ================= 지도 초기화 ================= */
-    const mapContainer = document.getElementById('map');
-    const mapOption = {
-      center: new kakao.maps.LatLng(35.84286091497955, 128.76508285268582),
-      level : 3
-    };
-    const map = new kakao.maps.Map(mapContainer, mapOption);
-    map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
-    map.addControl(new kakao.maps.ZoomControl(),    kakao.maps.ControlPosition.RIGHT);
+  /* ===== 마커/인포윈도우 ===== */
+  let clickMarker = null;
+  let myPosMarker = null;
+  const infowindow = new kakao.maps.InfoWindow({ zIndex:1 });
 
-    /* ============== 마커 & 인포윈도우 ============== */
-    let clickMarker = null;
-    let myPosMarker = null;
-    const infowindow = new kakao.maps.InfoWindow({ zIndex:1 });
+  kakao.maps.event.addListener(map, 'click', function(mouseEvent){
+    const latlng = mouseEvent.latLng;
+    const msg = `위도: ${latlng.getLat()}, 경도: ${latlng.getLng()}`;
+    setMarker(latlng, msg, 'click');
+  });
 
-    kakao.maps.event.addListener(map, 'click', function(mouseEvent){
-      const latlng = mouseEvent.latLng;
-      const msg = `위도: ${latlng.getLat()}, 경도: ${latlng.getLng()}`;
-      setMarker(latlng, msg, 'click');
-    });
+  function setMarker(latlng, message, type){
+    if(type === 'click' && clickMarker){ clickMarker.setMap(null); }
+    if(type === 'mypos'  && myPosMarker){ myPosMarker.setMap(null); }
 
-    function setMarker(latlng, message, type){
-      if(type === 'click' && clickMarker){ clickMarker.setMap(null); }
-      if(type === 'mypos'  && myPosMarker){ myPosMarker.setMap(null); }
+    const marker = new kakao.maps.Marker({ map, position: latlng });
+    infowindow.setContent(`<div style="padding:4px;">${message}</div>`);
+    infowindow.open(map, marker);
 
-      const marker = new kakao.maps.Marker({ map, position: latlng });
-      infowindow.setContent(`<div style="padding:4px;">${message}</div>`);
-      infowindow.open(map, marker);
+    if(type === 'click') clickMarker = marker;
+    if(type === 'mypos')  myPosMarker = marker;
+  }
 
-      if(type === 'click') clickMarker = marker;
-      if(type === 'mypos')  myPosMarker = marker;
+  /* ===== 로컬 저장/표시 ===== */
+  const savedCoordsEl = document.getElementById('savedCoords');
+  const copyNoticeEl  = document.getElementById('copyNotice');
+  const savedCoords   = JSON.parse(localStorage.getItem('coords') || '[]');
+  renderSaved();
+
+  document.getElementById('locBtn').addEventListener('click', getCurrentPosition);
+
+  function getCurrentPosition(){
+    if(!navigator.geolocation){
+      alert('이 브라우저는 위치 기능을 지원하지 않습니다.');
+      return;
     }
+    navigator.geolocation.getCurrentPosition(success, fail, {enableHighAccuracy:true, timeout:5000});
+  }
 
-    /* ============== 위치점검 / 저장 ============== */
-    const savedCoordsEl = document.getElementById('savedCoords');
-    const copyNoticeEl  = document.getElementById('copyNotice');
-    const savedCoords   = JSON.parse(localStorage.getItem('coords') || '[]');
+  function success(pos){
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    const latlng = new kakao.maps.LatLng(lat, lon);
+
+    map.panTo(latlng);
+    setMarker(latlng, '★ 내 위치 ★', 'mypos');
+
+    saveCoords(lat, lon);
+  }
+
+  function fail(err){
+    alert('위치 정보를 가져올 수 없습니다.');
+    console.error(err);
+  }
+
+  function saveCoords(lat, lon){
+    savedCoords.push({lat, lon, ts:Date.now()});
+    localStorage.setItem('coords', JSON.stringify(savedCoords));
     renderSaved();
 
-    document.getElementById('locBtn').addEventListener('click', getCurrentPosition);
-
-    function getCurrentPosition(){
-      if(!navigator.geolocation){
-        alert('이 브라우저는 위치 기능을 지원하지 않습니다.');
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(success, fail, {enableHighAccuracy:true, timeout:5000});
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(`${lat}, ${lon}`).then(showCopyNotice);
     }
-
-    function success(pos){
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      const latlng = new kakao.maps.LatLng(lat, lon);
-
-      map.panTo(latlng);
-      setMarker(latlng, '★ 내 위치 ★', 'mypos');
-
-      saveCoords(lat, lon);
-    }
-
-    function fail(err){
-      alert('위치 정보를 가져올 수 없습니다.');
-      console.error(err);
-    }
-
-    function saveCoords(lat, lon){
-      savedCoords.push({lat, lon, ts:Date.now()});
-      localStorage.setItem('coords', JSON.stringify(savedCoords));
-      renderSaved();
-
-      if(navigator.clipboard){
-        navigator.clipboard.writeText(`${lat}, ${lon}`).then(showCopyNotice);
-      }
-    }
-
-    function renderSaved(){
-      savedCoordsEl.textContent = savedCoords.map(c => `${c.lat}, ${c.lon}`).join('\n');
-    }
-
-    function showCopyNotice(){
-      copyNoticeEl.style.display = 'inline';
-      setTimeout(()=>copyNoticeEl.style.display='none', 2000);
-    }
-
-    /* ============== 지도 타입 전환 ============== */
-    let currentOverlay = null;
-    window.setOverlayMapTypeId = function(type){
-      if(currentOverlay){
-        map.removeOverlayMapTypeId(currentOverlay);
-        currentOverlay = null;
-      }
-      if(type === 'roadmap'){
-        map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
-        return;
-      }
-      if(type === 'use_district'){
-        map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
-        currentOverlay = kakao.maps.MapTypeId.USE_DISTRICT;
-        map.addOverlayMapTypeId(currentOverlay);
-      }
-    };
-
-    /* ============== 반응형 높이 ============== */
-    function setMapHeight(){
-      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-      const top = mapContainer.offsetTop;
-      mapContainer.style.height = (windowHeight - top) + 'px';
-    }
-    setMapHeight();
-    window.addEventListener('resize', setMapHeight);
   }
-});
+
+  function renderSaved(){
+    savedCoordsEl.textContent = savedCoords.map(c => `${c.lat}, ${c.lon}`).join('\n');
+  }
+
+  function showCopyNotice(){
+    copyNoticeEl.style.display = 'inline';
+    setTimeout(()=>copyNoticeEl.style.display='none', 2000);
+  }
+
+  /* ===== 지도 타입 전환 ===== */
+  let currentOverlay = null;
+  window.setOverlayMapTypeId = function(type){
+    if(currentOverlay){
+      map.removeOverlayMapTypeId(currentOverlay);
+      currentOverlay = null;
+    }
+    if(type === 'roadmap'){
+      map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
+      return;
+    }
+    if(type === 'use_district'){
+      map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
+      currentOverlay = kakao.maps.MapTypeId.USE_DISTRICT;
+      map.addOverlayMapTypeId(currentOverlay);
+    }
+  };
+
+  /* ===== 반응형 높이 ===== */
+  function setMapHeight(){
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
+  }
+  setMapHeight();
+  window.addEventListener('resize', setMapHeight);
+}
 </script>
 </body>
 </html>
