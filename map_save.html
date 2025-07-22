@@ -40,10 +40,13 @@
     <pre id="savedCoords" readonly></pre>
 </div>
 
-<!-- Kakao Maps SDK: 반드시 본인 APP KEY 로 교체 -->
-<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ca1951eaafbfe12089ef2f2d40755c2b"></script>
+<!-- Kakao Maps SDK : 반드시 본인 APP KEY 로 교체 -->
+<script defer src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ca1951eaafbfe12089ef2f2d40755c2b&autoload=false"></script>
 <script>
-(function(){
+document.addEventListener('DOMContentLoaded', () => {
+  // kakao SDK 스크립트가 로드된 후 실행
+  kakao.maps.load(function () {
+
     /* ======================= 지도 초기화 ======================= */
     const mapContainer = document.getElementById('map');
     const mapOption    = {center: new kakao.maps.LatLng(35.84286091497955, 128.76508285268582), level: 3};
@@ -157,7 +160,8 @@
         }
     };
 
-})();
+  }); // kakao.maps.load end
+}); // DOMContentLoaded end
 </script>
 </body>
 </html>
