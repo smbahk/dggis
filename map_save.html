@@ -7,7 +7,7 @@
     <style>
         /* ➊ 기본 레이아웃 */
         html, body {height: 100%; margin: 0; padding: 0; cursor: crosshair;}
-        #map          {width: 100%; height: 100%; min-height: 300px; cursor: crosshair;}
+        #map       {width: 100%; height: 100%; min-height: 300px; cursor: crosshair;}
 
         /* ➋ 하단 버튼 영역 */
         .button-container {
@@ -19,7 +19,7 @@
 
         /* ➌ 저장 목록 */
         #savedCoords {
-            flex: 1 1 100%; /* 한 줄 전체 사용 */
+            flex: 1 1 100%;
             margin-top: 6px; padding: 4px; height: 80px;
             font-size: 12px; white-space: pre-wrap; overflow: auto;
             border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9;
@@ -40,11 +40,10 @@
     <pre id="savedCoords" readonly></pre>
 </div>
 
-<!-- Kakao Maps SDK : 반드시 본인 APP KEY 로 교체 -->
+<!-- Kakao Maps SDK -->
 <script defer src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ca1951eaafbfe12089ef2f2d40755c2b&autoload=false"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // kakao SDK 스크립트가 로드된 후 실행
   kakao.maps.load(function () {
 
     /* ======================= 지도 초기화 ======================= */
@@ -56,29 +55,21 @@ document.addEventListener('DOMContentLoaded', () => {
     map.addControl(new kakao.maps.ZoomControl(),    kakao.maps.ControlPosition.RIGHT);
 
     /* ======================= 마커 & 인포윈도우 ======================= */
-    let clickMarker   = null; // 지도 클릭 시 찍히는 마커
-    let myPosMarker   = null; // 위치점검 시 찍히는 마커
-    const infowindow  = new kakao.maps.InfoWindow({zIndex: 1});
+    let clickMarker = null;   // 지도 클릭 마커
+    let myPosMarker = null;   // 위치점검 마커
+    const infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
 
-    // 지도 클릭 – 위·경도 마커 표시
     kakao.maps.event.addListener(map, 'click', function(evt){
         const latlng = evt.latLng;
-        const msg    = `위도: ${latlng.getLat()}, 경도: ${latlng.getLng()}`;
+        const msg = `위도: ${latlng.getLat()}, 경도: ${latlng.getLng()}`;
         setMarker(latlng, msg, 'click');
     });
 
-    /**
-     * 마커 표시 유틸
-     * @param {LatLng} latlng  - 좌표
-     * @param {String} message - 인포윈도우 내용 (HTML)
-     * @param {"click"|"mypos"} type - 마커 종류 구분
-     */
     function setMarker(latlng, message, type){
-        // 타입별 기존 마커 제거
         if(type === 'click' && clickMarker){ clickMarker.setMap(null); }
         if(type === 'mypos' && myPosMarker){ myPosMarker.setMap(null); }
 
-        const marker = new kakao.maps.Marker({map, position: latlng});
+        const marker = new kakao.maps.Marker({ map, position: latlng });
         infowindow.setContent(`<div style="padding:4px;">${message}</div>`);
         infowindow.open(map, marker);
 
@@ -86,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(type === 'mypos')  myPosMarker = marker;
     }
 
-    /* ======================= 위치점검 기능 ======================= */
+    /* ======================= 로컬 저장/표시 ======================= */
     const savedCoordsEl = document.getElementById('savedCoords');
     const copyNoticeEl  = document.getElementById('copyNotice');
     const savedCoords   = JSON.parse(localStorage.getItem('coords') || '[]');
@@ -99,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('이 브라우저는 위치 기능을 지원하지 않습니다.');
             return;
         }
-        navigator.geolocation.getCurrentPosition(success, fail, {enableHighAccuracy: true, timeout: 5000});
+        navigator.geolocation.getCurrentPosition(success, fail, { enableHighAccuracy: true, timeout: 5000 });
     }
 
     function success(pos){
@@ -107,11 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const lon = pos.coords.longitude;
         const latlng = new kakao.maps.LatLng(lat, lon);
 
-        // 지도 이동 및 마커 표시
         map.panTo(latlng);
         setMarker(latlng, '★ 내 위치 ★', 'mypos');
 
-        // 좌표 저장 및 렌더링
         saveCoords(lat, lon);
     }
 
@@ -120,12 +109,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error(err);
     }
 
-    /* -------------------- 저장 / 표시 / 복사 -------------------- */
     function saveCoords(lat, lon){
-        savedCoords.push({lat, lon, ts: Date.now()});
+        savedCoords.push({ lat, lon, ts: Date.now() });
         localStorage.setItem('coords', JSON.stringify(savedCoords));
         renderSaved();
-        // 클립보드 복사 (HTTPS 환경에서 작동)
+
         if(navigator.clipboard){
             navigator.clipboard.writeText(`${lat}, ${lon}`).then(showCopyNotice);
         }
@@ -143,16 +131,16 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ======================= 지도 타입 전환 ======================= */
     let currentOverlay = null;
     window.setOverlayMapTypeId = function(type){
-        // 1) 기존 오버레이 제거
-        if(currentOverlay){ map.removeOverlayMapTypeId(currentOverlay); currentOverlay = null; }
+        if(currentOverlay){
+            map.removeOverlayMapTypeId(currentOverlay);
+            currentOverlay = null;
+        }
 
-        // 2) 기본 지도
         if(type === 'roadmap'){
             map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
             return;
         }
 
-        // 3) 지적편집도 – ROADMAP 위에 오버레이로 겹침
         if(type === 'use_district'){
             map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
             currentOverlay = kakao.maps.MapTypeId.USE_DISTRICT;
@@ -160,8 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-  }); // kakao.maps.load end
-}); // DOMContentLoaded end
+  }); // kakao.maps.load
+});   // DOMContentLoaded
 </script>
 </body>
 </html>
