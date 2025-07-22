@@ -1,160 +1,160 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<html lang="ko">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>위·경도 확인 및 저장</title>
-    <style>
-        html, body {
-            height: 100%; margin: 0; padding: 0; cursor: crosshair;
-        }
-        #map {
-            width: 100%; height: 100%; min-height: 300px; cursor: crosshair;
-        }
-        .button-container {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background-color: #fff; padding: 10px; box-sizing: border-box;
-            z-index: 9999;
-            display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-            font-family: "Pretendard", sans-serif;
-        }
-        #savedCoords {
-            flex: 1 1 100%;
-            margin-top: 6px; padding: 4px; height: 80px;
-            font-size: 12px; white-space: pre-wrap; overflow: auto;
-            border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>위·경도 확인 및 저장</title>
+  <style>
+    html, body {height:100%; margin:0; padding:0; cursor:crosshair;}
+    #map       {width:100%; height:100%; min-height:300px; cursor:crosshair;}
+
+    .button-container{
+      position:fixed; bottom:0; left:0; width:100%;
+      background:#fff; padding:10px; box-sizing:border-box;
+      z-index:9999; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+      font-family:"Pretendard", sans-serif;
+    }
+    #savedCoords{
+      flex:1 1 100%;
+      margin-top:6px; padding:4px; height:80px;
+      font-size:12px; white-space:pre-wrap; overflow:auto;
+      border:1px solid #ccc; border-radius:4px; background:#f9f9f9;
+    }
+  </style>
 </head>
 <body>
 
 <div id="map"></div>
 
 <div class="button-container">
-    <button id="locBtn">위치점검</button>
-    <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
-    <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
-    <span id="copyNotice" style="display:none;color:#008000;font-size:12px;">좌표가 클립보드에 복사되었습니다.</span>
-    <pre id="savedCoords" readonly></pre>
+  <button id="locBtn">위치점검</button>
+  <button onclick="setOverlayMapTypeId('roadmap')">일반지도</button>
+  <button onclick="setOverlayMapTypeId('use_district')">지적편집도</button>
+  <span id="copyNotice" style="display:none;color:#008000;font-size:12px;">좌표가 클립보드에 복사되었습니다.</span>
+  <pre id="savedCoords" readonly></pre>
 </div>
 
-<!-- Kakao SDK (기존 방식 유지) -->
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ca1951eaafbfe12089ef2f2d40755c2b"></script>
-<script>
-/* ================= 기본 지도 생성 ================= */
-var mapContainer = document.getElementById('map'),
-    mapOption = {
-        center: new kakao.maps.LatLng(35.84286091497955, 128.76508285268582),
-        level: 3
+<!-- Kakao Maps SDK (먼저 로드) -->
+<script defer src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=ca1951eaafbfe12089ef2f2d40755c2b&autoload=false"></script>
+
+<!-- 내 스크립트 -->
+<script defer>
+document.addEventListener('DOMContentLoaded', () => {
+  kakao.maps.load(initMap);   // SDK 로드 후 실행
+
+  function initMap(){
+    /* ================= 지도 초기화 ================= */
+    const mapContainer = document.getElementById('map');
+    const mapOption = {
+      center: new kakao.maps.LatLng(35.84286091497955, 128.76508285268582),
+      level : 3
     };
-var map = new kakao.maps.Map(mapContainer, mapOption);
-var mapTypeControl = new kakao.maps.MapTypeControl();
-map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
-var zoomControl = new kakao.maps.ZoomControl();
-map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+    const map = new kakao.maps.Map(mapContainer, mapOption);
+    map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
+    map.addControl(new kakao.maps.ZoomControl(),    kakao.maps.ControlPosition.RIGHT);
 
-var infowindow = new kakao.maps.InfoWindow({zIndex:1});
-var marker = null;          // 클릭 마커(공용)
-var myPosMarker = null;     // 위치점검 전용 마커
-var currentTypeId;          // 지도 타입 오버레이
+    /* ============== 마커 & 인포윈도우 ============== */
+    let clickMarker = null;
+    let myPosMarker = null;
+    const infowindow = new kakao.maps.InfoWindow({ zIndex:1 });
 
-/* ================= 지도 클릭 시 좌표 표시 ================= */
-kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
-    var latlng = mouseEvent.latLng;
-    var message = '위도: ' + latlng.getLat() + ', 경도: ' + latlng.getLng();
+    kakao.maps.event.addListener(map, 'click', function(mouseEvent){
+      const latlng = mouseEvent.latLng;
+      const msg = `위도: ${latlng.getLat()}, 경도: ${latlng.getLng()}`;
+      setMarker(latlng, msg, 'click');
+    });
 
-    if (marker) marker.setMap(null);
-    displayMarker(latlng, message);
+    function setMarker(latlng, message, type){
+      if(type === 'click' && clickMarker){ clickMarker.setMap(null); }
+      if(type === 'mypos'  && myPosMarker){ myPosMarker.setMap(null); }
 
-});
+      const marker = new kakao.maps.Marker({ map, position: latlng });
+      infowindow.setContent(`<div style="padding:4px;">${message}</div>`);
+      infowindow.open(map, marker);
 
-/* 마커+인포윈도우 표시 함수 */
-function displayMarker(locPosition, message, type){
-    var m = new kakao.maps.Marker({ map: map, position: locPosition });
-    infowindow.setContent('<div style="padding:4px;">' + message + '</div>');
-    infowindow.open(map, m);
-
-    if(type === 'mypos'){          // 내 위치 마커로 분리 관리
-        if(myPosMarker) myPosMarker.setMap(null);
-        myPosMarker = m;
-    }else{
-        marker = m;
+      if(type === 'click') clickMarker = marker;
+      if(type === 'mypos')  myPosMarker = marker;
     }
-}
 
-/* ================= 내 위치 버튼 ================= */
-var savedCoordsEl = document.getElementById('savedCoords');
-var copyNoticeEl  = document.getElementById('copyNotice');
-var savedCoords   = JSON.parse(localStorage.getItem('coords') || '[]');
-renderSaved();
-
-document.getElementById('locBtn').addEventListener('click', function(){
-    if (!navigator.geolocation) {
-        alert('이 브라우저는 위치 기능을 지원하지 않습니다.');
-        return;
-    }
-    navigator.geolocation.getCurrentPosition(function(position){
-        var lat = position.coords.latitude;
-        var lon = position.coords.longitude;
-        var locPosition = new kakao.maps.LatLng(lat, lon);
-        var message = '★내위치★';
-
-        map.panTo(locPosition);
-        displayMarker(locPosition, message, 'mypos');
-
-        saveCoords(lat, lon);   // 로컬 저장 + 복사
-    }, function(err){
-        alert('위치 정보를 가져올 수 없습니다.');
-        console.error(err);
-    }, { enableHighAccuracy: true, timeout: 5000 });
-});
-
-/* 좌표 저장 / 표시 / 복사 */
-function saveCoords(lat, lon){
-    savedCoords.push({lat:lat, lon:lon, ts:Date.now()});
-    localStorage.setItem('coords', JSON.stringify(savedCoords));
+    /* ============== 위치점검 / 저장 ============== */
+    const savedCoordsEl = document.getElementById('savedCoords');
+    const copyNoticeEl  = document.getElementById('copyNotice');
+    const savedCoords   = JSON.parse(localStorage.getItem('coords') || '[]');
     renderSaved();
 
-    if(navigator.clipboard){
-        navigator.clipboard.writeText(lat + ', ' + lon).then(showCopyNotice);
-    }
-}
-function renderSaved(){
-    savedCoordsEl.textContent = savedCoords.map(function(c){
-        return c.lat + ', ' + c.lon;
-    }).join('\n');
-}
-function showCopyNotice(){
-    copyNoticeEl.style.display = 'inline';
-    setTimeout(function(){ copyNoticeEl.style.display = 'none'; }, 2000);
-}
+    document.getElementById('locBtn').addEventListener('click', getCurrentPosition);
 
-/* ================= 지도 타입 전환 ================= */
-function setOverlayMapTypeId(maptype) {
-    var changeMaptype;
-
-    if (maptype === 'use_district') {
-        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;
-    } else if (maptype === 'roadmap') {
-        changeMaptype = kakao.maps.MapTypeId.ROADMAP;
+    function getCurrentPosition(){
+      if(!navigator.geolocation){
+        alert('이 브라우저는 위치 기능을 지원하지 않습니다.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(success, fail, {enableHighAccuracy:true, timeout:5000});
     }
 
-    if (currentTypeId) {
-        map.removeOverlayMapTypeId(currentTypeId);
+    function success(pos){
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const latlng = new kakao.maps.LatLng(lat, lon);
+
+      map.panTo(latlng);
+      setMarker(latlng, '★ 내 위치 ★', 'mypos');
+
+      saveCoords(lat, lon);
     }
-    map.addOverlayMapTypeId(changeMaptype);
-    currentTypeId = changeMaptype;
-}
 
-/* ================= 반응형 높이 ================= */
-function setMapHeight() {
-    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
-    var mapContainer = document.getElementById('map');
-    mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
-}
-window.addEventListener('DOMContentLoaded', setMapHeight);
-window.addEventListener('resize', setMapHeight);
+    function fail(err){
+      alert('위치 정보를 가져올 수 없습니다.');
+      console.error(err);
+    }
 
+    function saveCoords(lat, lon){
+      savedCoords.push({lat, lon, ts:Date.now()});
+      localStorage.setItem('coords', JSON.stringify(savedCoords));
+      renderSaved();
+
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(`${lat}, ${lon}`).then(showCopyNotice);
+      }
+    }
+
+    function renderSaved(){
+      savedCoordsEl.textContent = savedCoords.map(c => `${c.lat}, ${c.lon}`).join('\n');
+    }
+
+    function showCopyNotice(){
+      copyNoticeEl.style.display = 'inline';
+      setTimeout(()=>copyNoticeEl.style.display='none', 2000);
+    }
+
+    /* ============== 지도 타입 전환 ============== */
+    let currentOverlay = null;
+    window.setOverlayMapTypeId = function(type){
+      if(currentOverlay){
+        map.removeOverlayMapTypeId(currentOverlay);
+        currentOverlay = null;
+      }
+      if(type === 'roadmap'){
+        map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
+        return;
+      }
+      if(type === 'use_district'){
+        map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
+        currentOverlay = kakao.maps.MapTypeId.USE_DISTRICT;
+        map.addOverlayMapTypeId(currentOverlay);
+      }
+    };
+
+    /* ============== 반응형 높이 ============== */
+    function setMapHeight(){
+      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+      const top = mapContainer.offsetTop;
+      mapContainer.style.height = (windowHeight - top) + 'px';
+    }
+    setMapHeight();
+    window.addEventListener('resize', setMapHeight);
+  }
+});
 </script>
 </body>
 </html>
