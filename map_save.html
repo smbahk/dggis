@@ -1,154 +1,323 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>위·경도 확인 및 저장</title>
-  <style>
-    html, body {height:100%; margin:0; padding:0; cursor:crosshair;}
-    #map       {width:100%; height:100%; min-height:300px; cursor:crosshair;}
-    .button-container{
-      position:fixed; bottom:0; left:0; width:100%;
-      background:#fff; padding:10px; box-sizing:border-box;
-      z-index:9999; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
-      font-family:"Pretendard", sans-serif;
-    }
-    #savedCoords{
-      flex:1 1 100%;
-      margin-top:6px; padding:4px; height:80px;
-      font-size:12px; white-space:pre-wrap; overflow:auto;
-      border:1px solid #ccc; border-radius:4px; background:#f9f9f9;
-    }
-  </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>위.경도 확인</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            cursor: crosshair;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            cursor: crosshair;
+        }
+        .button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 9999;
+        }
+        #savedList {
+            position: fixed;
+            bottom: 55px;
+            left: 0;
+            width: 100%;
+            max-height: 40%;
+            overflow: auto;
+            background: #fff;
+            z-index: 9999;
+            padding: 8px;
+            box-sizing: border-box;
+            display: none;
+            font-size: 13px;
+        }
+    </style>
 </head>
 <body>
-
 <div id="map"></div>
 
 <div class="button-container">
-  <button id="locBtn">위치점검</button>
-  <button onclick="setOverlayMapTypeId('roadmap')">일반지도</button>
-  <button onclick="setOverlayMapTypeId('use_district')">지적편집도</button>
-  <span id="copyNotice" style="display:none;color:#008000;font-size:12px;">좌표가 클립보드에 복사되었습니다.</span>
-  <pre id="savedCoords" readonly></pre>
+    <button onclick="setOverlayMapTypeId('roadmap')">일반지도 보기</button>
+    <button onclick="setOverlayMapTypeId('use_district')">지적편집도 보기</button>
+    <button id="btnSave" onclick="saveCurrentPoint()">좌표 저장</button>
+    <button id="btnList" onclick="toggleList()">저장목록</button>
 </div>
 
-<!-- 1) Kakao SDK: autoload=false + onload에서 initMap 호출 -->
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf&autoload=false"
-        onload="kakao.maps.load(initMap)"></script>
+<div id="savedList"></div>
 
-<!-- 2) 나의 스크립트 -->
+<!-- 기존 주석: 다른 키 -->
+<!-- script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=3c55a8281f53c899abbbbe6960e519bf"></script -->
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ca1951eaafbfe12089ef2f2d40755c2b"></script>
 <script>
-function initMap(){
-  /* ===== 지도 초기화 ===== */
-  const mapContainer = document.getElementById('map');
-  const mapOption = {
-    center: new kakao.maps.LatLng(35.84286091497955, 128.76508285268582),
-    level : 3
-  };
-  const map = new kakao.maps.Map(mapContainer, mapOption);
-  map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
-  map.addControl(new kakao.maps.ZoomControl(),    kakao.maps.ControlPosition.RIGHT);
+// ====== 기존 코드 시작 ======
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(35.84286091497955, 128.76508285268582), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
 
-  /* ===== 마커/인포윈도우 ===== */
-  let clickMarker = null;
-  let myPosMarker = null;
-  const infowindow = new kakao.maps.InfoWindow({ zIndex:1 });
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
 
-  kakao.maps.event.addListener(map, 'click', function(mouseEvent){
-    const latlng = mouseEvent.latLng;
-    const msg = `위도: ${latlng.getLat()}, 경도: ${latlng.getLng()}`;
-    setMarker(latlng, msg, 'click');
-  });
+// 일반 지도와 스카이뷰로 지도 타입을 전환할 수 있는 지도타입 컨트롤을 생성합니다
+var mapTypeControl = new kakao.maps.MapTypeControl();
 
-  function setMarker(latlng, message, type){
-    if(type === 'click' && clickMarker){ clickMarker.setMap(null); }
-    if(type === 'mypos'  && myPosMarker){ myPosMarker.setMap(null); }
+// 지도에 컨트롤을 추가해야 지도위에 표시됩니다
+// kakao.maps.ControlPosition은 컨트롤이 표시될 위치를 정의하는데 TOPRIGHT는 오른쪽 위를 의미합니다
+map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
 
-    const marker = new kakao.maps.Marker({ map, position: latlng });
-    infowindow.setContent(`<div style="padding:4px;">${message}</div>`);
+// 지도 확대 축소를 제어할 수 있는  줌 컨트롤을 생성합니다
+var zoomControl = new kakao.maps.ZoomControl();
+map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+// 클릭한 위치의 위도와 경도를 보여줄 인포윈도우를 생성합니다.
+var infowindow = new kakao.maps.InfoWindow({zIndex:1});
+var marker = null;
+
+// ---- 추가: 마지막 좌표 저장용 전역 ----
+var currentLatLng = null;
+var savedKey = 'savedCoords';
+
+// 클릭 이벤트를 등록합니다.
+kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
+    var latlng = mouseEvent.latLng;
+    var message = '위도: ' + latlng.getLat().toFixed(6) + ', 경도: ' + latlng.getLng().toFixed(6) + ' 입니다.';
+
+    // 기존 마커가 있으면 제거합니다.
+    if (marker) {
+        marker.setMap(null);
+    }
+
+    displayMarker(latlng, message);
+    currentLatLng = { lat: latlng.getLat(), lng: latlng.getLng() };
+});
+
+// 지도에 마커와 인포윈도우를 표시하는 함수입니다
+function displayMarker(locPosition, message) {
+
+    // 마커를 생성합니다.
+    marker = new kakao.maps.Marker({
+        map: map,
+        position: locPosition
+    });
+
+    // 인포윈도우에 표시할 내용입니다.
+    var iwContent = message;
+
+    // 인포윈도우를 생성합니다.
+    infowindow.setContent(iwContent);
     infowindow.open(map, marker);
+}
 
-    if(type === 'click') clickMarker = marker;
-    if(type === 'mypos')  myPosMarker = marker;
-  }
+// ----- 내위치 시작
+if (navigator.geolocation) {
+    // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+    navigator.geolocation.getCurrentPosition(function(position) {
+        
+        var lat = position.coords.latitude, // 위도
+            lon = position.coords.longitude; // 경도
+        
+        var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치
+            message = '<div style="padding:5px; color:red;">위도: ' + lat.toFixed(6) +
+                      '<br>경도: ' + lon.toFixed(6) + '</div>'; // 변경된 메시지
+        
+        // 마커와 인포윈도우를 표시합니다
+        displayMarker(locPosition, message);
+        currentLatLng = { lat: lat, lng: lon };
+            
+      });
+    
+} else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+    
+    var locPosition = new kakao.maps.LatLng(35.84286091497955, 128.76508285268582),    
+        message = '내위치를 찾을수 없음';
+        
+    displayMarker(locPosition, message);
+}
 
-  /* ===== 로컬 저장/표시 ===== */
-  const savedCoordsEl = document.getElementById('savedCoords');
-  const copyNoticeEl  = document.getElementById('copyNotice');
-  const savedCoords   = JSON.parse(localStorage.getItem('coords') || '[]');
-  renderSaved();
+// ------------ 내위치 끝
 
-  document.getElementById('locBtn').addEventListener('click', getCurrentPosition);
+// ================================================== 지도 타입 시작 ==
+var currentTypeId;
 
-  function getCurrentPosition(){
-    if(!navigator.geolocation){
-      alert('이 브라우저는 위치 기능을 지원하지 않습니다.');
-      return;
+// 버튼이 클릭되면 호출되는 함수입니다
+function setOverlayMapTypeId(maptype) {
+    var changeMaptype;
+    
+    // maptype에 따라 지도에 추가할 지도타입을 결정합니다
+    if (maptype === 'use_district') {
+        // 지적편집도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.USE_DISTRICT;           
+    } else if (maptype === 'roadmap') {
+        // 일반지도 지도타입
+        changeMaptype = kakao.maps.MapTypeId.ROADMAP;           
     }
-    navigator.geolocation.getCurrentPosition(success, fail, {enableHighAccuracy:true, timeout:5000});
-  }
-
-  function success(pos){
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-    const latlng = new kakao.maps.LatLng(lat, lon);
-
-    map.panTo(latlng);
-    setMarker(latlng, '★ 내 위치 ★', 'mypos');
-
-    saveCoords(lat, lon);
-  }
-
-  function fail(err){
-    alert('위치 정보를 가져올 수 없습니다.');
-    console.error(err);
-  }
-
-  function saveCoords(lat, lon){
-    savedCoords.push({lat, lon, ts:Date.now()});
-    localStorage.setItem('coords', JSON.stringify(savedCoords));
-    renderSaved();
-
-    if(navigator.clipboard){
-      navigator.clipboard.writeText(`${lat}, ${lon}`).then(showCopyNotice);
+    
+    // 이미 등록된 지도 타입이 있으면 제거합니다
+    if (currentTypeId) {
+        map.removeOverlayMapTypeId(currentTypeId);    
     }
-  }
+    
+    // maptype에 해당하는 지도타입을 지도에 추가합니다
+    map.addOverlayMapTypeId(changeMaptype);
+    
+    // 지도에 추가된 타입정보를 갱신합니다
+    currentTypeId = changeMaptype;        
+}
+// ================================================== 지도 타입 끝 ==
 
-  function renderSaved(){
-    savedCoordsEl.textContent = savedCoords.map(c => `${c.lat}, ${c.lon}`).join('\n');
-  }
+// 마커와 인포윈도우를 담을 배열입니다
+var markers = [];
+var infowindows = [];
 
-  function showCopyNotice(){
-    copyNoticeEl.style.display = 'inline';
-    setTimeout(()=>copyNoticeEl.style.display='none', 2000);
-  }
+// 마커와 인포윈도우 정보를 담은 객체 배열입니다
+var markerInfos = [];
 
-  /* ===== 지도 타입 전환 ===== */
-  let currentOverlay = null;
-  window.setOverlayMapTypeId = function(type){
-    if(currentOverlay){
-      map.removeOverlayMapTypeId(currentOverlay);
-      currentOverlay = null;
-    }
-    if(type === 'roadmap'){
-      map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
-      return;
-    }
-    if(type === 'use_district'){
-      map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
-      currentOverlay = kakao.maps.MapTypeId.USE_DISTRICT;
-      map.addOverlayMapTypeId(currentOverlay);
-    }
-  };
+// makeClickListener 미정의지만 markerInfos.length=0이라 실행 안 됨.
+// 그대로 둡니다(요구사항에 따라 문제점 방치).
 
-  /* ===== 반응형 높이 ===== */
-  function setMapHeight(){
-    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+for (var i = 0; i < markerInfos.length; i++) {
+    var marker2 = new kakao.maps.Marker({
+        position: markerInfos[i].position,
+        clickable: true
+    });
+    markers.push(marker2);
+    var infowindow2 = new kakao.maps.InfoWindow({
+        content: markerInfos[i].content,
+        removable: true
+    });
+    infowindows.push(infowindow2);
+
+    kakao.maps.event.addListener(marker2, 'click', makeClickListener(marker2, infowindow2));
+}
+
+// 모바일 화면 크기 변경 시 마다 높이를 계산하고 설정합니다.
+function setMapHeight() {
+    var windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    var mapContainer = document.getElementById('map');
     mapContainer.style.height = (windowHeight - mapContainer.offsetTop) + 'px';
-  }
-  setMapHeight();
-  window.addEventListener('resize', setMapHeight);
+}
+
+// 초기화 및 리사이즈 이벤트 핸들러를 등록합니다.
+window.addEventListener('DOMContentLoaded', setMapHeight);
+window.addEventListener('resize', setMapHeight);
+// ====== 기존 코드 끝 ======
+
+
+// ====== 추가 기능 구현부 ======
+
+// 저장
+function saveCurrentPoint() {
+    if (!currentLatLng) {
+        alert('저장할 좌표가 없습니다. 지도를 클릭하거나 내 위치를 받아오세요.');
+        return;
+    }
+    var memo = prompt('메모(선택):', '');
+    var now = new Date().toISOString();
+
+    var item = {
+        lat: currentLatLng.lat,
+        lng: currentLatLng.lng,
+        memo: memo || '',
+        time: now
+    };
+
+    var arr = JSON.parse(localStorage.getItem(savedKey) || '[]');
+    arr.push(item);
+    localStorage.setItem(savedKey, JSON.stringify(arr));
+
+    alert('저장되었습니다.');
+    if (document.getElementById('savedList').style.display === 'block') {
+        renderList();
+    }
+}
+
+// 목록 토글
+function toggleList() {
+    var box = document.getElementById('savedList');
+    if (box.style.display === 'none' || box.style.display === '') {
+        renderList();
+        box.style.display = 'block';
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+// 목록 렌더
+function renderList() {
+    var box = document.getElementById('savedList');
+    var arr = JSON.parse(localStorage.getItem(savedKey) || '[]');
+
+    if (arr.length === 0) {
+        box.innerHTML = '<b>저장된 좌표 없음</b>';
+        return;
+    }
+
+    var html = '<b>저장 좌표 (' + arr.length + '개)</b><br/>';
+    html += '<button onclick="exportJSON()">JSON 내보내기</button> ';
+    html += '<button onclick="clearSaved()">전체삭제</button><hr/>';
+
+    arr.forEach(function(it, idx){
+        html += (idx+1) + '. ' +
+            it.lat.toFixed(6) + ', ' + it.lng.toFixed(6) +
+            (it.memo ? ' (' + it.memo + ')' : '') +
+            ' <small>[' + it.time.replace('T',' ').substring(0,19) + ']</small>' +
+            ' <button onclick="flyTo('+idx+')">이동</button>' +
+            ' <button onclick="delOne('+idx+')">삭제</button><br/>';
+    });
+
+    box.innerHTML = html;
+}
+
+// 특정 저장 좌표로 이동
+function flyTo(idx) {
+    var arr = JSON.parse(localStorage.getItem(savedKey) || '[]');
+    var it = arr[idx];
+    if (!it) return;
+    var latlng = new kakao.maps.LatLng(it.lat, it.lng);
+    map.setCenter(latlng);
+
+    if (marker) marker.setMap(null);
+    var msg = '위도: ' + it.lat.toFixed(6) + ', 경도: ' + it.lng.toFixed(6) + ' 입니다.';
+    displayMarker(latlng, msg);
+    currentLatLng = {lat: it.lat, lng: it.lng};
+}
+
+// 단건 삭제
+function delOne(idx) {
+    var arr = JSON.parse(localStorage.getItem(savedKey) || '[]');
+    arr.splice(idx, 1);
+    localStorage.setItem(savedKey, JSON.stringify(arr));
+    renderList();
+}
+
+// 전체 삭제
+function clearSaved() {
+    if (confirm('정말 모두 삭제할까요?')) {
+        localStorage.removeItem(savedKey);
+        renderList();
+    }
+}
+
+// JSON 내보내기
+function exportJSON() {
+    var arrStr = localStorage.getItem(savedKey) || '[]';
+    var blob = new Blob([arrStr], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'saved_coords.json';
+    a.click();
+    URL.revokeObjectURL(url);
 }
 </script>
 </body>
